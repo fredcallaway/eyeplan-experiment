@@ -1,6 +1,9 @@
 from psychopy import core, visual, gui, data, event
 import numpy as np
+wait = core.wait
+
 MOUSE = event.Mouse()
+FRAME_RATE = 60
 
 def move_towards(pos, dest, dist):
     total = np.linalg.norm(pos - dest)
@@ -14,6 +17,7 @@ def angle(p1, p2):
     det = x1*y2 - y1*x2
     θ = np.arctan2(det, dot)
     return θ * 180 / np.pi
+
 
 
 class Graphics(object):
@@ -35,6 +39,16 @@ class Graphics(object):
         visual.ShapeStim(self.win, vertices=vertices, autoDraw=True, fillColor='black',
                          pos=move_towards(c1.pos, c0.pos, c1.radius),
                          ori=90-angle(c0.pos, c1.pos))
+
+    def rect(self, pos, width, height, **kws):
+        return visual.Rect(self.win, width, height, pos=pos, autoDraw=True, **kws)
+
+    def animate(self, sec):
+        total = round(sec * FRAME_RATE)
+        for i in range(1,total+1):
+            yield i / total
+            self.win.flip()
+
 
 class Graph(object):
     """Graph navigation interface"""
@@ -88,6 +102,13 @@ class Graph(object):
     def done(self):
         return len(self.graph[self.current_state]) == 0
 
+    def fade_out(self):
+        mask = self.gfx.rect((0, 0), 1, 1, color='gray', opacity=0)
+        for p in self.gfx.animate(.2):
+          mask.opacity = p
+          self.win.flip()
+
+
     def run(self):
         print('start trial')
         while True:
@@ -97,5 +118,7 @@ class Graph(object):
 
             self.win.flip()
             if self.done():
-                print('done!')
-                return
+                wait(.2)
+                return self.fade_out()
+
+
