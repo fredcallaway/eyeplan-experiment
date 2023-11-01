@@ -60,12 +60,20 @@ class Graph(object):
         self.start = start
         self.layout = layout
         self.current_state = None
+        self.data = []
         self.build_graph()
-        self.set_state(self.start)
 
+    def log(self, event, info={}):
+        time = core.getTime()
+        print(f'{time:3.3f}', event, ', '.join(f'{k} = {v}' for k, v in info.items()))
+        self.data.append({
+            'time': time,
+            'event': event,
+            **info
+        })
 
     def build_graph(self):
-        self.win.clearAutoDraw()
+        # self.win.clearAutoDraw()
         self.nodes = nodes = []
         for i, (x, y) in enumerate(self.layout):
             nodes.append(self.gfx.circle(0.8 * np.array([x, y]), name=i))
@@ -87,6 +95,7 @@ class Graph(object):
                     return n
 
     def set_state(self, s):
+        self.log('visit', {'state': s})
         if self.current_state is not None:
             self.nodes[self.current_state].fillColor = 'white'
 
@@ -95,29 +104,29 @@ class Graph(object):
         self.nodes[s].fillColor = '#1B79FF'
 
     def click(self, s):
-        print('clicked!', s)
         if s in self.graph[self.current_state]:
             self.set_state(s)
 
-    def done(self):
+    def is_done(self):
         return len(self.graph[self.current_state]) == 0
 
     def fade_out(self):
         mask = self.gfx.rect((0, 0), 1, 1, color='gray', opacity=0)
         for p in self.gfx.animate(.2):
           mask.opacity = p
-          self.win.flip()
-
 
     def run(self):
-        print('start trial')
+        self.log('start')
+        self.set_state(self.start)
+
         while True:
             clicked = self.get_click()
             if clicked is not None:
                 self.click(int(clicked.name))
 
             self.win.flip()
-            if self.done():
+            if self.is_done():
+                self.log('done')
                 wait(.2)
                 return self.fade_out()
 

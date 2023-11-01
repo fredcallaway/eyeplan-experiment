@@ -23,10 +23,8 @@ gfx = Graphics(win)
 win.clearAutoDraw()
 trial = config['trials']['main'][2]
 g = Graph(win, **trial, layout=layout)
-win.flip()
-core.wait(1)
 g.run()
-
+g.data
 
 # %% --------
 for trial in config['trials']['main']:
