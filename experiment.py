@@ -1,18 +1,37 @@
+import os
+import logging
+import json
+from datetime import datetime
 from psychopy import core, visual, gui, data, event
 from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
-import json
-from functools import cached_property
+
 from trial import GraphTrial
 from graphics import Graphics
+# from eyetracking import EyeLink
+
+subjid = 'fred'
+uniqueid = datetime.now().strftime('%y-%m-%d-%H%M-') + subjid
+
+logFormatter = logging.Formatter("%(asctime)s [%(levelname)s]  %(message)s")
+rootLogger = logging.getLogger()
+rootLogger.setLevel('DEBUG')
+
+os.makedirs('log', exist_ok=True)
+fileHandler = logging.FileHandler(f"log/{uniqueid}.log")
+fileHandler.setFormatter(logFormatter)
+rootLogger.addHandler(fileHandler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(logFormatter)
+consoleHandler.setLevel('INFO')
+rootLogger.addHandler(consoleHandler)
+logging.info(f'starting up {uniqueid} at {core.getTime()}')
 
 win = visual.Window([1400,800], allowGUI=True, units='height')
 framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
 assert abs(framerate - 60) < 2
 win.flip()
-
-# %% --------
-
 with open('json/config/1.json') as f:
     config = json.load(f)
 
@@ -28,6 +47,7 @@ instruct = visual.TextBox2(win, '', pos=(-.83, 0), color='white', autoDraw=True,
 tip = visual.TextBox2(win, '', pos=(-.83, -0.2), color='white', autoDraw=True, size=(0.65, None), letterHeight=.025, anchor='left')
 
 def message(msg, space=False, tip_text=None):
+    logging.debug('message: %s (%s)', msg, tip_text)
     instruct.text = msg
     tip.setText(tip_text if tip_text else
                 'press space to continue' if space else
@@ -36,13 +56,14 @@ def message(msg, space=False, tip_text=None):
     if space:
         event.waitKeys(keyList=['space'])
 
-
+fixation_cross_times = []
 def fixation_cross(pos=(0,0)):
-    print('fixation')
+    logging.debug('show cross')
     visual.ShapeStim(win, pos=pos, size=.03, vertices='cross', fillColor="black").draw()
     win.flip()
     event.waitKeys(keyList=['space'])
-    print('space')
+    fixation_cross_times.append(core.getTime())
+    logging.debug('hide cross')
 
 practice_trials = (
     GraphTrial(win, **trial, **config['parameters'], pos=(.3, 0))
@@ -76,14 +97,13 @@ message("Both the connections and points change on every round of the game.", sp
 gt.run()
 
 message("Before each round, a cross will appear. Look at it and press space to start the round.",
-        tip_text="Look at the cross and press space to continue")
+        tip_text="look at the cross and press space to continue")
 fixation_cross((.3, 0))
 win.flip()
-
-# %% --------
+tip.setText('click the board to continue')
+next(practice_trials).run()
 
 message("Try a few more practice rounds.")
-next(practice_trials).run()
 
 for gt in practice_trials:
     message("Try a few more practice rounds.", tip_text="Look at the cross and press space to continue")
@@ -101,28 +121,11 @@ message("Now we're going to calibrate the eyetracker.")
 
 win.clearAutoDraw()
 win.flip()
+trial_data = []
 for trial in config['trials']['main']:
-    # visual.ShapeStim(win, size=.03, vertices='cross', fillColor="black").draw()
-    # win.flip()
-    # event.waitKeys(keyList=['space'])
+    fixation_cross()
     gt = GraphTrial(win, **trial, **config['parameters'])
     gt.run()
+    trial_data.append(gt.data)
 
-
-# %% --------
-win.clearAutoDraw()
-trial = config['trials']['main'][0]
-gt = GraphTrial(win, **trial, **config['parameters'])
-gt.show()
-core.wait(0.5)
-gt.set_state(1)
-
-# %% --------
-
-
-win.clearAutoDraw()
-# gfx.circle((0,0), .015)
-
-visual.ShapeStim(win, size=.03, vertices='cross', fillColor="black").draw()
-
-win.flip()
+trial_data
