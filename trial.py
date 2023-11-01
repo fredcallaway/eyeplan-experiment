@@ -20,7 +20,15 @@ class GraphTrial(object):
         self.start = start
         self.layout = layout
         self.current_state = None
-        self.data = []
+        self.data = {
+            "trial": {
+                "graph": graph,
+                "rewards": rewards,
+                "start": start,
+                # layout
+            },
+            "events": []
+        }
         self.pos = pos
         self.mouse = event.Mouse()
 
@@ -28,7 +36,7 @@ class GraphTrial(object):
         time = core.getTime()
 
         logging.debug(f'GraphTrial.log {time:3.3f} {event}' + ', '.join(f'{k} = {v}' for k, v in info.items()))
-        self.data.append({
+        self.data["events"].append({
             'time': time,
             'event': event,
             **info

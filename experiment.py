@@ -8,6 +8,7 @@ import numpy as np
 
 from trial import GraphTrial
 from graphics import Graphics
+from bonus import Bonus
 # from eyetracking import EyeLink
 
 subjid = 'fred'
@@ -37,6 +38,19 @@ with open('json/config/1.json') as f:
 
 gfx = Graphics(win)
 
+BONUS = Bonus(config['parameters']['points_per_cent'], 50)
+N_TRIAL = len(config['trials']['main'])
+
+fixation_cross_times = []
+def fixation_cross(pos=(0,0)):
+    logging.debug('show cross')
+    visual.ShapeStim(win, pos=pos, size=.03, vertices='cross', fillColor="black").draw()
+    win.flip()
+    event.waitKeys(keyList=['space'])
+    fixation_cross_times.append(core.getTime())
+    logging.debug('hide cross')
+
+
 # %% ==================== instructions ====================
 win.clearAutoDraw()
 win.flip()
@@ -56,14 +70,6 @@ def message(msg, space=False, tip_text=None):
     if space:
         event.waitKeys(keyList=['space'])
 
-fixation_cross_times = []
-def fixation_cross(pos=(0,0)):
-    logging.debug('show cross')
-    visual.ShapeStim(win, pos=pos, size=.03, vertices='cross', fillColor="black").draw()
-    win.flip()
-    event.waitKeys(keyList=['space'])
-    fixation_cross_times.append(core.getTime())
-    logging.debug('hide cross')
 
 practice_trials = (
     GraphTrial(win, **trial, **config['parameters'], pos=(.3, 0))
@@ -84,6 +90,7 @@ message("Your current location on the board is highlighted in blue.", space=True
 for l in gt.reward_labels:
     l.setOpacity(1)
 message("The goal of the game is to collect as many points as you can.", space=True)
+message(f"The points will be converted to a cash bonus: {BONUS.describe_scheme()}!", space=True)
 
 message("You can move by clicking on a location that has an arrow pointing from your current location. Try it now!", space=False)
 gt.run(one_step=True)
@@ -119,13 +126,38 @@ message("Now we're going to calibrate the eyetracker.")
 
 # %% --------
 
+message("Alright! We're ready to begin the main phase of the experiment.", space=True)
+message(f"There will be  {N_TRIAL} rounds. "
+        f"Remember, you'll earn {BONUS.describe_scheme()} you make in the game.",
+        f"We'll start you off with 50 points for all your hard work so far."
+        space=True
+)
+message("Good luck!", space=True)
+# %% --------
+
 win.clearAutoDraw()
 win.flip()
+
 trial_data = []
-for trial in config['trials']['main']:
+summarize_every = 2
+for (i, trial) in enumerate(config['trials']['main'][:4]):
+    if i > 0 and i % summarize_every == 0:
+        msg = f'There are {N_TRIAL - i} trials left\n{BONUS.report_bonus()}'
+        msg += f'\nFeel free to take a quick break. Then press space to continue'
+        visual.TextBox2(win, msg, color='white', letterHeight=.035).draw()
+        win.flip()
+        event.waitKeys(keyList=['space'])
     fixation_cross()
     gt = GraphTrial(win, **trial, **config['parameters'])
     gt.run()
     trial_data.append(gt.data)
 
-trial_data
+all_data = {
+    'parameters': config['parameters'],
+    'trial_data': trial_data,
+    'fixation_cross_times': fixation_cross_times
+}
+all_data
+os.makedirs('data/exp/', exist_ok=True)
+with open(f'data/exp/{uniqueid}.json', 'w') as f:
+    json.dump(all_data, f)
