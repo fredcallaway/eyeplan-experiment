@@ -254,30 +254,37 @@ function make_trials(; )
     )
 end
 
+# %% --------
+
+function circle_layout(N)
+    # we use 0:N-1 to match python's 0 indexing
+    map(0:N-1) do s
+        angle = π/2 + s * 2 * π / N
+        x = (cos(angle) + 1) / 2 - 0.5
+        y = (sin(angle) + 1) / 2 - 0.5
+        (x, y)
+    end
+end
+
+circle_layout(11)
+
 
 # %% --------
 
-function reward_graphics(n=8)
-    emoji = [
-        "🎈","🎀","📌","✏️","🔮","⚙️","💡","⏰",
-        "✈️","🍎","🌞","⛄️","🐒","👟","🤖",
-    ]
-    Dict(zip(exponential_rewards(n), sample(emoji, n; replace=false)))
-end
-
 version = "e0.1"
 Random.seed!(hash(version))
-subj_trials = repeatedly(make_trials, 30)
+subj_trials = repeatedly(make_trials, 1)
+layout = circle_layout(11)
 
 # %% --------
 
 points_per_cent = 2
 
 dest = "json/config"
-rm(dest, recursive=true)
+rm(dest, recursive=true, force=true)
 mkpath(dest)
 foreach(enumerate(subj_trials)) do (i, trials)
-    parameters = (;points_per_cent)
+    parameters = (;points_per_cent, layout)
     write("$dest/$i.json", json((;parameters, trials)))
     println("$dest/$i.json")
 end
