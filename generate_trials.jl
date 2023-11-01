@@ -246,10 +246,9 @@ function make_trials(; )
     kws = (;n, rdist)
 
     (;
-        intro = intro_problem(kws),
+        # intro = intro_problem(kws),
         calibration = Problem(neighbor_list(DiGraph(n)), zeros(n), 1, -1),
-        vary_transition = sample_problem(;kws...),
-        practice_revealed = [sample_problem(;kws...) for i in 1:2],
+        practice = [sample_problem(;kws...) for i in 1:6],
         main = [sample_problem(;kws...) for i in 1:30]
     )
 end
