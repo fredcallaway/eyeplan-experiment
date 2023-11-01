@@ -3,7 +3,8 @@ from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
 import json
 from functools import cached_property
-from graph import Graph, Graphics
+from trial import GraphTrial
+from graphics import Graphics
 
 win = visual.Window([1400,800], allowGUI=True, units='height')
 framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
@@ -43,62 +44,78 @@ def fixation_cross(pos=(0,0)):
     event.waitKeys(keyList=['space'])
     print('space')
 
-practice_graphs = (
-    Graph(win, **trial, **config['parameters'], pos=(.3, 0))
+practice_trials = (
+    GraphTrial(win, **trial, **config['parameters'], pos=(.3, 0))
     for trial in config['trials']['practice']
 )
 
-# message('Welcome!', space=True)
+message('Welcome!', space=True)
 
-# g = next (practice_graphs)
-# g.show()
-# for l in g.reward_labels:
-#     l.setOpacity(0)
-# message("In this experiment, you will play a game on the board shown to the right.", space=True)
+gt = next(practice_trials)
+gt.show()
+for l in gt.reward_labels:
+    l.setOpacity(0)
+message("In this experiment, you will play a game on the board shown to the right.", space=True)
 
-# g.set_state(g.start)
-# message("Your current location on the board is highlighted in blue.", space=True)
+gt.set_state(gt.start)
+message("Your current location on the board is highlighted in blue.", space=True)
 
-# for l in g.reward_labels:
-#     l.setOpacity(1)
-# message("The goal of the game is to collect as many points as you can.", space=True)
+for l in gt.reward_labels:
+    l.setOpacity(1)
+message("The goal of the game is to collect as many points as you can.", space=True)
 
-# message("You can move by clicking on a location that has an arrow pointing from your current location. Try it now!", space=False)
-# g.run(one_step=True)
-# g.start = g.current_state
+message("You can move by clicking on a location that has an arrow pointing from your current location. Try it now!", space=False)
+gt.run(one_step=True)
+gt.start = gt.current_state
 
-# message("The round ends when you get to a location with no outgoing connections.", space=False)
-# g.run()
+message("The round ends when you get to a location with no outgoing connections.", space=False)
+gt.run()
 
-# g = next(practice_graphs)
-# message("Both the connections and points change on every round of the game.", space=False)
-# g.run()
-
+gt = next(practice_trials)
+message("Both the connections and points change on every round of the game.", space=False)
+gt.run()
 
 message("Before each round, a cross will appear. Look at it and press space to start the round.",
         tip_text="Look at the cross and press space to continue")
 fixation_cross((.3, 0))
 win.flip()
 
-message("Try a few more practice rounds.")
-next(practice_graphs).run()
+# %% --------
 
-for g in practice_graphs:
+message("Try a few more practice rounds.")
+next(practice_trials).run()
+
+for gt in practice_trials:
     message("Try a few more practice rounds.", tip_text="Look at the cross and press space to continue")
     fixation_cross((0.3, 0))
     message("Try a few more practice rounds.")
-    g.run()
+    gt.run()
+
+message("Great job!", space=True)
+
+# %% --------
+
+message("Now we're going to calibrate the eyetracker.")
+
+# %% --------
+
+win.clearAutoDraw()
+win.flip()
+for trial in config['trials']['main']:
+    # visual.ShapeStim(win, size=.03, vertices='cross', fillColor="black").draw()
+    # win.flip()
+    # event.waitKeys(keyList=['space'])
+    gt = GraphTrial(win, **trial, **config['parameters'])
+    gt.run()
 
 
 # %% --------
-for trial in config['trials']['main']:
-    visual.ShapeStim(win, size=.03, vertices='cross', fillColor="black").draw()
-    win.flip()
-    event.waitKeys(keyList=['space'])
-    g = Graph(win, **trial, **config['parameters'])
-    g.run()
-
-
+win.clearAutoDraw()
+trial = config['trials']['main'][0]
+gt = GraphTrial(win, **trial, **config['parameters'])
+gt.show()
+core.wait(0.5)
+gt.set_state(1)
 
 # %% --------
 
