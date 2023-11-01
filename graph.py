@@ -27,7 +27,7 @@ class Graphics(object):
         return visual.line.Line(self.win, start=start, end=end, lineColor='black', lineWidth=10, autoDraw=True, **kws)
 
     def text(self, text, pos=(0,0), **kws):
-        return visual.TextStim(self.win, text, pos=pos, autoDraw=True, **kws)
+        return visual.TextStim(self.win, text, pos=pos, autoDraw=True, height=.03, color='black', **kws)
 
     def arrow(self, c0, c1):
         self.line(c0.pos, c1.pos, depth=2)
@@ -51,9 +51,15 @@ class Graph(object):
 
 
     def build_graph(self):
+        self.win.clearAutoDraw()
         self.nodes = nodes = []
         for i, (x, y) in enumerate(self.layout):
             nodes.append(self.gfx.circle(0.8 * np.array([x, y]), name=i))
+
+        self.reward_labels = []
+        for i, n in enumerate(self.nodes):
+            lab = str(int(self.rewards[i])) if self.rewards[i] else ''
+            self.reward_labels.append(self.gfx.text(lab, n.pos))
 
         for i, js in enumerate(self.graph):
             for j in js:
@@ -71,6 +77,7 @@ class Graph(object):
             self.nodes[self.current_state].fillColor = 'white'
 
         self.current_state = s
+        self.reward_labels[s].text = ''
         self.nodes[s].fillColor = '#1B79FF'
 
     def click(self, s):
@@ -78,10 +85,17 @@ class Graph(object):
         if s in self.graph[self.current_state]:
             self.set_state(s)
 
+    def done(self):
+        return len(self.graph[self.current_state]) == 0
+
     def run(self):
+        print('start trial')
         while True:
             clicked = self.get_click()
             if clicked is not None:
                 self.click(int(clicked.name))
 
             self.win.flip()
+            if self.done():
+                print('done!')
+                return

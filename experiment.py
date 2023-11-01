@@ -16,9 +16,15 @@ layout = config['parameters']['layout']
 # %% --------
 
 win.clearAutoDraw()
-trial = config['trials']['main'][1]
+win.flip()
+trial = config['trials']['main'][2]
 g = Graph(win, **trial, layout=layout)
+win.flip()
 g.run()
+# %% --------
+for trial in config['trials']['main']:
+    g = Graph(win, **trial, layout=layout)
+    g.run()
 
 # %% --------
 from graph import Graphics
