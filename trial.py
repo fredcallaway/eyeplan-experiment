@@ -9,10 +9,13 @@ from graphics import Graphics
 def reward_string(r):
     return f'{int(r):+}' if r else ''
 
+def distance(p1, p2):
+    (x1, y1), (x2, y2) = (p1, p2)
+    return np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, pos=(0, 0), **kws):
+    def __init__(self, win, graph, rewards, start, layout, eyelink=None, pos=(0, 0), **kws):
         self.win = win
         self.gfx = Graphics(win)
         self.graph = graph
@@ -20,6 +23,8 @@ class GraphTrial(object):
         self.start = start
         self.layout = layout
         self.current_state = None
+        self.eyelink = eyelink
+        self.fixated = None
         self.data = {
             "trial": {
                 "graph": graph,
@@ -84,6 +89,7 @@ class GraphTrial(object):
             for p in self.gfx.animate(.2):
                 lab.setHeight(0.05 - p * 0.05)
                 lab.setOpacity(1-p)
+            lab.autoDraw = False
 
         self.current_state = s
 
@@ -102,7 +108,22 @@ class GraphTrial(object):
         self.win.flip()
         wait(.3)
 
+    def gaze_contingency(self):
+        gaze = self.eyelink.gaze_position()
+        visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
+
+        for i in range(len(self.nodes)):
+            if distance(gaze, self.nodes[i].pos) < .1:
+                self.reward_labels[i].setOpacity(1)
+            else:
+                self.reward_labels[i].setOpacity(0)
+
     def run(self, one_step=False):
+        if self.eyelink:
+            self.log('drift check')
+            self.eyelink.drift_check()
+            self.log('start recording')
+            self.eyelink.start_recording()
         self.log('start')
         if not hasattr(self, 'nodes'):
             self.show()
@@ -117,7 +138,8 @@ class GraphTrial(object):
                 if one_step:
                     self.win.flip()
                     return
-
+            if self.eyelink:
+                self.gaze_contingency()
 
             self.win.flip()
             if self.is_done():

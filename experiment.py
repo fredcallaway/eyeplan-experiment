@@ -51,6 +51,57 @@ def fixation_cross(pos=(0,0)):
     logging.debug('hide cross')
 
 
+# %% --------
+
+# message("Now we're going to calibrate the eyetracker.")
+from eyetracking import EyeLink
+el = EyeLink(win, uniqueid)
+el.setup_calibration()
+el.calibrate()
+el.start_recording()
+
+# %% --------
+
+win.clearAutoDraw()
+el.calibrate()
+win.setUnits('height')
+el.start_recording()
+
+win.clearAutoDraw()
+win.flip()
+# %% --------
+
+win.clearAutoDraw()
+win.flip()
+
+win.clearAutoDraw()
+el.calibrate()
+win.units = 'height'
+# %% --------
+
+gaze = gfx.circle((0,0), r=.01, color='red')
+while 'c' not in event.getKeys():
+    gaze.setPos(el.gaze_position())
+
+    win.flip()
+
+
+# win.size
+# el.tracker.doDriftCorrect(*(win.size / 4), 0, 1)
+# win.clearAutoDraw()
+# win.flip()
+# el.calibrate()
+# win.setUnits('height')
+# el.start_recording()
+
+# %% --------
+win.units = 'height'
+win.clearAutoDraw()
+win.flip()
+for trial in config['trials']['practice']:
+    gt = GraphTrial(win, **trial, **config['parameters'], eyelink=el)
+    gt.run()
+
 # %% ==================== instructions ====================
 win.clearAutoDraw()
 win.flip()
@@ -122,10 +173,6 @@ message("Great job!", space=True)
 
 # %% --------
 
-message("Now we're going to calibrate the eyetracker.")
-
-# %% --------
-
 message("Alright! We're ready to begin the main phase of the experiment.", space=True)
 message(f"There will be  {N_TRIAL} rounds. "
         f"Remember, you'll earn {BONUS.describe_scheme()} you make in the game.",
@@ -140,7 +187,7 @@ win.flip()
 
 trial_data = []
 summarize_every = 2
-for (i, trial) in enumerate(config['trials']['main'][:4]):
+for (i, trial) in enumerate(config['trials']['main']):
     if i > 0 and i % summarize_every == 0:
         msg = f'There are {N_TRIAL - i} trials left\n{BONUS.report_bonus()}'
         msg += f'\nFeel free to take a quick break. Then press space to continue'
