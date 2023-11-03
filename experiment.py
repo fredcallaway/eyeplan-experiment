@@ -43,15 +43,6 @@ gfx = Graphics(win)
 BONUS = Bonus(config['parameters']['points_per_cent'], 50)
 N_TRIAL = len(config['trials']['main'])
 
-fixation_cross_times = []
-def fixation_cross(pos=(0,0)):
-    logging.debug('show cross')
-    visual.ShapeStim(win, pos=pos, size=.03, vertices='cross', fillColor="black").draw()
-    win.flip()
-    event.waitKeys(keyList=['space'])
-    fixation_cross_times.append(core.getTime())
-    logging.debug('hide cross')
-
 # %% ==================== instructions ====================
 win.clearAutoDraw()
 win.flip()
@@ -104,19 +95,10 @@ gt = next(practice_trials)
 message("Both the connections and points change on every round of the game.", space=False)
 gt.run()
 
-message("Before each round, a cross will appear. Look at it and press space to start the round.",
-        tip_text="look at the cross and press space to continue")
-fixation_cross((.3, 0))
-win.flip()
-tip.setText('click the board to continue')
-next(practice_trials).run()
 
-message("Try a few more practice rounds.")
+message("Let's try a few more practice rounds.", space=False)
 
 for gt in practice_trials:
-    message("Try a few more practice rounds.", tip_text="Look at the cross and press space to continue")
-    fixation_cross((0.3, 0))
-    message("Try a few more practice rounds.")
     gt.run()
 
 message("Great job!", space=True)
@@ -127,13 +109,9 @@ message("""
 Now we're going to calibrate the eyetracker. When the circle appears, look at it and press space.
 """, space=True)
 win.stashAutoDraw()
-win.flip()
-
 el = EyeLink(win, uniqueid)
 el.setup_calibration()
 el.calibrate()
-win.flip()
-win.units = 'height'
 
 # %% --------
 win.retrieveAutoDraw()

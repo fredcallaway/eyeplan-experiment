@@ -158,6 +158,8 @@ class EyeLink(object):
         self.tracker.doTrackerSetup()
         logging.info('done doTrackerSetup')
         self.genv.exit_cal_display()
+        self.win.flip()
+        self.win.units = 'height'
 
     def save_data(self):
         self.tracker.closeDataFile()
