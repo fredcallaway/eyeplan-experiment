@@ -25,6 +25,7 @@ class GraphTrial(object):
         self.current_state = None
         self.eyelink = eyelink
         self.fixated = None
+        self.fix_verified = None
         self.data = {
             "trial": {
                 "graph": graph,
@@ -114,9 +115,14 @@ class GraphTrial(object):
 
         for i in range(len(self.nodes)):
             if distance(gaze, self.nodes[i].pos) < .1:
-                self.reward_labels[i].setOpacity(1)
-            else:
-                self.reward_labels[i].setOpacity(0)
+                self.fixated = i
+                self.fix_verified = core.getTime()
+
+        if self.fixated is not None and core.getTime() - self.fix_verified > .5:
+            self.fixated = None
+
+        for i in range(len(self.nodes)):
+            self.reward_labels[i].setOpacity(int(i == self.fixated))
 
     def run(self, one_step=False):
         if self.eyelink:
