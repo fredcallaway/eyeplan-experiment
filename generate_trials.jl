@@ -5,21 +5,6 @@ model_dir = "/Users/fred/projects/graphnav/model"
 include("$model_dir/problem.jl")
 include("$model_dir/utils.jl")
 
-# function default_graph_requirement(sgraph)
-#     is_connected(sgraph) || return false
-#     # all(vertices(sgraph)) do v
-#     #     length(neighbors(sgraph, v)) ≥ 1
-#     # end
-# end
-
-# function sample_graph(n; d=3, requirement=default_graph_requirement)
-#     for i in 1:10000
-#         sgraph = expected_degree_graph(fill(d, n)) |> random_orientation_dag
-#         # sgraph = expected_degree_graph(fill(2, n))
-#         requirement(sgraph) && return neighbor_list(sgraph)
-#     end
-#     error("Can't sample a graph!")
-# end
 
 neighbor_list(sgraph) = neighbors.(Ref(sgraph), vertices(sgraph))
 
@@ -102,16 +87,6 @@ end
 
 discrete_uniform(v) = DiscreteNonParametric(v, ones(length(v)) / length(v))
 
-function intro_graph(n)
-    g = DiGraph(n)
-    for i in 1:n
-        add_edge!(g, i, mod1(i+1, n))
-        add_edge!(g, i, mod1(i-3, n))
-        # add_edge!(g, i, mod1(i+6, n))
-    end
-    g
-end
-
 function linear_rewards(n)
     @assert iseven(n)
     n2 = div(n,2)
@@ -123,21 +98,6 @@ function exponential_rewards(n; base=2)
     n2 = div(n,2)
     v = base .^ (0:1:n2-1)
     sort!([-v; v])
-end
-
-function sample_nonmatching_perm(x)
-    while true
-        y = shuffle(x)
-        if all(y .≠ x)
-            return y
-        end
-    end
-end
-
-function sample_pairs(x)
-    x = shuffle(x)
-    y = sample_nonmatching_perm(x)
-    collect(zip(x, y))
 end
 
 struct Shuffler{T}
@@ -157,87 +117,6 @@ function Random.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:IIDSampler})
     (;n, x) = s[]
     rand(x, n)
 end
-
-struct ForceMoveTrial
-    p::Problem
-    path::Vector{Int}
-end
-
-function JSON.lower(t::ForceMoveTrial)
-    (;JSON.lower(t.p)..., path=t.path .+ 1)
-end
-
-struct ForceHoverTrial
-    p::Problem
-    expansions::Vector{Tuple{Int, Int}}
-end
-
-function JSON.lower(t::ForceHoverTrial)
-    (;JSON.lower(t.p)..., expansions=map(e -> e .- 1, t.expansions))
-end
-
-abstract type HoverGenerator end
-
-function ForceHoverTrial(gen::HoverGenerator; kws...)
-    problem = sample_problem(;kws...)
-    expansions = generate(gen, problem)
-    ForceHoverTrial(problem, expansions)
-end
-
-
-struct RolloutGenerator <: HoverGenerator
-    n::Int
-end
-
-function generate(g::RolloutGenerator, problem::Problem)
-    mapreduce(vcat, 1:g.n) do i
-        sliding_window(rollout(problem), 2)
-    end
-end
-
-sliding_window(xs, n) = [(xs[i], xs[i+1]) for i in 1:length(xs)-1]
-
-function rollout(p::Problem)
-    res = [p.start]
-    n_steps = p.n_steps <= 0 ? 100 : p.n_steps
-    for i in 1:n_steps
-        childs = children(p, res[end])
-        isempty(childs) && break
-        push!(res, rand(childs))
-    end
-    res
-end
-
-struct RandomGenerator <: HoverGenerator
-    n::Int
-end
-
-function generate(g::RandomGenerator, problem::Problem)
-    repeatedly(g.n) do
-        a = rand(states(problem))
-        b = rand(children(problem, a))
-        (a, b)
-    end
-end
-
-function intro_problem(kws)
-    @assert kws.n == 11
-    graph = g = [
-        [2, 11],
-        [3],
-        [4],
-        [5],
-        [6],
-        [],
-        [],
-        [7],
-        [8],
-        [9],
-        [10],
-    ]
-    Problem(graph, zeros(11), 1, -1)
-end
-
 
 function make_trials(; )
     n = 11
@@ -289,8 +168,6 @@ foreach(enumerate(subj_trials)) do (i, trials)
 end
 
 # %% --------
-
-value(t::ForceHoverTrial) = value(t.p)
 
 bonus = map(subj_trials) do trials
     trials = mapreduce(vcat, [:main, :eyetracking]) do t
