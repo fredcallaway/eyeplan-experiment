@@ -104,8 +104,13 @@ class EyeLink(object):
                 logging.info('Tracker initialized')
 
     def drift_check(self, pos=(0,0)):
+        # TODO: might want to implement this myself, to make it more stringent
         x, y = map(int, height2pix(self.win, pos))
-        self.tracker.doDriftCorrect(x, y, 1, 1)
+        try:
+            self.tracker.doDriftCorrect(x, y, 1, 1)
+        except RuntimeError:
+            logging.info('escape in drift correct')
+            self.tracker.doDriftCorrect(x, y, 1, 1)
         self.win.units = 'height'
 
     def message(self, msg):
@@ -177,8 +182,12 @@ class EyeLink(object):
         self.tracker.close()
 
     def gaze_position(self):
-        gaze = self.tracker.getNewestSample().getLeftEye().getGaze()
-        return pix2height(self.win, gaze)
+        sample = gaze = self.tracker.getNewestSample()
+        if sample is None:
+            return (-100000, -100000)
+        else:
+            gaze = sample.getLeftEye().getGaze()
+            return pix2height(self.win, gaze)
 
     def close_connection(self):
         # TODO make sure this gets called

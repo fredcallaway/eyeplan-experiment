@@ -19,7 +19,7 @@ class Bonus(object):
         self.points_per_cent = points_per_cent
 
     def add_points(self, points):
-        self.points += points
+        self.points += int(points)
         logging.debug('add bonus points %s (total = %s)', points, self.points)
 
     def dollars(self):

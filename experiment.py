@@ -9,6 +9,8 @@ import numpy as np
 from trial import GraphTrial
 from graphics import Graphics
 from bonus import Bonus
+from eyetracking import EyeLink
+
 # from eyetracking import EyeLink
 
 subjid = 'fred'
@@ -49,58 +51,6 @@ def fixation_cross(pos=(0,0)):
     event.waitKeys(keyList=['space'])
     fixation_cross_times.append(core.getTime())
     logging.debug('hide cross')
-
-
-# %% --------
-
-# message("Now we're going to calibrate the eyetracker.")
-from eyetracking import EyeLink
-el = EyeLink(win, uniqueid)
-el.setup_calibration()
-el.calibrate()
-el.start_recording()
-
-# %% --------
-
-win.clearAutoDraw()
-el.calibrate()
-win.setUnits('height')
-el.start_recording()
-
-win.clearAutoDraw()
-win.flip()
-# %% --------
-
-win.clearAutoDraw()
-win.flip()
-
-win.clearAutoDraw()
-el.calibrate()
-win.units = 'height'
-# %% --------
-
-gaze = gfx.circle((0,0), r=.01, color='red')
-while 'c' not in event.getKeys():
-    gaze.setPos(el.gaze_position())
-
-    win.flip()
-
-
-# win.size
-# el.tracker.doDriftCorrect(*(win.size / 4), 0, 1)
-# win.clearAutoDraw()
-# win.flip()
-# el.calibrate()
-# win.setUnits('height')
-# el.start_recording()
-
-# %% --------
-win.units = 'height'
-win.clearAutoDraw()
-win.flip()
-for trial in config['trials']['practice']:
-    gt = GraphTrial(win, **trial, **config['parameters'], eyelink=el)
-    gt.run()
 
 # %% ==================== instructions ====================
 win.clearAutoDraw()
@@ -173,12 +123,36 @@ message("Great job!", space=True)
 
 # %% --------
 
+message("""
+Now we're going to calibrate the eyetracker. When the circle appears, look at it and press space.
+""", space=True)
+win.stashAutoDraw()
+win.flip()
+
+el = EyeLink(win, uniqueid)
+el.setup_calibration()
+el.calibrate()
+win.flip()
+win.units = 'height'
+
+# %% --------
+win.retrieveAutoDraw()
+message("Check it out! This is where the eyetracker thinks you're looking.",
+        tip_text='press space to continue')
+
+el.start_recording()
+gaze = gfx.circle((0,0), r=.01, color='red')
+while 'space' not in event.getKeys():
+    gaze.setPos(el.gaze_position())
+    win.flip()
+gaze.autoDraw = False
+
+# %% --------
 message("Alright! We're ready to begin the main phase of the experiment.", space=True)
-message(f"There will be  {N_TRIAL} rounds. "
-        f"Remember, you'll earn {BONUS.describe_scheme()} you make in the game.",
-        f"We'll start you off with 50 points for all your hard work so far."
-        space=True
-)
+message(f"There will be  {N_TRIAL} rounds. \
+Remember, you'll earn {BONUS.describe_scheme()} you make in the game \
+We'll start you off with 50 points for all your hard work so far \
+", space=True )
 message("Good luck!", space=True)
 # %% --------
 
@@ -186,7 +160,7 @@ win.clearAutoDraw()
 win.flip()
 
 trial_data = []
-summarize_every = 2
+summarize_every = 1
 for (i, trial) in enumerate(config['trials']['main']):
     if i > 0 and i % summarize_every == 0:
         msg = f'There are {N_TRIAL - i} trials left\n{BONUS.report_bonus()}'
@@ -194,9 +168,10 @@ for (i, trial) in enumerate(config['trials']['main']):
         visual.TextBox2(win, msg, color='white', letterHeight=.035).draw()
         win.flip()
         event.waitKeys(keyList=['space'])
-    fixation_cross()
-    gt = GraphTrial(win, **trial, **config['parameters'])
+    # fixation_cross()
+    gt = GraphTrial(win, **trial, **config['parameters'], eyelink=el)
     gt.run()
+    BONUS.add_points(gt.score)
     trial_data.append(gt.data)
 
 all_data = {
@@ -208,3 +183,5 @@ all_data
 os.makedirs('data/exp/', exist_ok=True)
 with open(f'data/exp/{uniqueid}.json', 'w') as f:
     json.dump(all_data, f)
+
+el.save_data()

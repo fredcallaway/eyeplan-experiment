@@ -22,8 +22,11 @@ class GraphTrial(object):
         self.rewards = list(rewards)
         self.start = start
         self.layout = layout
-        self.current_state = None
         self.eyelink = eyelink
+        self.pos = pos
+
+        self.score = 0
+        self.current_state = None
         self.fixated = None
         self.fix_verified = None
         self.data = {
@@ -35,7 +38,6 @@ class GraphTrial(object):
             },
             "events": []
         }
-        self.pos = pos
         self.mouse = event.Mouse()
 
     def log(self, event, info={}):
@@ -55,8 +57,12 @@ class GraphTrial(object):
             nodes.append(self.gfx.circle(0.8 * np.array([x, y]), name=i))
 
         self.reward_labels = []
+        self.reward_unlabels = []
         for i, n in enumerate(self.nodes):
             self.reward_labels.append(self.gfx.text(reward_string(self.rewards[i]), n.pos))
+            ul = self.gfx.text('?', n.pos)
+            ul.autoDraw = False
+            self.reward_unlabels.append(ul)
 
         for i, js in enumerate(self.graph):
             for j in js:
@@ -79,19 +85,21 @@ class GraphTrial(object):
     def set_state(self, s):
         self.log('visit', {'state': s})
         self.nodes[s].fillColor = '#1B79FF'
+        lab = self.reward_labels[s]
+        self.score += self.rewards[s]
 
         if self.current_state is not None:  # not initial
             self.nodes[self.current_state].fillColor = 'white'
-            lab = self.reward_labels[s]
             lab.color = 'white'
             # lab.bold = True
-            for p in self.gfx.animate(.1):
+            for p in self.gfx.animate(.05):
                 lab.setHeight(0.03 + p * 0.02)
-            for p in self.gfx.animate(.2):
+            for p in self.gfx.animate(.1):
                 lab.setHeight(0.05 - p * 0.05)
                 lab.setOpacity(1-p)
-            lab.autoDraw = False
 
+        lab.setText('')
+        self.reward_unlabels[s].setText('')
         self.current_state = s
 
 
@@ -111,10 +119,10 @@ class GraphTrial(object):
 
     def gaze_contingency(self):
         gaze = self.eyelink.gaze_position()
-        visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
+        # visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
 
         for i in range(len(self.nodes)):
-            if distance(gaze, self.nodes[i].pos) < .1:
+            if distance(gaze, self.nodes[i].pos) < .08:
                 self.fixated = i
                 self.fix_verified = core.getTime()
 
@@ -122,7 +130,9 @@ class GraphTrial(object):
             self.fixated = None
 
         for i in range(len(self.nodes)):
-            self.reward_labels[i].setOpacity(int(i == self.fixated))
+            fixated = i == self.fixated
+            self.reward_labels[i].autoDraw = fixated
+            self.reward_unlabels[i].autoDraw = not fixated
 
     def run(self, one_step=False):
         if self.eyelink:
