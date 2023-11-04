@@ -42,6 +42,8 @@ class GraphTrial(object):
 
     def log(self, event, info={}):
         time = core.getTime()
+        if self.eyelink:
+            self.eyelink.message(event)
 
         logging.debug(f'GraphTrial.log {time:3.3f} {event}' + ', '.join(f'{k} = {v}' for k, v in info.items()))
         self.data["events"].append({
@@ -123,10 +125,13 @@ class GraphTrial(object):
 
         for i in range(len(self.nodes)):
             if distance(gaze, self.nodes[i].pos) < .08:
+                if self.fixated != i:
+                    self.log('show state', {'state': i})
                 self.fixated = i
                 self.fix_verified = core.getTime()
 
         if self.fixated is not None and core.getTime() - self.fix_verified > .5:
+            self.log('hide state', {'state': self.fixated})
             self.fixated = None
 
         for i in range(len(self.nodes)):

@@ -115,7 +115,7 @@ class EyeLink(object):
 
     def message(self, msg):
         logging.info('EyeLink.message %s', msg)
-        self.tracker.sendMessage(msg)
+        self.tracker.sendMessage(msg + f'time({core.getTime()})')
 
     def start_recording(self):
         logging.info('start_recording')
@@ -127,7 +127,7 @@ class EyeLink(object):
 
     def setup_calibration(self, full_screen=False):
         # Open a window, be sure to specify monitor parameters
-        self.message(f'Set up calibration. Time is {time.time()}')
+        self.message(f'Set up calibration')
         scn_width, scn_height = np.round(self.win.size / 2)  # / 2 for retina
         # pygame.mouse.set_visible(True)  # show mouse cursor
 
@@ -178,9 +178,9 @@ class EyeLink(object):
         # Download the EDF data file from the Host PC to a local data folder
         # parameters: source_file_on_the_host, destination_file_on_local_drive
         local_edf = os.path.join(session_folder,  'raw.edf')
-        logging.info('receiving')
+        logging.info('receiving eyelink data')
         self.tracker.receiveDataFile(self.edf_file, local_edf)
-        logging.info('done')
+        logging.info('wrote %s', local_edf)
         self.tracker.close()
 
     def gaze_position(self):
