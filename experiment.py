@@ -30,11 +30,12 @@ class Experiment(object):
         self._message = visual.TextBox2(self.win, '', pos=(-.83, 0), color='white', autoDraw=True, size=(0.65, None), letterHeight=.035, anchor='left')
         self._tip = visual.TextBox2(self.win, '', pos=(-.83, -0.2), color='white', autoDraw=True, size=(0.65, None), letterHeight=.025, anchor='left')
 
-        self.practice_trials = (
-            GraphTrial(self.win, **trial, **self.parameters, pos=(.3, 0))
-            for trial in self.trials['practice']
-        )
+        self._practice_trials = iter(self.trials['practice'])
         self.trial_data = []
+
+    def get_practice_trial(self, **kws):
+        trial = next(self._practice_trials)
+        return GraphTrial(self.win, **trial, **self.parameters, **kws, pos=(.3, 0))
 
 
     @property
@@ -96,7 +97,8 @@ class Experiment(object):
 
     def intro(self):
         self.message('Welcome!', space=True)
-        gt = next(self.practice_trials)
+        gt = self.get_practice_trial()
+
         gt.show()
         for l in gt.reward_labels:
             l.setOpacity(0)
@@ -118,12 +120,26 @@ class Experiment(object):
         gt.run()
         self.hide_message()
 
+    def practice_change(self):
+        gt = self.get_practice_trial()
 
-    def practice(self):
-        gt = next(self.practice_trials)
         self.message("Both the connections and points change on every round of the game.", space=False)
         gt.run()
 
+    def practice_timelimit(self):
+        gt = self.get_practice_trial(time_limit=3)
+        gt.disable_click = True
+
+        self.message("To make things more exciting, each round has a time limit.", space=True)
+        gt.show()
+        self.message("The time left is indicated by a bar on the right.", space=True)
+        self.message("Let's see what happens when it runs out...", space=False,
+            tip_text='wait for it')
+        gt.run()
+        self.message("If you run out of time, we'll make random decisions for you. Probably something to avoid.", space=True)
+        self.hide_message()
+
+    def practice(self):
         self.message("Let's try a few more practice rounds.", space=False)
 
         for gt in self.practice_trials:
@@ -131,6 +147,7 @@ class Experiment(object):
 
         self.message("Great job!", space=True)
         self.hide_message()
+
 
 
     def setup_eyetracker(self):
