@@ -4,7 +4,7 @@ import logging
 
 wait = core.wait
 
-from graphics import Graphics
+from graphics import Graphics, FRAME_RATE
 
 def reward_string(r):
     return f'{int(r):+}' if r else ''
@@ -15,13 +15,14 @@ def distance(p1, p2):
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, eyelink=None, pos=(0, 0), **kws):
+    def __init__(self, win, graph, rewards, start, layout, time_limit=None, eyelink=None, pos=(0, 0), **kws):
         self.win = win
-        self.gfx = Graphics(win)
         self.graph = graph
         self.rewards = list(rewards)
         self.start = start
         self.layout = layout
+        self.frames_left = self.total_frames = round(FRAME_RATE * time_limit) if time_limit else None
+
         self.eyelink = eyelink
         self.pos = pos
 
@@ -34,11 +35,14 @@ class GraphTrial(object):
                 "graph": graph,
                 "rewards": rewards,
                 "start": start,
+                "time_limit": time_limit,
                 # layout
             },
             "events": []
         }
+        self.gfx = Graphics(win)
         self.mouse = event.Mouse()
+        self.done = False
 
     def log(self, event, info={}):
         time = core.getTime()
@@ -70,8 +74,15 @@ class GraphTrial(object):
             for j in js:
                 self.gfx.arrow(nodes[i], nodes[j])
 
-        self.mask = self.gfx.rect((0,0), 1, 1, color='gray', opacity=0)
+        if self.total_frames is not None:
+            self.timer_wrap = self.gfx.rect((0.5,-0.45), .02, 0.9, anchor='bottom', color=-.2)
+            self.timer = self.gfx.rect((0.5,-0.45), .02, 0.9, anchor='bottom', color=-.5)
+        else:
+            self.timer = None
+
+        self.mask = self.gfx.rect((0,0), 1.2, 1, color='gray', opacity=0)
         self.gfx.shift(*self.pos)
+
 
     def set_reward(self, s, r):
         self.rewards[s] = r
@@ -94,16 +105,19 @@ class GraphTrial(object):
             self.nodes[self.current_state].fillColor = 'white'
             lab.color = 'white'
             # lab.bold = True
-            for p in self.gfx.animate(.05):
-                lab.setHeight(0.03 + p * 0.02)
             for p in self.gfx.animate(.1):
+                lab.setHeight(0.03 + p * 0.02)
+                self.tick()
+            for p in self.gfx.animate(.2):
                 lab.setHeight(0.05 - p * 0.05)
                 lab.setOpacity(1-p)
+                self.tick()
 
         lab.setText('')
         self.reward_unlabels[s].setText('')
         self.current_state = s
-
+        if len(self.graph[self.current_state]) == 0:
+            self.done = True
 
     def click(self, s):
         if s in self.graph[self.current_state]:
@@ -115,6 +129,7 @@ class GraphTrial(object):
     def fade_out(self):
         for p in self.gfx.animate(.2):
             self.mask.opacity = p
+            self.win.flip()
         self.gfx.clear()
         self.win.flip()
         wait(.3)
@@ -139,6 +154,32 @@ class GraphTrial(object):
             self.reward_labels[i].autoDraw = fixated
             self.reward_unlabels[i].autoDraw = not fixated
 
+    def check_click(self, one_step):
+        clicked = self.get_click()
+        if clicked is not None and clicked in self.graph[self.current_state]:
+            self.set_state(clicked)
+            if one_step:
+                self.done = True
+
+    def tick(self):
+        if self.frames_left is not None and self.frames_left >= 0:
+            self.frames_left -= 1
+            self.timer.setHeight(0.9 * (self.frames_left / self.total_frames))
+        self.win.flip()
+
+    def do_timeout(self):
+        logging.info('timeout')
+        for i in range(3):
+            self.timer_wrap.setColor('red'); self.win.flip()
+            wait(0.3)
+            self.timer_wrap.setColor(-.2); self.win.flip()
+            wait(0.3)
+
+        # random choices
+        while not self.done:
+            self.set_state(np.random.choice(self.graph[self.current_state]))
+            core.wait(.5)
+
     def run(self, one_step=False):
         if self.eyelink:
             self.log('drift check')
@@ -146,26 +187,24 @@ class GraphTrial(object):
             self.log('start recording')
             self.eyelink.start_recording()
         self.log('start')
+
         if not hasattr(self, 'nodes'):
             self.show()
         if self.current_state is None:
             self.set_state(self.start)
 
-        while True:
-            clicked = self.get_click()
-            if clicked is not None and clicked in self.graph[self.current_state]:
-                self.set_state(clicked)
-
-                if one_step:
-                    self.win.flip()
-                    return
+        while not self.done:
+            self.check_click(one_step)
             if self.eyelink:
                 self.gaze_contingency()
+            if self.frames_left <= 0:
+                self.do_timeout()
+            self.tick()
 
-            self.win.flip()
-            if self.is_done():
-                self.log('done')
-                wait(.3)
-                return self.fade_out()
+        self.log('done')
+        if self.eyelink:
+            self.eyelink.stop_recording()
+        wait(.3)
+        return self.fade_out()
 
 

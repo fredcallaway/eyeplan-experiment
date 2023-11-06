@@ -7,7 +7,6 @@ from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
 
 from trial import GraphTrial
-from instructions import Instructions
 from graphics import Graphics
 from bonus import Bonus
 from eyetracking import EyeLink
@@ -26,6 +25,7 @@ class Experiment(object):
         self.setup_logging()
         self.win = self.setup_window()
         self.bonus = Bonus(self.parameters['points_per_cent'], 50)
+        self.eyelink = None
 
         self._message = visual.TextBox2(self.win, '', pos=(-.83, 0), color='white', autoDraw=True, size=(0.65, None), letterHeight=.035, anchor='left')
         self._tip = visual.TextBox2(self.win, '', pos=(-.83, -0.2), color='white', autoDraw=True, size=(0.65, None), letterHeight=.025, anchor='left')
@@ -162,6 +162,12 @@ class Experiment(object):
         self.message("Good luck!", space=True)
         self.hide_message()
 
+    def run_one(self, i):
+        trial = self.trials['main'][i]
+        gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
+        gt.run()
+        self.bonus.add_points(gt.score)
+        self.trial_data.append(gt.data)
 
     def run_main(self):
         summarize_every = 1

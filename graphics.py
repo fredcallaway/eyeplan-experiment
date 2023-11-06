@@ -24,6 +24,7 @@ def shift(obj, x, y):
 class Graphics(object):
     def __init__(self, win):
         self.win = win
+        self.animating = False
         self.objects = []
 
     def clear(self):
@@ -58,10 +59,11 @@ class Graphics(object):
         return o
 
     def animate(self, sec):
+        self.animating = True
         total = round(sec * FRAME_RATE)
         for i in range(1,total+1):
             yield i / total
-            self.win.flip()
+        self.animating = False
 
     def shift(self, x=0, y=0):
         for o in self.objects:
