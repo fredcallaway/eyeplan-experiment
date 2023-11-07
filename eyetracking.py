@@ -52,7 +52,6 @@ def configure_data(tracker):
 def pix2height(win, pos):
     assert win.units == 'height'
     w, h = win.size / 2  # eyetracker uses non-retina pixels
-    h
     x, y = pos
 
     y *= -1  # invert y axis
@@ -113,8 +112,9 @@ class EyeLink(object):
             self.tracker.doDriftCorrect(x, y, 1, 1)
         self.win.units = 'height'
 
-    def message(self, msg):
-        logging.info('EyeLink.message %s', msg)
+    def message(self, msg, log=True):
+        if log:
+            logging.debug('EyeLink.message %s', msg)
         self.tracker.sendMessage(msg + f'time({core.getTime()})')
 
     def start_recording(self):

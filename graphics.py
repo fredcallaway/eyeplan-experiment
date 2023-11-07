@@ -31,6 +31,10 @@ class Graphics(object):
         for o in self.objects:
             o.autoDraw = False
 
+    def show(self):
+        for o in self.objects:
+            o.autoDraw = True
+
     def circle(self, pos, r=.05, **kws):
         o = visual.Circle(self.win, radius=r, pos=pos, lineColor='black', lineWidth=10, autoDraw=True, **kws)
         self.objects.append(o)

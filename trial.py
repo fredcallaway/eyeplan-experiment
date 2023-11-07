@@ -1,6 +1,8 @@
 from psychopy import core, visual, gui, data, event
 import numpy as np
 import logging
+import json
+from eyetracking import height2pix
 
 wait = core.wait
 
@@ -15,13 +17,14 @@ def distance(p1, p2):
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, time_limit=None, eyelink=None, pos=(0, 0), **kws):
+    def __init__(self, win, graph, rewards, start, layout, time_limit=None, gaze_contingent=False, eyelink=None, pos=(0, 0), **kws):
         self.win = win
         self.graph = graph
         self.rewards = list(rewards)
         self.start = start
         self.layout = layout
         self.frames_left = self.total_frames = round(FRAME_RATE * time_limit) if time_limit else None
+        self.gaze_contingent = gaze_contingent
 
         self.eyelink = eyelink
         self.pos = pos
@@ -47,18 +50,25 @@ class GraphTrial(object):
 
     def log(self, event, info={}):
         time = core.getTime()
-        if self.eyelink:
-            self.eyelink.message(event)
-
-        logging.debug(f'GraphTrial.log {time:3.3f} {event}' + ', '.join(f'{k} = {v}' for k, v in info.items()))
-        self.data["events"].append({
+        logging.debug(f'GraphTrial.log {time:3.3f} {event} ' + ', '.join(f'{k} = {v}' for k, v in info.items()))
+        datum = {
             'time': time,
             'event': event,
             **info
-        })
+        }
+        self.data["events"].append(datum)
+        if self.eyelink:
+            self.eyelink.message(json.dumps(datum), log=False)
+
 
     def show(self):
         # self.win.clearAutoDraw()
+        if self.gfx.objects:
+            self.gfx.show()
+            if self.gaze_contingent:
+                self.gaze_contingency()
+            return
+
         self.nodes = nodes = []
         for i, (x, y) in enumerate(self.layout):
             nodes.append(self.gfx.circle(0.8 * np.array([x, y]), name=i))
@@ -67,8 +77,7 @@ class GraphTrial(object):
         self.reward_unlabels = []
         for i, n in enumerate(self.nodes):
             self.reward_labels.append(self.gfx.text(reward_string(self.rewards[i]), n.pos))
-            ul = self.gfx.text('?', n.pos)
-            ul.autoDraw = False
+            ul = self.gfx.text('?', n.pos, opacity=0)
             self.reward_unlabels.append(ul)
 
         for i, js in enumerate(self.graph):
@@ -81,8 +90,17 @@ class GraphTrial(object):
         else:
             self.timer = None
 
-        self.mask = self.gfx.rect((0,0), 1.2, 1, color='gray', opacity=0)
+        self.mask = self.gfx.rect((.1,0), 1.1, 1, color='gray', opacity=0)
         self.gfx.shift(*self.pos)
+        if self.gaze_contingent:
+            self.gaze_contingency()
+
+    def hide(self):
+        self.gfx.clear()
+
+    def shift(self, x, y):
+        self.gfx.shift(x, y)
+        self.pos = np.array(self.pos) + [x, y]
 
 
     def set_reward(self, s, r):
@@ -108,7 +126,7 @@ class GraphTrial(object):
         if len(self.graph[self.current_state]) == 0:
             self.done = True
 
-        if prev is not None:  # not initial
+        if prev is not None and prev != s:  # not initial
             self.nodes[prev].fillColor = 'white'
             lab.color = 'white'
             # lab.bold = True
@@ -155,17 +173,16 @@ class GraphTrial(object):
 
         for i in range(len(self.nodes)):
             fixated = i == self.fixated
-            self.reward_labels[i].autoDraw = fixated
-            self.reward_unlabels[i].autoDraw = not fixated
+            self.reward_labels[i].setOpacity(float(fixated))
+            self.reward_unlabels[i].setOpacity(float(not fixated))
 
-    def check_click(self, one_step):
+    def check_click(self):
         if self.disable_click:
             return
         clicked = self.get_click()
         if clicked is not None and clicked in self.graph[self.current_state]:
             self.set_state(clicked)
-            if one_step:
-                self.done = True
+            return True
 
     def tick(self):
         if self.frames_left is not None and self.frames_left >= 0:
@@ -177,7 +194,7 @@ class GraphTrial(object):
                 original = -.2 * np.ones(3)
                 red = np.array([1, -1, -1])
                 self.timer.setColor(p2 * original + (1-p2) * red)
-        self.win.flip()
+        return self.win.flip()
 
     def do_timeout(self):
         logging.info('timeout')
@@ -192,22 +209,58 @@ class GraphTrial(object):
             self.set_state(np.random.choice(self.graph[self.current_state]))
             core.wait(.5)
 
-    def run(self, one_step=False):
-        if self.eyelink:
-            self.log('drift check')
-            self.eyelink.drift_check()
-            self.log('start recording')
-            self.eyelink.start_recording()
-        self.log('start')
+    def start_recording(self):
+        self.log('drift check')
+        self.eyelink.drift_check(self.pos)
+        self.eyelink.start_recording()
+        self.log('start recording')
 
-        if not hasattr(self, 'nodes'):
-            self.show()
+    def practice_gazecontingent(self, timeout=15):
+        assert self.eyelink
+        self.start_recording()
+        self.show()
+        self.set_state(self.start)
+        self.log('node positions', {
+            'node_positions': [height2pix(self.win, n.pos) for n in self.nodes]
+        })
+
+        start_time = self.tick()
+        self.log('start', {'flip_time': start_time})
+        fixated = set()
+        while len(fixated) != len(self.nodes):
+            self.gaze_contingency()
+            fixated.add(self.fixated)
+            self.tick()
+            if core.getTime() > start_time + timeout:
+                return 'timeout'
+
+        self.log('done')
+        self.eyelink.stop_recording()
+        wait(.3)
+        self.fade_out()
+        return 'success'
+
+
+    def run(self, one_step=False, stop_on_space=True):
+        if self.eyelink:
+            self.start_recording()
+        self.show()
+        if self.eyelink:
+            self.log('node positions', {
+                'node_positions': [height2pix(self.win, n.pos) for n in self.nodes]
+            })
+
         if self.current_state is None:
             self.set_state(self.start)
 
+        start_time = self.tick()
+        self.log('start', {'flip_time': start_time})
+
         while not self.done:
-            self.check_click(one_step)
-            if self.eyelink:
+            moved = self.check_click()
+            if moved and one_step:
+                return
+            if self.gaze_contingent:
                 self.gaze_contingency()
             if not self.done and self.frames_left is not None and self.frames_left <= 0:
                 self.do_timeout()

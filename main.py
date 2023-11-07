@@ -1,13 +1,11 @@
 from experiment import Experiment
-
-exp = Experiment('fred', full_screen=False)
-exp.trials['main'] = exp.trials['main'][0:10]
-# exp.intro()
-exp.practice()
-# exp.setup_eyetracker()
-# exp.show_gaze_demo()
+exp = Experiment('fred', full_screen=True)
+exp.intro()
+exp.practice(2)
+exp.practice_timelimit()
+exp.setup_eyetracker()
+exp.show_gaze_demo()
+exp.intro_gaze()
 exp.intro_main()
-exp.run_main()
+exp.run_main(5)
 exp.save_data()
-# todo save the bonus!
-# jonathan did the first 6 trials
