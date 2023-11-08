@@ -18,8 +18,41 @@ def angle(p1, p2):
     return θ * 180 / np.pi
 
 def shift(obj, x, y):
-    obj.setPos(obj.pos + np.array([x, y]))
+    if hasattr(obj, 'shift'):
+        obj.shift(x, y)
+    else:
+        obj.setPos(obj.pos + np.array([x, y]))
 
+class MultiShape(object):
+    """One shape composed of multiple visual objects."""
+    def __init__(self, *objects):
+        self.objects = objects
+
+    def setColor(self, x):
+        for o in self.objects:
+            o.setColor(x)
+
+    def setAutoDraw(self, x):
+        for o in self.objects:
+            o.setAutoDraw(x)
+
+    def setOpacity(self, x):
+        for o in self.objects:
+            o.setOpacity(x)
+
+    def shift(self, x, y):
+        for o in self.objects:
+            shift(o, x, y)
+
+
+def shape(f):
+    def wrapper(self, *args, sub_shape=False, **kwargs):
+        obj = f(self, *args, **kwargs)
+        obj.setAutoDraw(True)
+        if not sub_shape:
+            self.objects.append(obj)
+        return obj
+    return wrapper
 
 class Graphics(object):
     def __init__(self, win):
@@ -29,38 +62,36 @@ class Graphics(object):
 
     def clear(self):
         for o in self.objects:
-            o.autoDraw = False
+            o.setAutoDraw(False)
 
     def show(self):
         for o in self.objects:
-            o.autoDraw = True
+            o.setAutoDraw(True)
 
+    @shape
     def circle(self, pos, r=.05, **kws):
-        o = visual.Circle(self.win, radius=r, pos=pos, lineColor='black', lineWidth=10, autoDraw=True, **kws)
-        self.objects.append(o)
-        return o
+        return visual.Circle(self.win, radius=r, pos=pos, lineColor='black', lineWidth=10, **kws)
 
+    @shape
     def line(self, start, end, **kws):
-        o = visual.line.Line(self.win, start=start, end=end, lineColor='black', lineWidth=10, autoDraw=True, **kws)
-        self.objects.append(o)
-        return o
+        return visual.line.Line(self.win, start=start, end=end, lineColor='black', lineWidth=10, **kws)
 
+    @shape
     def text(self, text, pos=(0,0), height=.03, color='black', **kws):
-        o = visual.TextStim(self.win, text, pos=pos, autoDraw=True, height=height, color=color, **kws)
-        self.objects.append(o)
-        return o
+        return visual.TextStim(self.win, text, pos=pos, height=height, color=color, **kws)
 
+    @shape
     def arrow(self, c0, c1):
-        self.line(c0.pos, c1.pos, depth=2)
+        line = self.line(c0.pos, c1.pos, depth=2, sub_shape=True)
         vertices = .01 * np.array([[-1, -2], [1, -2], [0, 0]])
-        self.objects.append(visual.ShapeStim(self.win, vertices=vertices, autoDraw=True, fillColor='black',
+        point = visual.ShapeStim(self.win, vertices=vertices, fillColor='black',
                          pos=move_towards(c1.pos, c0.pos, c1.radius),
-                         ori=90-angle(c0.pos, c1.pos)))
+                         ori=90-angle(c0.pos, c1.pos))
+        return MultiShape(line, point)
 
+    @shape
     def rect(self, pos, width, height, **kws):
-        o = visual.Rect(self.win, width, height, pos=pos, autoDraw=True, **kws)
-        self.objects.append(o)
-        return o
+        return visual.Rect(self.win, width, height, pos=pos, **kws)
 
     def animate(self, sec):
         self.animating = True

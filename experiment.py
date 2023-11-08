@@ -45,7 +45,16 @@ class Experiment(object):
 
     def get_practice_trial(self, **kws):
         trial = next(self._practice_trials)
-        return GraphTrial(self.win, **trial, **self.parameters, **kws, pos=(.3, 0))
+        prm = {
+            **self.parameters,
+            'gaze_contingent': False,
+            'time_limit': None,
+            'pos': (.3, 0),
+            **trial,
+            **kws
+        }
+
+        return GraphTrial(self.win, **prm)
 
 
     @property
@@ -70,7 +79,7 @@ class Experiment(object):
         logging.info(f'starting up {self.id} at {core.getTime()}')
 
     def setup_window(self):
-        size = (1500,100) if self.full_screen else (1400,800)
+        size = (1500,1000) if self.full_screen else (900,500)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
         framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
         assert abs(framerate - 60) < 2
@@ -122,19 +131,21 @@ class Experiment(object):
         self.message("The goal of the game is to collect as many points as you can.", space=True)
         self.message(f"The points will be converted to a cash bonus: {self.bonus.describe_scheme()}!", space=True)
 
-        self.message("You can move by clicking on a location that has an arrow pointing from your current location. Try it now!", space=False)
-        gt.run(one_step=True)
+        self.message("You can move by clicking on a location that has an arrow pointing from your current location. Try it now!",
+                     tip_text='click one of the highlighted locations', space=False)
+        gt.run(one_step=True, highlight_edges=True)
         gt.start = gt.current_state
 
-        self.message("The round ends when you get to a location with no outgoing connections.", space=False,
-            tip_text="keep going!")
-        gt.run()
+        self.message("The round ends when you get to a location with no outgoing connections.",
+                     tip_text='click one of the highlighted locations', space=False)
+        gt.run(highlight_edges=True)
 
     @stage
     def practice_change(self):
         gt = self.get_practice_trial()
 
-        self.message("Both the connections and points change on every round of the game.", space=False)
+        self.message("Both the connections and points change on every round of the game.",
+                     tip_text='complete the round to continue', space=False)
         gt.run()
 
     @stage
@@ -144,7 +155,12 @@ class Experiment(object):
 
         self.message("To make things more exciting, each round has a time limit.", space=True)
         gt.show()
+        gt.timer.setLineColor('#FFC910')
+        gt.timer.setLineWidth(5)
+        gt.win.flip()
+
         self.message("The time left is indicated by a bar on the right.", space=True)
+        gt.timer.setLineWidth(0)
         self.message("Let's see what happens when it runs out...", space=False,
             tip_text='wait for it')
         gt.run()
@@ -152,9 +168,9 @@ class Experiment(object):
 
     @stage
     def practice(self, n):
-        self.message("Let's try a few more practice rounds.", space=False)
-
         for i in range(n):
+            self.message("Let's try a few more practice rounds.",
+                         space=False, tip_text=f'complete {n - i} practice rounds to continue')
             self.get_practice_trial().run()
 
         self.message("Great job!", space=True)
@@ -241,7 +257,7 @@ class Experiment(object):
                 self.win.flip()
                 event.waitKeys(keyList=['space'])
             # fixation_cross()
-            gt = GraphTrial(self.win, **trial, **self.parameters, time_limit=10, gaze_contingent=True, eyelink=self.eyelink)
+            gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
             print('gt.gaze_contingent', gt.gaze_contingent)
             gt.run()
             self.bonus.add_points(gt.score)

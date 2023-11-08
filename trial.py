@@ -80,9 +80,11 @@ class GraphTrial(object):
             ul = self.gfx.text('?', n.pos, opacity=0)
             self.reward_unlabels.append(ul)
 
+        self.arrows = {}
         for i, js in enumerate(self.graph):
             for j in js:
-                self.gfx.arrow(nodes[i], nodes[j])
+                self.arrows[(i, j)] = self.gfx.arrow(nodes[i], nodes[j])
+
 
         if self.total_frames is not None:
             self.timer_wrap = self.gfx.rect((0.5,-0.45), .02, 0.9, anchor='bottom', color=-.1)
@@ -150,7 +152,7 @@ class GraphTrial(object):
 
     def fade_out(self):
         for p in self.gfx.animate(.2):
-            self.mask.opacity = p
+            self.mask.setOpacity(p)
             self.win.flip()
         self.gfx.clear()
         self.win.flip()
@@ -183,6 +185,17 @@ class GraphTrial(object):
         if clicked is not None and clicked in self.graph[self.current_state]:
             self.set_state(clicked)
             return True
+
+    def highlight_current_edges(self):
+        for (i, j), arrow in self.arrows.items():
+            if i == self.current_state:
+                arrow.setColor('#FFC910')
+                arrow.objects[0].setDepth(1)  # make sure the line is on top
+                self.nodes[j].setLineColor('#FFC910')
+            else:
+                arrow.setColor('black')
+                arrow.objects[0].setDepth(2)
+                self.nodes[j].setLineColor('black')
 
     def tick(self):
         if self.frames_left is not None and self.frames_left >= 0:
@@ -240,8 +253,7 @@ class GraphTrial(object):
         self.fade_out()
         return 'success'
 
-
-    def run(self, one_step=False, stop_on_space=True):
+    def run(self, one_step=False, stop_on_space=True, highlight_edges=False):
         if self.eyelink:
             self.start_recording()
         self.show()
@@ -262,6 +274,8 @@ class GraphTrial(object):
                 return
             if self.gaze_contingent:
                 self.gaze_contingency()
+            if highlight_edges:
+                self.highlight_current_edges()
             if not self.done and self.frames_left is not None and self.frames_left <= 0:
                 self.do_timeout()
             self.tick()
