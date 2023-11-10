@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import pandas as pd
 import subprocess
@@ -9,6 +10,7 @@ version = sys.argv[1]
 trials = []
 for file in os.listdir(f"data/exp/{version}/"):
     wid = file.replace('.json', '')
+    print(wid)
     # wid = uid.rsplit('-', 1)[1]
 
     # experimental data
