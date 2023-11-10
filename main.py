@@ -1,5 +1,6 @@
 from experiment import Experiment
-improt sys
+import sys
+
 if len(sys.argv) > 1:
     participant_id = sys.argv[1]
 else:
