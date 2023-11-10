@@ -235,9 +235,14 @@ class Experiment(object):
         self.message("Good luck!", space=True)
 
     @stage
-    def run_one(self, i):
+    def run_one(self, i, **kws):
         trial = self.trials['main'][i]
-        gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
+        prm = {
+            **self.parameters,
+            **trial,
+            **kws
+        }
+        gt = GraphTrial(self.win, **prm, eyelink=self.eyelink)
         gt.run()
         self.bonus.add_points(gt.score)
         self.trial_data.append(gt.data)
