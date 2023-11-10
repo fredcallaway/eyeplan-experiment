@@ -23,7 +23,8 @@ def stage(f):
 
 
 class Experiment(object):
-    def __init__(self, participant_id, full_screen=False):
+    def __init__(self, version, participant_id, full_screen=False):
+        self.version = version
         self.id = datetime.now().strftime('%y-%m-%d-%H%M-') + participant_id
         self.full_screen = full_screen
 
@@ -273,7 +274,7 @@ class Experiment(object):
             'bonus': self.bonus.dollars()
         }
         os.makedirs('data/exp/', exist_ok=True)
-        fp = f'data/exp/{self.id}.json'
+        fp = f'data/exp/{self.version}/{self.id}.json'
         with open(fp, 'w') as f:
             json.dump(all_data, f)
         logging.info('wrote %s', fp)
