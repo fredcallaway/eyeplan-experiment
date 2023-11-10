@@ -63,7 +63,7 @@ class GraphTrial(object):
 
     def show(self):
         # self.win.clearAutoDraw()
-        if self.gfx.objects:
+        if hasattr(self, 'nodes'):
             self.gfx.show()
             if self.gaze_contingent:
                 self.gaze_contingency()
@@ -256,6 +256,11 @@ class GraphTrial(object):
     def run(self, one_step=False, stop_on_space=True, highlight_edges=False):
         if self.eyelink:
             self.start_recording()
+        else:
+            visual.TextStim(self.win, 'press space to start', color='white', height=.035).draw()
+            self.win.flip()
+            event.waitKeys(keyList=['space'])
+
         self.show()
         if self.eyelink:
             self.log('node positions', {
