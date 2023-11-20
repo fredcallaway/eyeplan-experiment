@@ -29,18 +29,21 @@ class Experiment(object):
     def __init__(self, version, participant_id, config, full_screen=False):
         self.version = version
         self.id = datetime.now().strftime('%y-%m-%d-%H%M-') + participant_id
-        self.config = config
-        self.full_screen = full_screen
-        with open(f'json/config/{config}.json') as f:
-            config = json.load(f)
-            self.trials = config['trials']
-            self.parameters = config['parameters']
-
         self.setup_logging()
         logging.info('git SHA: ' + subprocess.getoutput('git rev-parse HEAD'))
         logging.info('Configuration file: ' + f'json/config/{config}.json')
+
+        self.config = config
+        self.full_screen = full_screen
+        with open(f'json/config/{config}.json') as f:
+            conf = json.load(f)
+            self.trials = conf['trials']
+            self.parameters = conf['parameters']
+            logging.info('parameters %s', self.parameters)
+
         self.win = self.setup_window()
-        self.bonus = Bonus(self.parameters['points_per_cent'], 50)
+        self.bonus = Bonus(0, 50)
+        # self.bonus = Bonus(self.parameters['points_per_cent'], 50)
         self.eyelink = None
 
         self._message = visual.TextBox2(self.win, '', pos=(-.83, 0), color='white', autoDraw=True, size=(0.65, None), letterHeight=.035, anchor='left')
@@ -140,7 +143,8 @@ class Experiment(object):
         for l in gt.reward_labels:
             l.setOpacity(1)
         self.message("The goal of the game is to collect as many points as you can.", space=True)
-        self.message(f"The points will be converted to a cash bonus: {self.bonus.describe_scheme()}!", space=True)
+        if self.bonus:
+            self.message(f"The points will be converted to a cash bonus: {self.bonus.describe_scheme()}!", space=True)
 
         self.message("You can move by clicking on a location that has an arrow pointing from your current location. Try it now!",
                      tip_text='click one of the highlighted locations', space=False)
@@ -239,10 +243,13 @@ class Experiment(object):
     @stage
     def intro_main(self):
         self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
-        self.message(f"There will be {self.n_trial} rounds. "
-                     f"Remember, you'll earn {self.bonus.describe_scheme()} you make in the game. "
-                     "We'll start you off with 50 points for all your hard work so far.", space=True )
-        self.message("Good luck!", space=True)
+        if self.bonus:
+            self.message(f"There will be {self.n_trial} rounds. "
+                         f"Remember, you'll earn {self.bonus.describe_scheme()} you make in the game. "
+                         "We'll start you off with 50 points for all your hard work so far.", space=True )
+            self.message("Good luck!", space=True)
+        else:
+            self.message(f"There will be {self.n_trial} rounds. Good luck!")
 
     @stage
     def run_one(self, i, **kws):
@@ -267,7 +274,9 @@ class Experiment(object):
 
         for (i, trial) in enumerate(trials):
             if i > 0 and i % summarize_every == 0:
-                msg = f'There are {self.n_trial - i} trials left\n{self.bonus.report_bonus()}'
+                msg = f'There are {self.n_trial - i} trials left'
+                if self.bonus:
+                    msg += f"\n{self.bonus.report_bonus()}"
                 msg += f'\nFeel free to take a quick break. Then press space to continue'
                 visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
                 self.win.flip()

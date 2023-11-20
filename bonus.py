@@ -18,13 +18,19 @@ class Bonus(object):
         self.points = self.initial = initial
         self.points_per_cent = points_per_cent
 
+    def __bool__(self):
+        return self.points_per_cent > 0
+
     def add_points(self, points):
         self.points += int(points)
         logging.debug('add bonus points %s (total = %s)', points, self.points)
 
     def dollars(self):
-        cents = max(0, round(self.points / self.points_per_cent))
-        return cents / 100
+        if self:
+            cents = max(0, round(self.points / self.points_per_cent))
+            return cents / 100
+        else:
+            return 0
 
     def report_bonus(self):
         return f"Your current bonus is ${self.dollars():.2f} ({self.points} points)"

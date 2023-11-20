@@ -25,12 +25,13 @@ class GraphTrial(object):
         self.rewards = list(rewards)
         self.start = start
         self.layout = layout
+        self.time_limit = time_limit
         self.gaze_contingent = gaze_contingent
         self.eyelink = eyelink
         self.pos = pos
         self.space_start = space_start
 
-        self.frames_left = self.total_frames = round(FRAME_RATE * time_limit) if time_limit else None
+        self.start_time = None
         self.disable_click = False
         self.score = 0
         self.current_state = None
@@ -45,7 +46,9 @@ class GraphTrial(object):
                 "gaze_contingent": gaze_contingent
                 # layout
             },
-            "events": []
+            "events": [],
+            "flips": [],
+            "mouse": [],
         }
         logging.info("begin trial " + jsonify(self.data["trial"]))
         self.gfx = Graphics(win)
@@ -81,8 +84,6 @@ class GraphTrial(object):
         self.reward_unlabels = []
         for i, n in enumerate(self.nodes):
             self.reward_labels.append(self.gfx.text(reward_string(self.rewards[i]), n.pos))
-            ul = self.gfx.text('?', n.pos, opacity=0)
-            self.reward_unlabels.append(ul)
 
         self.arrows = {}
         for i, js in enumerate(self.graph):
@@ -90,7 +91,7 @@ class GraphTrial(object):
                 self.arrows[(i, j)] = self.gfx.arrow(nodes[i], nodes[j])
 
 
-        if self.total_frames is not None:
+        if self.time_limit is not None:
             self.timer_wrap = self.gfx.rect((0.5,-0.45), .02, 0.9, anchor='bottom', color=-.1)
             self.timer = self.gfx.rect((0.5,-0.45), .02, 0.9, anchor='bottom', color=-.2)
         else:
@@ -145,7 +146,6 @@ class GraphTrial(object):
                 self.tick()
 
         lab.setText('')
-        self.reward_unlabels[s].setText('')
 
     def click(self, s):
         if s in self.graph[self.current_state]:
@@ -180,9 +180,8 @@ class GraphTrial(object):
 
         if self.gaze_contingent:
             for i in range(len(self.nodes)):
-                fixated = i == self.fixated
-                self.reward_labels[i].setOpacity(float(fixated))
-                self.reward_unlabels[i].setOpacity(float(not fixated))
+                lab = reward_string(self.rewards[i]) if i == self.fixated else '?'
+                self.reward_labels[i].text = lab
 
     def check_click(self):
         if self.disable_click:
@@ -204,16 +203,20 @@ class GraphTrial(object):
                 self.nodes[j].setLineColor('black')
 
     def tick(self):
-        if self.frames_left is not None and self.frames_left >= 0:
-            self.frames_left -= 1
-            p = (self.frames_left / self.total_frames)
-            self.timer.setHeight(0.9 * p)
-            if self.frames_left < 3 * FRAME_RATE:
-                p2 = self.frames_left / (3 * FRAME_RATE)
-                original = -.2 * np.ones(3)
-                red = np.array([1, -1, -1])
-                self.timer.setColor(p2 * original + (1-p2) * red)
-        return self.win.flip()
+        if self.start_time is not None and self.time_limit is not None:
+            time_left = self.start_time + self.time_limit - core.getTime()
+            if time_left > 0:
+                p = time_left / self.time_limit
+                self.timer.setHeight(0.9 * p)
+                if time_left < 3:
+                    p2 = time_left / 3
+                    original = -.2 * np.ones(3)
+                    red = np.array([1, -1, -1])
+                    self.timer.setColor(p2 * original + (1-p2) * red)
+        t = self.win.flip()
+        self.data["mouse"].append(self.mouse.getPos())
+        self.data["flips"].append(t)
+        return t
 
     def do_timeout(self):
         logging.info('timeout')
@@ -243,8 +246,8 @@ class GraphTrial(object):
             'node_positions': [height2pix(self.win, n.pos) for n in self.nodes]
         })
 
-        start_time = self.tick()
-        self.log('start', {'flip_time': start_time})
+        self.start_time = self.tick()
+        self.log('start', {'flip_time': self.start_time})
         fixated = set()
         while len(fixated) != len(self.nodes):
             self.update_fixation()
@@ -276,8 +279,8 @@ class GraphTrial(object):
         if self.current_state is None:
             self.set_state(self.start)
 
-        start_time = self.tick()
-        self.log('start', {'flip_time': start_time})
+        self.start_time = self.tick()
+        self.log('start', {'flip_time': self.start_time})
 
         while not self.done:
             moved = self.check_click()
@@ -287,7 +290,7 @@ class GraphTrial(object):
                 self.update_fixation()
             if highlight_edges:
                 self.highlight_current_edges()
-            if not self.done and self.frames_left is not None and self.frames_left <= 0:
+            if not self.done and self.time_limit is not None and self.start_time + self.time_limit < core.getTime():
                 self.do_timeout()
             self.tick()
 
