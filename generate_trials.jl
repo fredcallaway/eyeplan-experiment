@@ -118,16 +118,27 @@ function Random.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:IIDSampler})
     rand(x, n)
 end
 
+
+
 function make_trials(; )
     n = 11
     rewards = exponential_rewards(8)
     rdist = IIDSampler(n, rewards)
     kws = (;n, rdist)
 
-    (;
-        practice = [sample_problem(;kws...) for i in 1:6],
-        main = [sample_problem(;kws...) for i in 1:100]
-    )
+    practice = repeatedly(6) do
+        sample_problem(;kws...)
+    end
+
+    gaze_contingent = mapreduce(vcat, 1:25) do i
+        shuffle([true, true, false, false])
+    end
+    main = map(gaze_contingent) do gaze_contingent
+        p = sample_problem(;kws...)
+        (;JSON.lower(p)..., gaze_contingent)
+    end
+
+    (; practice, main )
 end
 
 # %% --------
@@ -142,13 +153,11 @@ function circle_layout(N)
     end
 end
 
-circle_layout(11)
-
 
 # %% --------
 
 version = "p3"
-n_subj = 10
+n_subj = 50
 Random.seed!(hash(version))
 subj_trials = repeatedly(make_trials, n_subj)
 layout = circle_layout(11)
@@ -161,7 +170,7 @@ dest = "json/config"
 rm(dest, recursive=true, force=true)
 mkpath(dest)
 foreach(enumerate(subj_trials)) do (i, trials)
-    parameters = (;points_per_cent, layout)
+    parameters = (;points_per_cent, layout, time_limit=7, summarize_every=10)
     write("$dest/$i.json", json((;parameters, trials)))
     println("$dest/$i.json")
 end
