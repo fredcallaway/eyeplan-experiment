@@ -1,7 +1,5 @@
 from experiment import Experiment
-import sys
 from fire import Fire
-import random
 
 version = 'p3'
 
