@@ -11,6 +11,8 @@ from graphics import Graphics
 from bonus import Bonus
 from eyetracking import EyeLink
 
+import subprocess
+
 def stage(f):
     def wrapper(self, *args, **kwargs):
         self.win.clearAutoDraw()
@@ -23,17 +25,19 @@ def stage(f):
 
 
 class Experiment(object):
-    def __init__(self, version, participant_id, full_screen=False):
+    def __init__(self, version, participant_id, config, full_screen=False):
         self.version = version
         self.id = datetime.now().strftime('%y-%m-%d-%H%M-') + participant_id
+        self.config = config
         self.full_screen = full_screen
-
-        with open('json/config/1.json') as f:
+        with open(f'json/config/{config}.json') as f:
             config = json.load(f)
             self.trials = config['trials']
             self.parameters = config['parameters']
 
         self.setup_logging()
+        logging.info('git SHA: ' + subprocess.getoutput('git rev-parse HEAD'))
+        logging.info('Configuration file: ' + f'json/config/{config}.json')
         self.win = self.setup_window()
         self.bonus = Bonus(self.parameters['points_per_cent'], 50)
         self.eyelink = None
@@ -79,8 +83,10 @@ class Experiment(object):
 
         logging.info(f'starting up {self.id} at {core.getTime()}')
 
+
     def setup_window(self):
         size = (1500,1000) if self.full_screen else (900,500)
+        size = (1500, 1000)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
         framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
         assert abs(framerate - 60) < 2
@@ -208,7 +214,7 @@ class Experiment(object):
         gt.start_recording()
         gt.eyelink.stop_recording()
         self.message("Yup just like that. There's just one more thing...", space=True)
-        self.message("The points will only be visible when you're looking at them.", space=True)
+        self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
         self.message("Try it out! Look at every location to continue", tip_text='', space=False)
         while True:
             result = gt.practice_gazecontingent(timeout=10)
@@ -273,6 +279,7 @@ class Experiment(object):
     def save_data(self):
         self.message("You're done! Let's just save your data...", tip_text="give us a few seconds", space=False)
         all_data = {
+            'config': self.config,
             'parameters': self.parameters,
             'trial_data': self.trial_data,
             'window': self.win.size.tolist(),

@@ -125,10 +125,8 @@ function make_trials(; )
     kws = (;n, rdist)
 
     (;
-        # intro = intro_problem(kws),
-        calibration = Problem(neighbor_list(DiGraph(n)), zeros(n), 1, -1),
         practice = [sample_problem(;kws...) for i in 1:6],
-        main = [sample_problem(;kws...) for i in 1:30]
+        main = [sample_problem(;kws...) for i in 1:100]
     )
 end
 
@@ -149,9 +147,10 @@ circle_layout(11)
 
 # %% --------
 
-version = "e0.1"
+version = "p3"
+n_subj = 10
 Random.seed!(hash(version))
-subj_trials = repeatedly(make_trials, 1)
+subj_trials = repeatedly(make_trials, n_subj)
 layout = circle_layout(11)
 
 # %% --------

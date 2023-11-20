@@ -66,7 +66,7 @@ class GraphTrial(object):
         if hasattr(self, 'nodes'):
             self.gfx.show()
             if self.gaze_contingent:
-                self.gaze_contingency()
+                self.update_fixation()
             return
 
         self.nodes = nodes = []
@@ -95,7 +95,7 @@ class GraphTrial(object):
         self.mask = self.gfx.rect((.1,0), 1.1, 1, color='gray', opacity=0)
         self.gfx.shift(*self.pos)
         if self.gaze_contingent:
-            self.gaze_contingency()
+            self.update_fixation()
 
     def hide(self):
         self.gfx.clear()
@@ -158,25 +158,27 @@ class GraphTrial(object):
         self.win.flip()
         wait(.3)
 
-    def gaze_contingency(self):
+    def update_fixation(self):
         gaze = self.eyelink.gaze_position()
         # visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
 
         for i in range(len(self.nodes)):
             if distance(gaze, self.nodes[i].pos) < .08:
                 if self.fixated != i:
-                    self.log('show state', {'state': i})
+                    self.log('fixate state', {'state': i})
                 self.fixated = i
                 self.fix_verified = core.getTime()
+                break
 
         if self.fixated is not None and core.getTime() - self.fix_verified > .5:
-            self.log('hide state', {'state': self.fixated})
+            self.log('unfixate state', {'state': self.fixated})
             self.fixated = None
 
-        for i in range(len(self.nodes)):
-            fixated = i == self.fixated
-            self.reward_labels[i].setOpacity(float(fixated))
-            self.reward_unlabels[i].setOpacity(float(not fixated))
+        if self.gaze_contingent:
+            for i in range(len(self.nodes)):
+                fixated = i == self.fixated
+                self.reward_labels[i].setOpacity(float(fixated))
+                self.reward_unlabels[i].setOpacity(float(not fixated))
 
     def check_click(self):
         if self.disable_click:
@@ -241,7 +243,7 @@ class GraphTrial(object):
         self.log('start', {'flip_time': start_time})
         fixated = set()
         while len(fixated) != len(self.nodes):
-            self.gaze_contingency()
+            self.update_fixation()
             fixated.add(self.fixated)
             self.tick()
             if core.getTime() > start_time + timeout:
@@ -278,7 +280,7 @@ class GraphTrial(object):
             if moved and one_step:
                 return
             if self.gaze_contingent:
-                self.gaze_contingency()
+                self.update_fixation()
             if highlight_edges:
                 self.highlight_current_edges()
             if not self.done and self.frames_left is not None and self.frames_left <= 0:

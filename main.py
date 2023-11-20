@@ -1,25 +1,35 @@
 from experiment import Experiment
 import sys
+from fire import Fire
 
-if len(sys.argv) > 1:
-    participant_id = sys.argv[1]
-else:
-    participant_id = input('participant ID: ')
-if not participant_id:
-    participant_id = 'default'
+version = 'p3'
 
-exp = Experiment('p2', participant_id, full_screen=False)
-exp.parameters.update({
-    'time_limit': 7,
-    'gaze_contingent': True
-})
+def main(participant_id=None, config=None):
 
-exp.intro()
-exp.practice(2)
-exp.practice_timelimit()
-exp.setup_eyetracker()
-exp.show_gaze_demo()
-exp.intro_gaze()
-exp.intro_main()
-exp.run_main(10)
-exp.save_data()
+    if participant_id is None:
+        participant_id = input('participant ID: ') or 'default'
+    if config is None:
+        config = input('configuration number: ') or 1 + random.choice(range(10))
+
+    exp = Experiment(version, participant_id, config, full_screen=False)
+
+    exp.parameters.update({
+        'time_limit': 7,
+        'gaze_contingent': True,
+        'summarize_every': 10,
+    })
+    for i, t in enumerate(exp.trials['main']):
+        t['gaze_contingent'] = not (i % 3 == 2)
+
+    exp.intro()
+    exp.practice(2)
+    exp.practice_timelimit()
+    exp.setup_eyetracker()
+    exp.show_gaze_demo()
+    exp.intro_gaze()
+    exp.intro_main()
+    exp.run_main(100)
+    exp.save_data()
+
+if __name__ == '__main__':
+    Fire(main)
