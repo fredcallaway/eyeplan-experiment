@@ -18,18 +18,19 @@ def distance(p1, p2):
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, time_limit=None, gaze_contingent=False, eyelink=None, pos=(0, 0), **kws):
+    def __init__(self, win, graph, rewards, start, layout, time_limit=None,
+                 gaze_contingent=False, eyelink=None, pos=(0, 0), space_start=True, **kws):
         self.win = win
         self.graph = graph
         self.rewards = list(rewards)
         self.start = start
         self.layout = layout
-        self.frames_left = self.total_frames = round(FRAME_RATE * time_limit) if time_limit else None
         self.gaze_contingent = gaze_contingent
-
         self.eyelink = eyelink
         self.pos = pos
+        self.space_start = space_start
 
+        self.frames_left = self.total_frames = round(FRAME_RATE * time_limit) if time_limit else None
         self.disable_click = False
         self.score = 0
         self.current_state = None
@@ -135,10 +136,10 @@ class GraphTrial(object):
             self.nodes[prev].fillColor = 'white'
             lab.color = 'white'
             # lab.bold = True
-            for p in self.gfx.animate(.1):
+            for p in self.gfx.animate(4/60):
                 lab.setHeight(0.03 + p * 0.02)
                 self.tick()
-            for p in self.gfx.animate(.2):
+            for p in self.gfx.animate(8/60):
                 lab.setHeight(0.05 - p * 0.05)
                 lab.setOpacity(1-p)
                 self.tick()
@@ -261,8 +262,8 @@ class GraphTrial(object):
     def run(self, one_step=False, stop_on_space=True, highlight_edges=False):
         if self.eyelink:
             self.start_recording()
-        else:
-            visual.TextStim(self.win, 'press space to start', color='white', height=.035).draw()
+        elif self.space_start:
+            visual.TextStim(self.win,  'press space to start', pos=self.pos, color='white', height=.035).draw()
             self.win.flip()
             event.waitKeys(keyList=['space'])
 

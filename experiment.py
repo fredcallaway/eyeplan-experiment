@@ -49,6 +49,9 @@ class Experiment(object):
         self._practice_trials = iter(self.trials['practice'])
         self.trial_data = []
 
+    def _reset_practice(self):
+        self._practice_trials = iter(self.trials['practice'])
+
     def get_practice_trial(self, **kws):
         trial = next(self._practice_trials)
         prm = {
@@ -56,6 +59,7 @@ class Experiment(object):
             'gaze_contingent': False,
             'time_limit': None,
             'pos': (.3, 0),
+            'space_start': False,
             **trial,
             **kws
         }
@@ -86,8 +90,7 @@ class Experiment(object):
 
 
     def setup_window(self):
-        size = (1500,1000) if self.full_screen else (900,500)
-        size = (1500, 1000)
+        size = (1800,1000) if self.full_screen else (900,500)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
         framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
         assert abs(framerate - 60) < 2
