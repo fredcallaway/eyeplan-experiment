@@ -6,6 +6,7 @@ from psychopy import core, visual, gui, data, event
 from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
 
+from util import jsonify
 from trial import GraphTrial
 from graphics import Graphics
 from bonus import Bonus
@@ -270,7 +271,6 @@ class Experiment(object):
                 event.waitKeys(keyList=['space'])
             # fixation_cross()
             gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
-            print('gt.gaze_contingent', gt.gaze_contingent)
             gt.run()
             self.bonus.add_points(gt.score)
             self.trial_data.append(gt.data)
@@ -282,13 +282,14 @@ class Experiment(object):
             'config': self.config,
             'parameters': self.parameters,
             'trial_data': self.trial_data,
-            'window': self.win.size.tolist(),
+            'window': self.win.size,
             'bonus': self.bonus.dollars()
         }
         os.makedirs('data/exp/', exist_ok=True)
         fp = f'data/exp/{self.version}/{self.id}.json'
+        os.makedirs(os.path.dirname(fp), exist_ok=True)
         with open(fp, 'w') as f:
-            json.dump(all_data, f)
+            f.write(jsonify(all_data))
         logging.info('wrote %s', fp)
 
         self.eyelink.save_data()

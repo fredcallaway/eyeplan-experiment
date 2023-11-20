@@ -3,6 +3,7 @@ import numpy as np
 import logging
 import json
 from eyetracking import height2pix
+from util import jsonify
 
 wait = core.wait
 
@@ -40,10 +41,12 @@ class GraphTrial(object):
                 "rewards": rewards,
                 "start": start,
                 "time_limit": time_limit,
+                "gaze_contingent": gaze_contingent
                 # layout
             },
             "events": []
         }
+        logging.info("begin trial " + jsonify(self.data["trial"]))
         self.gfx = Graphics(win)
         self.mouse = event.Mouse()
         self.done = False
@@ -58,7 +61,7 @@ class GraphTrial(object):
         }
         self.data["events"].append(datum)
         if self.eyelink:
-            self.eyelink.message(json.dumps(datum), log=False)
+            self.eyelink.message(jsonify(datum), log=False)
 
 
     def show(self):
@@ -288,6 +291,7 @@ class GraphTrial(object):
             self.tick()
 
         self.log('done')
+        logging.info("end trial " + jsonify(self.data["events"]))
         if self.eyelink:
             self.eyelink.stop_recording()
         wait(.3)
