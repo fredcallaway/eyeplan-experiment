@@ -172,7 +172,7 @@ dest = "json/config"
 rm(dest, recursive=true, force=true)
 mkpath(dest)
 foreach(enumerate(subj_trials)) do (i, trials)
-    parameters = (;points_per_cent, layout, time_limit=7, summarize_every=10)
+    parameters = (;points_per_cent, layout, time_limit=15, summarize_every=10)
     write("$dest/$i.json", json((;parameters, trials)))
     println("$dest/$i.json")
 end
