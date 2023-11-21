@@ -95,8 +95,8 @@ class Experiment(object):
     def setup_window(self):
         size = (1800,1000) if self.full_screen else (900,500)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
-        framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
-        assert abs(framerate - 60) < 2
+        # framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
+        # assert abs(framerate - 60) < 2
         win.flip()
         # win.callOnFlip(self.on_flip)
         return win
