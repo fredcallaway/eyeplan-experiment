@@ -127,7 +127,9 @@ function make_trials(; )
     kws = (;n, rdist)
 
     practice = repeatedly(6) do
-        sample_problem(;kws...)
+        sample_problem(;kws...) do p
+            minimum(length, paths(p)) == 2
+        end
     end
 
     gaze_contingent = mapreduce(vcat, 1:25) do i
@@ -177,15 +179,15 @@ end
 
 # %% --------
 
-bonus = map(subj_trials) do trials
-    trials = mapreduce(vcat, [:main, :eyetracking]) do t
-        get(trials, t, [])
-    end
-    points = 50 + sum(value.(trials))
-    points / (points_per_cent * 100)
-end
+# bonus = map(subj_trials) do trials
+#     trials = mapreduce(vcat, [:main, :eyetracking]) do t
+#         get(trials, t, [])
+#     end
+#     points = 50 + sum(value.(trials))
+#     points / (points_per_cent * 100)
+# end
 
-using UnicodePlots
-if length(bonus) > 1
-    display(histogram(bonus, nbins=10, vertical=true, height=10))
-end
+# using UnicodePlots
+# if length(bonus) > 1
+#     display(histogram(bonus, nbins=10, vertical=true, height=10))
+# end
