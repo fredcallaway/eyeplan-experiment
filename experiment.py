@@ -274,7 +274,6 @@ class Experiment(object):
         trials = self.trials['main']
         if n is not None:
             trials = trials[:n]
-            self.n_trial = n
 
         for (i, trial) in enumerate(trials):
             if i > 0 and i % summarize_every == 0:
