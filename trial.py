@@ -137,10 +137,10 @@ class GraphTrial(object):
             self.nodes[prev].fillColor = 'white'
             lab.color = 'white'
             # lab.bold = True
-            for p in self.gfx.animate(4/60):
+            for p in self.gfx.animate(6/60):
                 lab.setHeight(0.03 + p * 0.02)
                 self.tick()
-            for p in self.gfx.animate(8/60):
+            for p in self.gfx.animate(12/60):
                 lab.setHeight(0.05 - p * 0.05)
                 lab.setOpacity(1-p)
                 self.tick()
@@ -253,7 +253,7 @@ class GraphTrial(object):
             self.update_fixation()
             fixated.add(self.fixated)
             self.tick()
-            if core.getTime() > start_time + timeout:
+            if core.getTime() > self.start_time + timeout:
                 return 'timeout'
 
         self.log('done')

@@ -27,11 +27,13 @@ def main(participant_id=None, config=None, test=False):
         exp.run_main(100)
         exp.save_data()
     except:
+        exp.win.clearAutoDraw()
         exp.win.showMessage("Drat! The experiment has encountered an error.\nPlease inform the experimenter.")
         exp.win.flip()
         logging.exception('oh no!')
         import IPython, time; IPython.embed(); time.sleep(0.5)
         exp.win.showMessage(None)
+        raise
 
 
 if __name__ == '__main__':
