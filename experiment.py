@@ -252,7 +252,7 @@ class Experiment(object):
                          "We'll start you off with 50 points for all your hard work so far.", space=True )
             self.message("Good luck!", space=True)
         else:
-            self.message(f"There will be {self.n_trial} rounds. Good luck!")
+            self.message(f"There will be {self.n_trial} rounds. Good luck!", space=True)
 
     @stage
     def run_one(self, i, **kws):
@@ -274,6 +274,7 @@ class Experiment(object):
         trials = self.trials['main']
         if n is not None:
             trials = trials[:n]
+            self.n_trial = n
 
         for (i, trial) in enumerate(trials):
             if i > 0 and i % summarize_every == 0:
