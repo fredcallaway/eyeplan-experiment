@@ -180,7 +180,12 @@ class GraphTrial(object):
 
         if self.gaze_contingent:
             for i in range(len(self.nodes)):
-                lab = reward_string(self.rewards[i]) if i == self.fixated else '?'
+                if i == self.fixated:
+                    lab = reward_string(self.rewards[i])
+                elif self.rewards[i]
+                    lab = '?'
+                else:
+                    lab = ''
                 self.reward_labels[i].text = lab
 
     def check_click(self):
