@@ -182,7 +182,7 @@ class GraphTrial(object):
             for i in range(len(self.nodes)):
                 if i == self.fixated:
                     lab = reward_string(self.rewards[i])
-                elif self.rewards[i]
+                elif self.rewards[i]:
                     lab = '?'
                 else:
                     lab = ''
