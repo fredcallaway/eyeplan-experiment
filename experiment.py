@@ -51,6 +51,7 @@ class Experiment(object):
 
         self._practice_trials = iter(self.trials['practice'])
         self.trial_data = []
+        self.practice_data = []
 
     def _reset_practice(self):
         self._practice_trials = iter(self.trials['practice'])
@@ -67,7 +68,9 @@ class Experiment(object):
             **kws
         }
 
-        return GraphTrial(self.win, **prm)
+        gt = GraphTrial(self.win, **prm)
+        self.trial_data.append(gt.data)
+        return gt
 
 
     @property
@@ -294,6 +297,7 @@ class Experiment(object):
             'config': self.config,
             'parameters': self.parameters,
             'trial_data': self.trial_data,
+            'practice_data': self.practice_data,
             'window': self.win.size,
             'bonus': self.bonus.dollars()
         }
