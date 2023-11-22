@@ -2,9 +2,9 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-version = 'p3'
+from config import VERSION
 
-def main(participant_id=None, config=None, test=False):
+def main(participant_id=None, config=None, test=False, fast=False):
 
     if test:
         participant_id = participant_id or 'test'
@@ -15,7 +15,7 @@ def main(participant_id=None, config=None, test=False):
         config = input('configuration number: ') or 1 + random.choice(range(10))
         config = int(config)
 
-    exp = Experiment(version, participant_id, config, full_screen=not test)
+    exp = Experiment(VERSION, participant_id, config, full_screen=not test)
     try:
         exp.intro()
         exp.practice(2)
@@ -24,7 +24,7 @@ def main(participant_id=None, config=None, test=False):
         exp.show_gaze_demo()
         exp.intro_gaze()
         exp.intro_main()
-        exp.run_main(100)
+        exp.run_main(5 if fast else None)
         exp.save_data()
     except:
         exp.win.clearAutoDraw()

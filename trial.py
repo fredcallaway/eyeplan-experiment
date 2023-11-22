@@ -44,7 +44,6 @@ class GraphTrial(object):
                 "start": start,
                 "time_limit": time_limit,
                 "gaze_contingent": gaze_contingent
-                # layout
             },
             "events": [],
             "flips": [],
@@ -79,6 +78,7 @@ class GraphTrial(object):
         self.nodes = nodes = []
         for i, (x, y) in enumerate(self.layout):
             nodes.append(self.gfx.circle(0.8 * np.array([x, y]), name=i))
+        self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
 
         self.reward_labels = []
         self.reward_unlabels = []
@@ -163,6 +163,8 @@ class GraphTrial(object):
         wait(.3)
 
     def update_fixation(self):
+        if not self.eyelink:
+            return
         gaze = self.eyelink.gaze_position()
         # visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
 
@@ -247,9 +249,6 @@ class GraphTrial(object):
         self.start_recording()
         self.show()
         self.set_state(self.start)
-        self.log('node positions', {
-            'node_positions': [height2pix(self.win, n.pos) for n in self.nodes]
-        })
 
         self.start_time = self.tick()
         self.log('start', {'flip_time': self.start_time})
@@ -276,10 +275,6 @@ class GraphTrial(object):
             event.waitKeys(keyList=['space'])
 
         self.show()
-        if self.eyelink:
-            self.log('node positions', {
-                'node_positions': [height2pix(self.win, n.pos) for n in self.nodes]
-            })
 
         if self.current_state is None:
             self.set_state(self.start)
@@ -291,8 +286,7 @@ class GraphTrial(object):
             moved = self.check_click()
             if moved and one_step:
                 return
-            if self.gaze_contingent:
-                self.update_fixation()
+            self.update_fixation()
             if highlight_edges:
                 self.highlight_current_edges()
             if not self.done and self.time_limit is not None and self.start_time + self.time_limit < core.getTime():
