@@ -267,16 +267,12 @@ class GraphTrial(object):
 
             if (not done) and core.getTime() > self.start_time + timeout:
                 result = 'timeout'
-            if 'x' in event.getKeys():
+
+            pressed = event.getKeys()
+            if 'x' in pressed:
                 logging.info('press x')
                 result = 'cancelled'
-            if 'space' in event.getKeys():
-                logging.info('press space')
-                if done:
-                    result = 'success'
-                else:
-                    result = 'cancelled'
-            if 'y' in event.getKeys():
+            if 'space' in pressed:
                 logging.info('press space')
                 if done:
                     result = 'success'
