@@ -17,14 +17,21 @@ def main(participant_id=None, config=None, test=False, fast=False):
 
     exp = Experiment(VERSION, participant_id, config, full_screen=not test)
     try:
-        exp.intro()
-        exp.practice(2)
-        exp.practice_timelimit()
-        exp.setup_eyetracker()
-        exp.show_gaze_demo()
-        exp.intro_gaze()
-        exp.intro_main()
-        exp.run_main(5 if fast else None)
+        if fast:
+            exp.setup_eyetracker()
+            exp.show_gaze_demo()
+            exp.intro_main()
+            exp.run_main(5.)
+        else:
+            exp.intro()
+            exp.practice(2)
+            exp.practice_timelimit()
+            exp.setup_eyetracker()
+            exp.show_gaze_demo()
+            exp.intro_gaze()
+            exp.intro_main()
+            exp.run_main()
+
         exp.save_data()
     except:
         exp.win.clearAutoDraw()
