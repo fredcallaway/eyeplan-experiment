@@ -3,18 +3,24 @@ import sys
 import json
 import pandas as pd
 import subprocess
-version = sys.argv[1]
+
+from config import VERSION
 # wid = 'fred'
+if len(sys.argv) > 1:
+    VERSION = sys.argv[1]
 
 
 trials = []
-for file in os.listdir(f"data/exp/{version}/"):
+for file in os.listdir(f"data/exp/{VERSION}/"):
+    if 'test' in file:
+        continue
     wid = file.replace('.json', '')
-    print(wid)
     # wid = uid.rsplit('-', 1)[1]
 
     # experimental data
-    with open(f"data/exp/{version}/{file}") as f:
+    fn = f"data/exp/{VERSION}/{file}"
+    print(fn)
+    with open(fn) as f:
         data = json.load(f)
     for i, t in enumerate(data["trial_data"]):
         t["wid"] = wid
@@ -32,8 +38,8 @@ for file in os.listdir(f"data/exp/{version}/"):
             print(f'Error parsing {edf}', '-'*80, output, '-'*80, sep='\n')
 
 
-os.makedirs(f'data/processed/{version}/', exist_ok=True)
-with open(f'data/processed/{version}/trials.json', 'w') as f:
+os.makedirs(f'data/processed/{VERSION}/', exist_ok=True)
+with open(f'data/processed/{VERSION}/trials.json', 'w') as f:
     json.dump(trials, f)
 
 
