@@ -228,7 +228,7 @@ class Experiment(object):
         self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
         self.message("Try it out! Look at every location to continue", tip_text='', space=False)
         while True:
-            result = gt.practice_gazecontingent(timeout=10)
+            result = gt.practice_gazecontingent(timeout=30)
             if result == 'success':
                 break
             else:
