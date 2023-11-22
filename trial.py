@@ -254,7 +254,7 @@ class GraphTrial(object):
         self.start_time = self.tick()
         self.log('start', {'flip_time': self.start_time})
         fixated = set()
-        done = false
+        done = False
         result = None
         while result is None:
             self.update_fixation()
