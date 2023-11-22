@@ -39,8 +39,7 @@ def main(participant_id=None, config=None, test=False, fast=False):
         exp.win.showMessage("Drat! The experiment has encountered an error.\nPlease inform the experimenter.")
         exp.win.flip()
         logging.exception('oh no!')
-        import IPython, time; IPython.embed(); time.sleep(0.5)
-        exp.win.showMessage(None)
+        exp.save_data()
         raise
 
 
