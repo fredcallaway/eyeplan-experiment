@@ -341,7 +341,7 @@ class EyeLinkCoreGraphicsPsychoPy(pylink.EyeLinkCustomDisplay):
     def setup_cal_display(self):
         """ Set up the calibration display before entering
         the calibration/validation routine""" 
-
+        self._display.stashAutoDraw()
         self._display.clearBuffer()
 
         self._calibInst.autoDraw = True
@@ -357,6 +357,7 @@ class EyeLinkCoreGraphicsPsychoPy(pylink.EyeLinkCustomDisplay):
         self._camImgRect.autoDraw = False
 
         self._display.color = self._backgroundColor
+        self._display.retrieveAutoDraw()
         self._display.flip()
         self._display.color = self._backgroundColor
 
