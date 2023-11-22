@@ -13,6 +13,7 @@ from bonus import Bonus
 from eyetracking import EyeLink
 
 import subprocess
+from copy import deepcopy
 
 def stage(f):
     def wrapper(self, *args, **kwargs):
@@ -228,6 +229,7 @@ class Experiment(object):
                      tip_text="look at the circle and press space", space=False)
 
         gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink)
+        _gt = deepcopy(gt)
         gt.start_recording()
         gt.eyelink.stop_recording()
         self.message("Yup just like that. There's just one more thing...", space=True)
@@ -238,7 +240,6 @@ class Experiment(object):
             self.message("Great! Keep looking around as long as you like", tip_text='press space to continue or X to recalibrate', space=False)
 
         while True:
-
             result = gt.practice_gazecontingent(on_done, timeout=30)
             if result == 'success':
                 break
@@ -249,8 +250,9 @@ class Experiment(object):
                 self.win.flip()
                 self.eyelink.calibrate()
                 self.message("OK we're going to try again. We'll use the center of the screen this time", space=True)
+                gt = deepcopy(_gt)
+                gt.pos = (0, 0)
                 self.hide_message()
-                gt.shift(-.3, 0)
 
         self.message("Great! It looks like the eyetracker is working well.", space=True)
         self.message("By the way, if it ever seems like the eyetracker isn't working correctly, "

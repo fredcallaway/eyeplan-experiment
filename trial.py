@@ -239,15 +239,16 @@ class GraphTrial(object):
             self.set_state(np.random.choice(self.graph[self.current_state]))
             core.wait(.5)
 
-    def start_recording(self):
+    def start_recording(self, drift_check=True):
         self.log('drift check')
-        self.eyelink.drift_check(self.pos)
+        if drift_check:
+            self.eyelink.drift_check(self.pos)
         self.eyelink.start_recording()
         self.log('start recording')
 
     def practice_gazecontingent(self, callback, timeout=15):
         assert self.eyelink
-        self.start_recording()
+        self.start_recording(drift_check=False)
         self.show()
         self.set_state(self.start)
 
