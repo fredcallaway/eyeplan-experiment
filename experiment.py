@@ -228,8 +228,10 @@ class Experiment(object):
                      "Look at it and press space to start the round.",
                      tip_text="look at the circle and press space", space=False)
 
-        gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink)
-        _gt = deepcopy(gt)
+        trial = next(self._practice_trials)
+        prm = {**self.parameters, **trial, "time_limit": None, "pos": (.3, 0), "gaze_contingent": True, "eyelink": self.eyelink}
+        gt = GraphTrial(self.win, **prm)
+
         gt.start_recording()
         gt.eyelink.stop_recording()
         self.message("Yup just like that. There's just one more thing...", space=True)
@@ -250,8 +252,8 @@ class Experiment(object):
                 self.win.flip()
                 self.eyelink.calibrate()
                 self.message("OK we're going to try again. We'll use the center of the screen this time", space=True)
-                gt = deepcopy(_gt)
-                gt.pos = (0, 0)
+                prm["pos"] = (.3, 0)
+                gt = GraphTrial(self.win, **prm)
                 self.hide_message()
 
         self.message("Great! It looks like the eyetracker is working well.", space=True)
