@@ -31,6 +31,7 @@ class GraphTrial(object):
         self.pos = pos
         self.space_start = space_start
 
+        self.status = 'ok'
         self.start_time = None
         self.disable_click = False
         self.score = 0
@@ -244,7 +245,7 @@ class GraphTrial(object):
         self.eyelink.start_recording()
         self.log('start recording')
 
-    def practice_gazecontingent(self, timeout=15):
+    def practice_gazecontingent(self, callback, timeout=15):
         assert self.eyelink
         self.start_recording()
         self.show()
@@ -253,18 +254,32 @@ class GraphTrial(object):
         self.start_time = self.tick()
         self.log('start', {'flip_time': self.start_time})
         fixated = set()
-        while len(fixated) != len(self.nodes):
+        done = false
+        result = None
+        while result is None:
             self.update_fixation()
             fixated.add(self.fixated)
+            if not done and len(fixated) == len(self.nodes):
+                done = True
+                callback()
             self.tick()
-            if core.getTime() > self.start_time + timeout:
-                return 'timeout'
+
+            if not done and core.getTime() > self.start_time + timeout:
+                result = 'timeout'
+            elif 'x' in event.getKeys():
+                result = 'cancelled'
+            elif 'space' in event.getKeys():
+                if done:
+                    result = 'success'
+                else:
+                    result = 'cancelled'
 
         self.log('done')
+        self.log('practice_gazecontingent result', {"result": result})
         self.eyelink.stop_recording()
         wait(.3)
         self.fade_out()
-        return 'success'
+        return result
 
     def run(self, one_step=False, stop_on_space=True, highlight_edges=False):
         if self.eyelink:
@@ -291,6 +306,10 @@ class GraphTrial(object):
                 self.highlight_current_edges()
             if not self.done and self.time_limit is not None and self.start_time + self.time_limit < core.getTime():
                 self.do_timeout()
+            if 'x' in event.getKeys():
+                self.log('press x')
+                self.status = 'x'
+                break
             self.tick()
 
         self.log('done')

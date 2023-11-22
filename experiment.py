@@ -196,11 +196,17 @@ class Experiment(object):
     @stage
     def setup_eyetracker(self):
         self.message("Now we're going to calibrate the eyetracker. When the circle appears, look at it and press space.", space=True)
-        print("here")
         self.hide_message()
         self.win.flip()
         self.eyelink = EyeLink(self.win, self.id)
         self.eyelink.setup_calibration()
+        self.eyelink.calibrate()
+
+    @stage
+    def recalibrate(self):
+        self.message("Looks like we need to recalibrate the eyetracker. Please tell the experimenter.", space=True)
+        self.hide_message()
+        self.win.flip()
         self.eyelink.calibrate()
 
 
@@ -226,9 +232,14 @@ class Experiment(object):
         gt.eyelink.stop_recording()
         self.message("Yup just like that. There's just one more thing...", space=True)
         self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
-        self.message("Try it out! Look at every location to continue", tip_text='', space=False)
+        self.message("Try it out! Look at every location to continue", tip_text='press X to recalibrate', space=False)
+
+        def on_done():
+            self.message("Great! Keep looking around as long as you like", tip_text='press space to continue or X to recalibrate', space=False)
+
         while True:
-            result = gt.practice_gazecontingent(timeout=30)
+
+            result = gt.practice_gazecontingent(on_done, timeout=30)
             if result == 'success':
                 break
             else:
@@ -242,6 +253,8 @@ class Experiment(object):
                 gt.shift(-.3, 0)
 
         self.message("Great! It looks like the eyetracker is working well.", space=True)
+        self.message("By the way, if it ever seems like the eyetracker isn't working correctly, "
+                     "you can let us know by pressing X", space=True)
 
     @stage
     def intro_main(self):
@@ -289,6 +302,9 @@ class Experiment(object):
             gt.run()
             self.bonus.add_points(gt.score)
             self.trial_data.append(gt.data)
+            if gt.status == 'x':
+                self.recalibrate()
+
 
     @stage
     def save_data(self):

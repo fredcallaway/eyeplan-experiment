@@ -20,6 +20,7 @@ def main(participant_id=None, config=None, test=False, fast=False):
         if fast:
             exp.setup_eyetracker()
             exp.show_gaze_demo()
+            exp.intro_gaze()
             exp.intro_main()
             exp.run_main(5.)
         else:
