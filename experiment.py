@@ -252,7 +252,7 @@ class Experiment(object):
                 self.win.flip()
                 self.eyelink.calibrate()
                 self.message("OK we're going to try again. We'll use the center of the screen this time", space=True)
-                prm["pos"] = (.3, 0)
+                prm["pos"] = (0, 0)
                 gt = GraphTrial(self.win, **prm)
                 self.hide_message()
 

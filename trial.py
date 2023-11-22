@@ -265,11 +265,19 @@ class GraphTrial(object):
                 callback()
             self.tick()
 
-            if not done and core.getTime() > self.start_time + timeout:
+            if (not done) and core.getTime() > self.start_time + timeout:
                 result = 'timeout'
-            elif 'x' in event.getKeys():
+            if 'x' in event.getKeys():
+                logging.info('press x')
                 result = 'cancelled'
-            elif 'space' in event.getKeys():
+            if 'space' in event.getKeys():
+                logging.info('press space')
+                if done:
+                    result = 'success'
+                else:
+                    result = 'cancelled'
+            if 'y' in event.getKeys():
+                logging.info('press space')
                 if done:
                     result = 'success'
                 else:
