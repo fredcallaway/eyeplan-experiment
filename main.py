@@ -22,7 +22,7 @@ def main(participant_id=None, config=None, test=False, fast=False):
             exp.show_gaze_demo()
             exp.intro_gaze()
             exp.intro_main()
-            exp.run_main(5)
+            exp.run_main()
         else:
             exp.intro()
             exp.practice(2)
@@ -31,7 +31,7 @@ def main(participant_id=None, config=None, test=False, fast=False):
             exp.show_gaze_demo()
             exp.intro_gaze()
             exp.intro_main()
-            exp.run_main()
+            exp.run_main(80)
 
         exp.save_data()
     except:
