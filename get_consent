@@ -5,7 +5,6 @@ else
     # Use the provided argument
     name=$1
 fi
-echo "name is $name"
 dest="consent/$name.pdf"
 mkdir -p consent
 
@@ -26,3 +25,5 @@ cpdf \
     -o "$dest" &> /dev/null
 
 open -a "Preview" "$dest"
+echo "Press enter when form has been saved"
+read
