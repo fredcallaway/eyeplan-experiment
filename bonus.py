@@ -26,7 +26,7 @@ class Bonus(object):
         logging.debug('add bonus points %s (total = %s)', points, self.points)
 
     def dollars(self):
-        if self:
+        if self.points_per_cent != 0:
             cents = max(0, round(self.points / self.points_per_cent))
             return cents / 100
         else:
