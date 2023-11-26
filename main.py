@@ -2,20 +2,8 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-from config import VERSION
-
-def main(participant_id=None, config=None, test=False, fast=False):
-
-    if test:
-        participant_id = participant_id or 'test'
-        config = config or 1
-    if participant_id is None:
-        participant_id = input('participant ID: ') or 'default'
-    if config is None:
-        config = input('configuration number: ') or 1 + random.choice(range(10))
-        config = int(config)
-
-    exp = Experiment(VERSION, participant_id, config, full_screen=not test)
+def main(config_number=None, name=None, test=False, fast=False):
+    exp = Experiment(config_number, name, full_screen=not test)
     try:
         if fast:
             exp.setup_eyetracker()
@@ -39,8 +27,13 @@ def main(participant_id=None, config=None, test=False, fast=False):
         exp.win.showMessage("Drat! The experiment has encountered an error.\nPlease inform the experimenter.")
         exp.win.flip()
         logging.exception('oh no!')
-        exp.save_data()
-        raise
+        try:
+            exp.save_data()
+            raise
+        except:
+            logging.exception('error on second save data attempt')
+            exp.emergency_save_data()
+            raise
 
 
 if __name__ == '__main__':

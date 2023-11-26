@@ -1,7 +1,7 @@
 using Graphs
 using Random
 
-model_dir = "/Users/fred/projects/graphnav/model"
+model_dir = "../model"
 include("$model_dir/problem.jl")
 include("$model_dir/utils.jl")
 
@@ -158,8 +158,19 @@ end
 
 # %% --------
 
-version = "p3"
-n_subj = 50
+function get_version()
+    for line in readlines("config.py")
+        m = match(r"VERSION = '(.*)'", line)
+        if !isnothing(m)
+            return m.captures[1]
+        end
+    end
+    error("Cannot find version")
+end
+
+
+version = get_version()
+n_subj = 200  # better safe than sorry
 Random.seed!(hash(version))
 subj_trials = repeatedly(make_trials, n_subj)
 layout = circle_layout(11)
@@ -168,7 +179,7 @@ layout = circle_layout(11)
 
 points_per_cent = 2
 
-dest = "json/config"
+dest = "config/$(version)"
 rm(dest, recursive=true, force=true)
 mkpath(dest)
 foreach(enumerate(subj_trials)) do (i, trials)

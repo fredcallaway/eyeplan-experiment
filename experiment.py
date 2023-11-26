@@ -1,6 +1,7 @@
 import os
 import logging
 import json
+import re
 from datetime import datetime
 from psychopy import core, visual, gui, data, event
 from psychopy.tools.filetools import fromFile, toFile
@@ -14,6 +15,15 @@ from eyetracking import EyeLink
 
 import subprocess
 from copy import deepcopy
+from config import VERSION
+
+
+DATA_PATH = f'data/exp/{VERSION}'
+CONFIG_PATH = f'config/{VERSION}'
+LOG_PATH = 'log'
+for p in (DATA_PATH, CONFIG_PATH, LOG_PATH, ):
+    os.makedirs(p, exist_ok=True)
+
 
 def stage(f):
     def wrapper(self, *args, **kwargs):
@@ -25,18 +35,40 @@ def stage(f):
 
     return wrapper
 
+def get_next_config_number():
+    print("FIX ME!")
+    used = set()
+    for fn in os.listdir(DATA_PATH):
+        used.add(int(re.match(r'.*_P(\d+)\.', fn).group(1)))
+
+    possible = range(1, 1 + len(os.listdir(CONFIG_PATH)))
+    try:
+        n = next(i for i in possible if i not in used)
+        return n
+    except StopIteration:
+        print("WARNING: USING RANDOM CONFIGURATION NUMBER")
+        return np.random.choice(list(possible))
+
 
 class Experiment(object):
-    def __init__(self, version, participant_id, config, full_screen=False):
-        self.version = version
-        self.id = datetime.now().strftime('%y-%m-%d-%H%M-') + participant_id
+    def __init__(self, config_number, name=None, full_screen=False):
+        if config_number is None:
+            config_number = get_next_config_number()
+        self.config_number = config_number
+        print('>>>', self.config_number)
+        self.full_screen = full_screen
+
+        timestamp = datetime.now().strftime('%y-%m-%d-%H%M')
+        self.id = f'{timestamp}_P{config_number}'
+        if name:
+            self.id += '-' + str(name)
+
         self.setup_logging()
         logging.info('git SHA: ' + subprocess.getoutput('git rev-parse HEAD'))
-        logging.info('Configuration file: ' + f'json/config/{config}.json')
 
-        self.config = config
-        self.full_screen = full_screen
-        with open(f'json/config/{config}.json') as f:
+        config_file = f'{CONFIG_PATH}/{config_number}.json'
+        logging.info('Configuration file: ' + config_file)
+        with open(config_file) as f:
             conf = json.load(f)
             self.trials = conf['trials']
             self.parameters = conf['parameters']
@@ -83,8 +115,7 @@ class Experiment(object):
         rootLogger = logging.getLogger()
         rootLogger.setLevel('DEBUG')
 
-        os.makedirs('log', exist_ok=True)
-        fileHandler = logging.FileHandler(f"log/{self.id}.log")
+        fileHandler = logging.FileHandler(f"{LOG_PATH}/{self.id}.log")
         fileHandler.setFormatter(logFormatter)
         rootLogger.addHandler(fileHandler)
 
@@ -309,27 +340,37 @@ class Experiment(object):
             if gt.status == 'x':
                 self.recalibrate()
 
-
-    @stage
-    def save_data(self):
-        self.message("You're done! Let's just save your data...", tip_text="give us a few seconds", space=False)
-        all_data = {
-            'config': self.config,
+    @property
+    def all_data(self):
+        return {
+            'config_number': self.config_number,
             'parameters': self.parameters,
             'trial_data': self.trial_data,
             'practice_data': self.practice_data,
             'window': self.win.size,
             'bonus': self.bonus.dollars()
         }
-        os.makedirs('data/exp/', exist_ok=True)
-        fp = f'data/exp/{self.version}/{self.id}.json'
-        os.makedirs(os.path.dirname(fp), exist_ok=True)
+
+    @stage
+    def save_data(self):
+        self.message("You're done! Let's just save your data...", tip_text="give us a few seconds", space=False)
+
+        fp = f'{DATA_PATH}/{self.id}.json'
         with open(fp, 'w') as f:
-            f.write(jsonify(all_data))
+            f.write(jsonify(self.all_data))
         logging.info('wrote %s', fp)
 
-        self.eyelink.save_data()
+        if self.eyelink:
+            self.eyelink.save_data()
         self.message("Data saved! Please let the experimenter that you've completed the study.", space=True,
                     tip_text='press space to exit')
+
+    def emergency_save_data(self):
+        logging.warning('emergency save data')
+        fp = f'{DATA_PATH}/{self.id}.txt'
+        with open(fp, 'w') as f:
+            f.write(str(self.all_data))
+        logging.info('wrote %s', fp)
+
 
 
