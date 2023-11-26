@@ -70,7 +70,7 @@ class Experiment(object):
         }
 
         gt = GraphTrial(self.win, **prm)
-        self.trial_data.append(gt.data)
+        self.practice_data.append(gt.data)
         return gt
 
 
