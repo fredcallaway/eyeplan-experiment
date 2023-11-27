@@ -54,7 +54,9 @@ def get_next_config_number():
     print("FIX ME!")
     used = set()
     for fn in os.listdir(DATA_PATH):
-        used.add(int(re.match(r'.*_P(\d+)\.', fn).group(1)))
+        m = re.match(r'.*_P(\d+)\.', fn)
+        if m:
+            used.add(int(m.group(1)))
 
     possible = range(1, 1 + len(os.listdir(CONFIG_PATH)))
     try:
