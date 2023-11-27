@@ -19,7 +19,7 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, time_limit=None,
-                 gaze_contingent=False, eyelink=None, pos=(0, 0), space_start=True, **kws):
+                 gaze_contingent=False, eyelink=None, pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
         self.graph = graph
         self.rewards = list(rewards)
@@ -30,6 +30,7 @@ class GraphTrial(object):
         self.eyelink = eyelink
         self.pos = pos
         self.space_start = space_start
+        self.max_score = max_score
 
         self.status = 'ok'
         self.start_time = None

@@ -4,6 +4,9 @@ import logging
 
 def main(config_number=None, name=None, test=False, fast=False):
     exp = Experiment(config_number, name, full_screen=not test)
+    if test:
+        exp.practice(3)
+        return
     try:
         if fast:
             exp.intro()
@@ -16,7 +19,7 @@ def main(config_number=None, name=None, test=False, fast=False):
             exp.run_main(2)
         else:
             exp.intro()
-            exp.practice(2)
+            exp.practice(3)
             exp.practice_timelimit()
             exp.setup_eyetracker()
             exp.show_gaze_demo()

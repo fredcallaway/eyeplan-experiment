@@ -126,10 +126,11 @@ function make_trials(; )
     rdist = IIDSampler(n, rewards)
     kws = (;n, rdist)
 
-    practice = repeatedly(6) do
-        sample_problem(;kws...) do p
-            minimum(length, paths(p)) == 2
+    practice = repeatedly(10) do
+        p = sample_problem(;kws...) do p
+            minimum(length, paths(p)) == 2 && value(p) > 0
         end
+        (;JSON.lower(p)..., max_score=value(p))
     end
 
     gaze_contingent = mapreduce(vcat, 1:25) do i
@@ -137,7 +138,7 @@ function make_trials(; )
     end
     main = map(gaze_contingent) do gaze_contingent
         p = sample_problem(;kws...)
-        (;JSON.lower(p)..., gaze_contingent)
+        (;JSON.lower(p)..., gaze_contingent, max_score=value(p))
     end
 
     (; practice, main )

@@ -98,25 +98,26 @@ class Experiment(object):
         self._message = visual.TextBox2(self.win, '', pos=(-.83, 0), color='white', autoDraw=True, size=(0.65, None), letterHeight=.035, anchor='left')
         self._tip = visual.TextBox2(self.win, '', pos=(-.83, -0.2), color='white', autoDraw=True, size=(0.65, None), letterHeight=.025, anchor='left')
 
-        self._practice_trials = iter(self.trials['practice'])
+        # self._practice_trials = iter(self.trials['practice'])
+        self.practice_i = -1
         self.trial_data = []
         self.practice_data = []
 
     def _reset_practice(self):
         self._practice_trials = iter(self.trials['practice'])
 
-    def get_practice_trial(self, **kws):
-        trial = next(self._practice_trials)
+    def get_practice_trial(self, repeat=False,**kws):
+        if not repeat:
+            self.practice_i += 1
         prm = {
             **self.parameters,
             'gaze_contingent': False,
             'time_limit': None,
             'pos': (.3, 0),
             'space_start': False,
-            **trial,
+            **self.trials['practice'][self.practice_i],
             **kws
         }
-
         gt = GraphTrial(self.win, **prm)
         self.practice_data.append(gt.data)
         return gt
@@ -237,7 +238,18 @@ class Experiment(object):
         for i in range(n):
             self.message("Let's try a few more practice rounds.",
                          space=False, tip_text=f'complete {n - i} practice rounds to continue')
-            self.get_practice_trial().run()
+
+            gt = self.get_practice_trial()
+            while True:
+                gt.run()
+                if gt.score == gt.max_score:
+                    break
+                else:
+                    self.message(
+                        f"You got {int(gt.score)} points on that round, but you could have gotten {int(gt.max_score)}.\n"
+                        f"Let's try again. Try to make as many points as possible!"
+                    )
+                gt = self.get_practice_trial(repeat=True)
 
         self.message("Great job!", space=True)
 
@@ -283,7 +295,7 @@ class Experiment(object):
                      "Look straight at it and press space to start the round.",
                      tip_text="look at the circle and press space", space=False)
 
-        trial = next(self._practice_trials)
+        trial = self.get_practice_trial()
         prm = {**self.parameters, **trial, "time_limit": None, "pos": (.3, 0), "gaze_contingent": True, "eyelink": self.eyelink}
         gt = GraphTrial(self.win, **prm)
 
