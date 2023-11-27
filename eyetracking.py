@@ -134,9 +134,13 @@ class EyeLink(object):
         # Pass the display pixel coordinates (left, top, right, bottom) to the tracker
         # see the EyeLink Installation Guide, "Customizing Screen Settings"
 
+        scale = 0.8
+        h_trim = int(((1 - scale) * scn_height) / 2)
+        w_trim = int((scn_width - scale * scn_height) / 2)
+
         offset = int((scn_width - scn_height) / 2)
 
-        el_coords = f"screen_pixel_coords = {offset} 0 {scn_width - offset - 1} {scn_height - 1}"
+        el_coords = f"screen_pixel_coords = {w_trim} {h_trim} {scn_width - w_trim - 1} {scn_height - h_trim - 1}"
         self.tracker.sendCommand(el_coords)
         # For EyeLink Data Viewer
         # dv_coords = "DISPLAY_COORDS  0 0 %d %d" % (scn_width - 1, scn_height - 1)

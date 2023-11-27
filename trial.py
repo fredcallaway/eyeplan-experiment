@@ -79,7 +79,7 @@ class GraphTrial(object):
 
         self.nodes = nodes = []
         for i, (x, y) in enumerate(self.layout):
-            nodes.append(self.gfx.circle(0.8 * np.array([x, y]), name=i))
+            nodes.append(self.gfx.circle(0.7 * np.array([x, y]), name=i))
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
 
         self.reward_labels = []
@@ -104,7 +104,6 @@ class GraphTrial(object):
         if self.gaze_contingent:
             self.update_fixation()
 
-    def hide(self):
         self.gfx.clear()
 
     def shift(self, x, y):
@@ -171,7 +170,7 @@ class GraphTrial(object):
         # visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
 
         for i in range(len(self.nodes)):
-            if distance(gaze, self.nodes[i].pos) < .08:
+            if distance(gaze, self.nodes[i].pos) < 1.6 * self.nodes[i].radius:
                 if self.fixated != i:
                     self.log('fixate state', {'state': i})
                 self.fixated = i
