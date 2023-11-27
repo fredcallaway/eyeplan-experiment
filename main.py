@@ -26,10 +26,10 @@ def main(config_number=None, name=None, test=False, fast=False):
 
         exp.save_data()
     except:
+        logging.exception('Uncaught exception in main')
         exp.win.clearAutoDraw()
         exp.win.showMessage("Drat! The experiment has encountered an error.\nPlease inform the experimenter.")
         exp.win.flip()
-        logging.exception('oh no!')
         try:
             exp.save_data()
             raise

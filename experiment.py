@@ -29,9 +29,24 @@ def stage(f):
     def wrapper(self, *args, **kwargs):
         self.win.clearAutoDraw()
         logging.info('begin %s', f.__name__)
-        f(self, *args, **kwargs)
-        self.win.clearAutoDraw()
-        self.win.flip()
+        try:
+            f(self, *args, **kwargs)
+        except:
+            stage = f.__name__
+            logging.exception(f"Caught exception in stage {stage}")
+            if f.__name__ == "run_main":
+                logging.warning('Continuing to save data...')
+            else:
+                self.win.clearAutoDraw()
+                self.win.showMessage('The experiment ran into a problem! Please tell the experimenter.\nThen press C to continue.')
+                self.win.flip()
+                event.waitKeys(keyList=['c'])
+                self.win.showMessage(None)
+                logging.warning(f'Retrying {stage}')
+                f(self, *args, **kwargs)
+        finally:
+            self.win.clearAutoDraw()
+            self.win.flip()
 
     return wrapper
 
@@ -324,21 +339,38 @@ class Experiment(object):
             trials = trials[:n]
 
         for (i, trial) in enumerate(trials):
-            if i > 0 and i % summarize_every == 0:
-                msg = f'There are {self.n_trial - i} trials left'
-                if self.bonus:
-                    msg += f"\n{self.bonus.report_bonus()}"
-                msg += f'\nFeel free to take a quick break. Then press space to continue'
-                visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
+            try:
+                if i > 0 and i % summarize_every == 0:
+                    msg = f'There are {self.n_trial - i} trials left'
+                    if self.bonus:
+                        msg += f"\n{self.bonus.report_bonus()}"
+                    msg += f'\nFeel free to take a quick break. Then press space to continue'
+                    visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
+                    self.win.flip()
+                    event.waitKeys(keyList=['space'])
+                # fixation_cross()
+                gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
+                gt.run()
+                self.bonus.add_points(gt.score)
+                self.trial_data.append(gt.data)
+                if gt.status == 'x':
+                    self.recalibrate()
+            except:
+                logging.exception(f"Caught exception in run_main")
+                self.win.clearAutoDraw()
+                self.win.showMessage(
+                    'The experiment ran into a problem! Please tell the experimenter.\n'
+                    'Press C to continue or A to abort and save data'
+                    )
                 self.win.flip()
-                event.waitKeys(keyList=['space'])
-            # fixation_cross()
-            gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
-            gt.run()
-            self.bonus.add_points(gt.score)
-            self.trial_data.append(gt.data)
-            if gt.status == 'x':
-                self.recalibrate()
+                keys = event.waitKeys(keyList=['c', 'a'])
+                self.win.showMessage(None)
+                print('keys are', keys)
+                if 'c' in keys:
+                    continue
+                else:
+                    print('return')
+                    return
 
     @property
     def all_data(self):
