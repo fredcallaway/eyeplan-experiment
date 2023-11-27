@@ -314,7 +314,6 @@ class GraphTrial(object):
             if 'x' in event.getKeys():
                 self.log('press x')
                 self.status = 'x'
-                break
             self.tick()
 
         self.log('done')
