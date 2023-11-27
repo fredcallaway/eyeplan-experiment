@@ -355,6 +355,17 @@ class Experiment(object):
                 self.trial_data.append(gt.data)
                 if gt.status == 'x':
                     self.recalibrate()
+                elif gt.status == 'a':
+                    self.win.clearAutoDraw()
+                    self.win.showMessage(
+                       'Abort key was pressed!\n'
+                       'Press A again to stop the experiment early.'
+                       )
+                    self.win.flip()
+                    keys = event.waitKeys()
+                    self.win.showMessage(None)
+                    if 'a' in keys:
+                        break
             except:
                 logging.exception(f"Caught exception in run_main")
                 self.win.clearAutoDraw()

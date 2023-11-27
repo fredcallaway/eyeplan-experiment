@@ -311,9 +311,16 @@ class GraphTrial(object):
                 self.highlight_current_edges()
             if not self.done and self.time_limit is not None and self.start_time + self.time_limit < core.getTime():
                 self.do_timeout()
-            if 'x' in event.getKeys():
+
+            keys = event.getKeys()
+            if 'x' in keys:
+                logging.warning('press x')
                 self.log('press x')
                 self.status = 'x'
+            elif 'a' in keys:
+                logging.warning('press a')
+                self.log('press a')
+                self.status = 'a'
             self.tick()
 
         self.log('done')
