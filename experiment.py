@@ -93,6 +93,7 @@ class Experiment(object):
         self.bonus = Bonus(0, 50)
         # self.bonus = Bonus(self.parameters['points_per_cent'], 50)
         self.eyelink = None
+        self.disable_gaze_contingency = False
 
         self._message = visual.TextBox2(self.win, '', pos=(-.83, 0), color='white', autoDraw=True, size=(0.65, None), letterHeight=.035, anchor='left')
         self._tip = visual.TextBox2(self.win, '', pos=(-.83, -0.2), color='white', autoDraw=True, size=(0.65, None), letterHeight=.025, anchor='left')
@@ -251,7 +252,12 @@ class Experiment(object):
 
     @stage
     def recalibrate(self):
-        self.message("Looks like we need to recalibrate the eyetracker. Please tell the experimenter.", space=True)
+        self.message("Looks like we need to recalibrate the eyetracker. Please tell the experimenter.")
+        keys = event.waitKeys()
+        if 'x' in keys:
+            self.disable_gaze_contingency = True
+            self.message("Gaze-contingency disabled for the remainder of the experiment.", space=True)
+            logging.warning("Disabling gaze-contingency")
         self.hide_message()
         self.win.flip()
         self.eyelink.calibrate()
@@ -271,7 +277,7 @@ class Experiment(object):
     @stage
     def intro_gaze(self):
         self.message("At the beginning of each round, a circle will appear. "
-                     "Look at it and press space to start the round.",
+                     "Look straight at it and press space to start the round.",
                      tip_text="look at the circle and press space", space=False)
 
         trial = next(self._practice_trials)
@@ -280,7 +286,8 @@ class Experiment(object):
 
         gt.start_recording()
         gt.eyelink.stop_recording()
-        self.message("Yup just like that. There's just one more thing...", space=True)
+        self.message("Yup just like that. Make sure you hold your gaze steady on the circle before pressing space.", space=True)
+        self.message("There's just one more thing...", space=True)
         self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
         self.message("Try it out! Look at every location to continue", tip_text='press X to recalibrate', space=False)
 
@@ -348,7 +355,8 @@ class Experiment(object):
                     visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
                     self.win.flip()
                     event.waitKeys(keyList=['space'])
-                # fixation_cross()
+                if self.disable_gaze_contingency:
+                    trial['gaze_contingent'] = False
                 gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
                 gt.run()
                 self.bonus.add_points(gt.score)
