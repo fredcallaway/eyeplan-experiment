@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 if [ $# -eq 0 ]; then
     # No arguments, ask for user input
     read -p "Participant Name: " name
@@ -5,7 +7,7 @@ else
     # Use the provided argument
     name=$1
 fi
-dest="consent/$name.pdf"
+dest="consent/$(date +'%y-%m-%d-%H%M') $name.pdf"
 mkdir -p consent
 
 cpdf \
