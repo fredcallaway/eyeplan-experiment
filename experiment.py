@@ -310,13 +310,12 @@ class Experiment(object):
             self.message("Great! Keep looking around as long as you like", tip_text='press space to continue or X to recalibrate', space=False)
 
         while True:
-            result = gt.practice_gazecontingent(on_done, timeout=30)
+            result = gt.practice_gazecontingent(on_done, timeout=60)
             if result == 'success':
                 break
             else:
                 self.message("It seems like the eyetracker isn't calibrated correctly. Let's try to fix that", space=True)
                 self.hide_message()
-                gt.hide()
                 self.win.flip()
                 self.eyelink.calibrate()
                 self.message("OK we're going to try again. We'll use the center of the screen this time", space=True)

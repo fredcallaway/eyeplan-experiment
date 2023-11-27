@@ -272,12 +272,8 @@ class GraphTrial(object):
             if 'x' in pressed:
                 logging.info('press x')
                 result = 'cancelled'
-            if 'space' in pressed:
-                logging.info('press space')
-                if done:
-                    result = 'success'
-                else:
-                    result = 'cancelled'
+            if done and 'space' in pressed:
+                result = 'success'
 
         self.log('done')
         self.log('practice_gazecontingent result', {"result": result})
