@@ -360,14 +360,17 @@ class Experiment(object):
         if n is not None:
             trials = trials[:n]
 
+        block_earned = 0
+        block_possible = 0
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}")
             try:
                 if i > 0 and i % summarize_every == 0:
-                    msg = f'There are {self.n_trial - i} trials left'
+                    msg = f"In the last {summarize_every} rounds, you earned {int(block_earned)} points out of {int(block_possible)} possible points."
+                    block_earned = block_possible = 0
                     if self.bonus:
                         msg += f"\n{self.bonus.report_bonus()}"
-                    msg += f'\nFeel free to take a quick break. Then press space to continue'
+                    msg += f'\n\nThere are {self.n_trial - i} rounds left. Feel free to take a quick break. Then press space to continue.'
                     visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
                     self.win.flip()
                     event.waitKeys(keyList=['space'])
@@ -375,7 +378,10 @@ class Experiment(object):
                     trial['gaze_contingent'] = False
                 gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
                 gt.run()
+                block_earned += gt.score
+                block_possible += gt.max_score
                 self.bonus.add_points(gt.score)
+
                 self.trial_data.append(gt.data)
                 if gt.status == 'x':
                     self.recalibrate()
