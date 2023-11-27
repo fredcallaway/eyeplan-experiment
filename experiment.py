@@ -243,7 +243,8 @@ class Experiment(object):
 
     @stage
     def setup_eyetracker(self):
-        self.message("Now we're going to calibrate the eyetracker. When the circle appears, look at it and press space.", space=True)
+        self.message("Now we're going to calibrate the eyetracker. Please tell the experimenter.",
+            tip_text="Wait for the experimenter (space)", space=True)
         self.hide_message()
         self.win.flip()
         self.eyelink = EyeLink(self.win, self.id)
@@ -252,15 +253,17 @@ class Experiment(object):
 
     @stage
     def recalibrate(self):
-        self.message("Looks like we need to recalibrate the eyetracker. Please tell the experimenter.")
-        keys = event.waitKeys()
+        self.message("Looks like we need to recalibrate the eyetracker. Please tell the experimenter.",
+            tip_text="Wait for the experimenter (c or x)")
+        keys = event.waitKeys(['c', 'x'])
+        self.hide_message()
+        self.win.flip()
         if 'x' in keys:
             self.disable_gaze_contingency = True
             self.message("Gaze-contingency disabled for the remainder of the experiment.", space=True)
             logging.warning("Disabling gaze-contingency")
-        self.hide_message()
-        self.win.flip()
-        self.eyelink.calibrate()
+        else:
+            self.eyelink.calibrate()
 
 
     @stage
