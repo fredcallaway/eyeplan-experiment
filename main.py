@@ -2,10 +2,10 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-def main(config_number=None, name=None, test=False, fast=False):
+def main(config_number=None, name=None, test=False, fast=False, full=False):
     if test and name is None:
         name = 'test'
-    exp = Experiment(config_number, name, full_screen=not test)
+    exp = Experiment(config_number, name, full_screen=(not test) or full)
     if test:
         # exp.parameters['summarize_every'] = 2
         # exp.intro()
