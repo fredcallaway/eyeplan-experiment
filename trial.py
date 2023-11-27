@@ -104,6 +104,7 @@ class GraphTrial(object):
         if self.gaze_contingent:
             self.update_fixation()
 
+    def hide(self):
         self.gfx.clear()
 
     def shift(self, x, y):

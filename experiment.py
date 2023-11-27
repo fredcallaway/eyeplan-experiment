@@ -316,6 +316,7 @@ class Experiment(object):
             else:
                 self.message("It seems like the eyetracker isn't calibrated correctly. Let's try to fix that", space=True)
                 self.hide_message()
+                gt.hide()
                 self.win.flip()
                 self.eyelink.calibrate()
                 self.message("OK we're going to try again. We'll use the center of the screen this time", space=True)
