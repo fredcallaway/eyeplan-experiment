@@ -346,6 +346,7 @@ class Experiment(object):
             trials = trials[:n]
 
         for (i, trial) in enumerate(trials):
+            logging.info(f"Trial {i+1} of {len(trials)}")
             try:
                 if i > 0 and i % summarize_every == 0:
                     msg = f'There are {self.n_trial - i} trials left'
