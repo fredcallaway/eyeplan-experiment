@@ -294,10 +294,8 @@ class Experiment(object):
         self.message("At the beginning of each round, a circle will appear. "
                      "Look straight at it and press space to start the round.",
                      tip_text="look at the circle and press space", space=False)
-
-        trial = self.get_practice_trial()
-        prm = {**self.parameters, **trial, "time_limit": None, "pos": (.3, 0), "gaze_contingent": True, "eyelink": self.eyelink}
-        gt = GraphTrial(self.win, **prm)
+        
+        gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink)
 
         gt.start_recording()
         gt.eyelink.stop_recording()
@@ -321,7 +319,7 @@ class Experiment(object):
                 self.eyelink.calibrate()
                 self.message("OK we're going to try again. We'll use the center of the screen this time", space=True)
                 prm["pos"] = (0, 0)
-                gt = GraphTrial(self.win, **prm)
+                gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, repeat=True)
                 self.hide_message()
 
         self.message("Great! It looks like the eyetracker is working well.", space=True)
