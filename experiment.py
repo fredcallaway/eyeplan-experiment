@@ -245,7 +245,7 @@ class Experiment(object):
             gt = self.get_practice_trial()
             for i in range(3):
                 gt.run()
-                if gt.score == gt.max_score:
+                if intervened or gt.score == gt.max_score:
                     break
                 else:
                     self.message(
