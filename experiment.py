@@ -350,7 +350,7 @@ class Experiment(object):
 
         self.message("Great! It looks like the eyetracker is working well.", space=True)
         self.message("By the way, if it ever seems like the eyetracker isn't working correctly, "
-                     "you can let us know by pressing X", space=True)
+                     "please let the experimenter know so we can fix it!", space=True)
 
     @stage
     def intro_main(self):
