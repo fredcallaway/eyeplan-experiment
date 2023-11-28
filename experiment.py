@@ -269,7 +269,7 @@ class Experiment(object):
     def recalibrate(self):
         self.message("We're going to recalibrate the eyetracker. Please tell the experimenter.",
             tip_text="Wait for the experimenter (c or x)")
-        keys = event.waitKeys(keylist=['c', 'x'])
+        keys = event.waitKeys(keyList=['c', 'x'])
         self.hide_message()
         self.win.flip()
         if 'x' in keys:
