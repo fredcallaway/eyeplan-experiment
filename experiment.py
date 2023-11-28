@@ -267,7 +267,7 @@ class Experiment(object):
 
     @stage
     def recalibrate(self):
-        self.message("Looks like we need to recalibrate the eyetracker. Please tell the experimenter.",
+        self.message("We're going to recalibrate the eyetracker. Please tell the experimenter.",
             tip_text="Wait for the experimenter (c or x)")
         keys = event.waitKeys(keylist=['c', 'x'])
         self.hide_message()
@@ -363,6 +363,8 @@ class Experiment(object):
         block_possible = 0
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}")
+            if i == 49:
+                self.recalibrate()
             try:
                 if i > 0 and i % summarize_every == 0:
                     msg = f"In the last {summarize_every} rounds, you earned {int(block_earned)} points out of {int(block_possible)} possible points."
