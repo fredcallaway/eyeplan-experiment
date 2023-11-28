@@ -9,6 +9,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False):
     if test:
         # exp.parameters['summarize_every'] = 2
         # exp.intro()
+        # exp.practice(1)
         # exp.practice_timelimit()
         exp.setup_eyetracker()
         exp.show_gaze_demo()
