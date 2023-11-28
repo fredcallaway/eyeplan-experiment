@@ -297,17 +297,19 @@ class Experiment(object):
                      "Look straight at it and press space to start the round.",
                      tip_text="look at the circle and press space", space=False)
 
-        gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink)
+        gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0))
 
         gt.start_recording()
         gt.eyelink.stop_recording()
+
         self.message("Yup just like that. Make sure you hold your gaze steady on the circle before pressing space.", space=True)
         self.message("There's just one more thing...", space=True)
         self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
-        self.message("Try it out! Look at every location to continue", tip_text='press X to recalibrate', space=False)
+        self.message("Try it out!\nShow all the points\nto continue", tip_text='press X to recalibrate', space=False)
 
         def on_done():
             self.message("Great! Keep looking around as long as you like", tip_text='press space to continue or X to recalibrate', space=False)
+
 
         while True:
             result = gt.practice_gazecontingent(on_done, timeout=60)
@@ -319,9 +321,11 @@ class Experiment(object):
                 gt.hide()
                 self.win.flip()
                 self.eyelink.calibrate()
-                self.message("OK we're going to try again. We'll use the center of the screen this time", space=True)
+                self.message("OK we're going to try again.", space=True)
+                self.message("Show all the points\nto continue", tip_text='press X to recalibrate', space=False)
+
                 gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0), repeat=True)
-                self.hide_message()
+                # self.hide_message()
 
         self.message("Great! It looks like the eyetracker is working well.", space=True)
         self.message("By the way, if it ever seems like the eyetracker isn't working correctly, "
