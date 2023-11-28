@@ -19,7 +19,7 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, time_limit=None,
-                 gaze_contingent=False, eyelink=None, pos=(0, 0), space_start=True, max_score=None, **kws):
+                 gaze_contingent=False, gaze_tolerance=1.5, eyelink=None, pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
         self.graph = graph
         self.rewards = list(rewards)
@@ -27,6 +27,7 @@ class GraphTrial(object):
         self.layout = layout
         self.time_limit = time_limit
         self.gaze_contingent = gaze_contingent
+        self.gaze_tolerance = gaze_tolerance
         self.eyelink = eyelink
         self.pos = pos
         self.space_start = space_start
@@ -171,7 +172,7 @@ class GraphTrial(object):
         # visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
 
         for i in range(len(self.nodes)):
-            if distance(gaze, self.nodes[i].pos) < 1.5 * self.nodes[i].radius:
+            if distance(gaze, self.nodes[i].pos) < self.gaze_tolerance * self.nodes[i].radius:
                 if self.fixated != i:
                     self.log('fixate state', {'state': i})
                 self.fixated = i
