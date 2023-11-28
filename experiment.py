@@ -308,15 +308,27 @@ class Experiment(object):
         self.message("Try it out!\nShow all the points\nto continue", tip_text='press X to recalibrate', space=False)
 
         def on_done():
-            self.message("Great! Keep looking around as long as you like", tip_text='press space to continue or X to recalibrate', space=False)
+            self.message("Great! Keep looking\naround as long\nas you like", tip_text='press space to continue\n or X to recalibrate', space=False)
 
 
-        while True:
+        for attempt in range(1, 4):
             result = gt.practice_gazecontingent(on_done, timeout=60)
             if result == 'success':
                 break
             else:
-                self.message("It seems like the eyetracker isn't calibrated correctly. Let's try to fix that", space=True)
+                if attempt == 1:
+                    self.message("It seems like the eyetracker isn't calibrated correctly. Let's try to fix that.", space=True)
+                if attempt == 2:
+                    self.parameters['gaze_tolerance'] = 1.5
+                    logging.warning('Setting gaze_tolerance to 1.5')
+                    self.message("Hmmm, let's try one more time", space=True)
+                if attempt == 3:
+                    self.parameters['gaze_tolerance'] = 1.5
+                    logging.warning('disabling gaze contingency')
+                    self.disable_gaze_contingency = True
+                    self.message("OK. We'll just leave the number visible all the time", space=True)
+                    break
+
                 self.hide_message()
                 gt.hide()
                 self.win.flip()

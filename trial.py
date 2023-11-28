@@ -46,7 +46,8 @@ class GraphTrial(object):
                 "rewards": rewards,
                 "start": start,
                 "time_limit": time_limit,
-                "gaze_contingent": gaze_contingent
+                "gaze_contingent": gaze_contingent,
+                "gaze_tolernace": gaze_tolernace
             },
             "events": [],
             "flips": [],
