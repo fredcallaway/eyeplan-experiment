@@ -1,3 +1,6 @@
 __pycache__
 data
 consent
+credentials.json
+token.json
+reminded.txt
