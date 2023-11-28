@@ -237,12 +237,13 @@ class Experiment(object):
 
     @stage
     def practice(self, n):
+        intervened = False
         for i in range(n):
             self.message("Let's try a few more practice rounds.",
                          space=False, tip_text=f'complete {n - i} practice rounds to continue')
 
             gt = self.get_practice_trial()
-            while True:
+            for i in range(3):
                 gt.run()
                 if gt.score == gt.max_score:
                     break
@@ -252,6 +253,14 @@ class Experiment(object):
                         f"Let's try again. Try to make as many points as possible!"
                     )
                 gt = self.get_practice_trial(repeat=True)
+            else:  # never succeeded
+                logging.warning(f"failed practice trial {i}")
+                if not intervened:
+                    intervened = True
+                    self.message("Please check in with the experimenter",
+                        tip_text="Wait for the experimenter (space)", space=True)
+                    self.get_practice_trial(repeat=True).run()
+
 
         self.message("Great job!", space=True)
 

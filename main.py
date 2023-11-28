@@ -7,6 +7,8 @@ def main(config_number=None, name=None, test=False, fast=False, full=False):
         name = 'test'
     exp = Experiment(config_number, name, full_screen=(not test) or full)
     if test:
+        exp.practice(3)
+        return
         # exp.parameters['summarize_every'] = 2
         # exp.intro()
         # exp.practice_timelimit()
