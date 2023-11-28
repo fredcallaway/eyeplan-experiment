@@ -171,7 +171,7 @@ class GraphTrial(object):
         # visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
 
         for i in range(len(self.nodes)):
-            if distance(gaze, self.nodes[i].pos) < 1.6 * self.nodes[i].radius:
+            if distance(gaze, self.nodes[i].pos) < 1.2 * self.nodes[i].radius:
                 if self.fixated != i:
                     self.log('fixate state', {'state': i})
                 self.fixated = i
