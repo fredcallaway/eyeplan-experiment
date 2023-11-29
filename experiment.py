@@ -282,9 +282,15 @@ class Experiment(object):
         self.hide_message()
         self.win.flip()
         if 'x' in keys:
-            self.disable_gaze_contingency = True
-            self.message("Gaze-contingency disabled for the remainder of the experiment.", space=True)
-            logging.warning("Disabling gaze-contingency")
+            if self.parameters.get('gaze_tolerance') == 1.5:
+                logging.warning("Disabling gaze-contingency")
+                self.disable_gaze_contingency = True
+                self.message("Gaze-contingency disabled for the remainder of the experiment.", space=True)
+            else:
+                logging.warning('Setting gaze_tolerance to 1.5')
+                self.parameters['gaze_tolerance'] = 1.5
+                self.eyelink.calibrate()
+
         else:
             self.eyelink.calibrate()
 
@@ -332,7 +338,6 @@ class Experiment(object):
                     logging.warning('Setting gaze_tolerance to 1.5')
                     self.message("Hmmm, let's try one more time", space=True)
                 if attempt == 3:
-                    self.parameters['gaze_tolerance'] = 1.5
                     logging.warning('disabling gaze contingency')
                     self.disable_gaze_contingency = True
                     self.message("OK. We'll just leave the number visible all the time", space=True)
