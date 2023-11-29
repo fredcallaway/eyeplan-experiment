@@ -98,7 +98,7 @@ def send_reminder(email, full_name, dt):
     if email in reminded:
         print(f'{email} has already been reminded. Skipping.')
         return
-    assert today.date() == dt.date()
+    assert datetime.now().date() == dt.date()
     date = dt.strftime('%A, %B %d')
     time = dt.strftime('%l:%M%p').strip()
     subject = f"Reminder: study today at {time} in Meyer 566"
