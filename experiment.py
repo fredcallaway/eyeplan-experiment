@@ -285,13 +285,13 @@ class Experiment(object):
         self.hide_message()
         self.win.flip()
         if 'x' in keys:
-            if self.parameters.get('gaze_tolerance') == 1.5:
+            if self.parameters.get('gaze_tolerance') == 2:
                 logging.warning("Disabling gaze-contingency")
                 self.disable_gaze_contingency = True
                 self.message("Gaze-contingency disabled for the remainder of the experiment.", space=True)
             else:
-                logging.warning('Setting gaze_tolerance to 1.5')
-                self.parameters['gaze_tolerance'] = 1.5
+                logging.warning('Setting gaze_tolerance to 2')
+                self.parameters['gaze_tolerance'] = 2
                 self.eyelink.calibrate()
 
         else:
@@ -337,8 +337,8 @@ class Experiment(object):
                 if attempt == 1:
                     self.message("It seems like the eyetracker isn't calibrated correctly. Let's try to fix that.", space=True)
                 if attempt == 2:
-                    self.parameters['gaze_tolerance'] = 1.5
-                    logging.warning('Setting gaze_tolerance to 1.5')
+                    self.parameters['gaze_tolerance'] = 2
+                    logging.warning('Setting gaze_tolerance to 2')
                     self.message("Hmmm, let's try one more time", space=True)
                 if attempt == 3:
                     logging.warning('disabling gaze contingency')
