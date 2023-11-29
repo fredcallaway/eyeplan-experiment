@@ -344,7 +344,7 @@ class Experiment(object):
                     logging.warning('disabling gaze contingency')
                     self.disable_gaze_contingency = True
                     self.message("OK. We'll just leave the number visible all the time", space=True)
-                    break
+                    return
 
                 self.hide_message()
                 gt.hide()
