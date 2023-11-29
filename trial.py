@@ -84,10 +84,8 @@ class GraphTrial(object):
             nodes.append(self.gfx.circle(0.7 * np.array([x, y]), name=i))
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
 
-        self.reward_labels = []
-        self.reward_unlabels = []
-        for i, n in enumerate(self.nodes):
-            self.reward_labels.append(self.gfx.text(reward_string(self.rewards[i]), n.pos))
+        self.reward_labels = [self.gfx.text('', n.pos) for n in self.nodes]
+        self.update_node_labels()
 
         self.arrows = {}
         for i, js in enumerate(self.graph):
@@ -103,8 +101,6 @@ class GraphTrial(object):
 
         self.mask = self.gfx.rect((.1,0), 1.1, 1, color='gray', opacity=0)
         self.gfx.shift(*self.pos)
-        if self.gaze_contingent:
-            self.update_fixation()
 
     def hide(self):
         self.gfx.clear()
@@ -166,10 +162,30 @@ class GraphTrial(object):
         self.win.flip()
         wait(.3)
 
+    def node_label(self, i):
+        if self.gaze_contingent:
+            if i == self.fixated:
+                return reward_string(self.rewards[i])
+            elif self.rewards[i]:
+                return '?'
+            else:
+                return ''
+        else:
+            return reward_string(self.rewards[i])
+
+    def update_node_labels(self):
+        for i in range(len(self.nodes)):
+            old = self.reward_labels[i].text
+            new = self.node_label(i)
+            if old != new:
+                logging.debug(f'Changing reward_label[%s] from %s to %s', i, old, new)
+                self.reward_labels[i].text = new
+
     def update_fixation(self):
         if not self.eyelink:
             return
         gaze = self.eyelink.gaze_position()
+        self.last_fixated = self.fixated
         # visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
 
         for i in range(len(self.nodes)):
@@ -184,15 +200,8 @@ class GraphTrial(object):
             self.log('unfixate state', {'state': self.fixated})
             self.fixated = None
 
-        if self.gaze_contingent:
-            for i in range(len(self.nodes)):
-                if i == self.fixated:
-                    lab = reward_string(self.rewards[i])
-                elif self.rewards[i]:
-                    lab = '?'
-                else:
-                    lab = ''
-                self.reward_labels[i].text = lab
+        if self.gaze_contingent and self.last_fixated != self.fixated:
+            self.update_node_labels()
 
     def check_click(self):
         if self.disable_click:
