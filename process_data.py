@@ -5,16 +5,26 @@ import pandas as pd
 import subprocess
 
 from config import VERSION
-# wid = 'fred'
+
 if len(sys.argv) > 1:
     VERSION = sys.argv[1]
 
+def shorten_wid(wid):
+    return wid.split('_')[-1]
 
 trials = []
-for file in os.listdir(f"data/exp/{VERSION}/"):
+used_wids = set()
+os.makedirs(f'data/processed/{VERSION}/', exist_ok=True)
+
+participants = []
+
+for file in sorted(os.listdir(f"data/exp/{VERSION}/")):
     if 'test' in file:
         continue
     wid = file.replace('.json', '')
+    short_wid = wid.split('_')[-1]
+    assert short_wid not in used_wids
+    used_wids.add(short_wid)
     # wid = uid.rsplit('-', 1)[1]
 
     # experimental data
@@ -22,8 +32,10 @@ for file in os.listdir(f"data/exp/{VERSION}/"):
     print(fn)
     with open(fn) as f:
         data = json.load(f)
+    data.keys()
+    wid
     for i, t in enumerate(data["trial_data"]):
-        t["wid"] = wid
+        t["wid"] = short_wid
         t["trial_index"] = i
         trials.append(t)
 
@@ -38,7 +50,6 @@ for file in os.listdir(f"data/exp/{VERSION}/"):
             print(f'Error parsing {edf}', '-'*80, output, '-'*80, sep='\n')
 
 
-os.makedirs(f'data/processed/{VERSION}/', exist_ok=True)
 with open(f'data/processed/{VERSION}/trials.json', 'w') as f:
     json.dump(trials, f)
 
