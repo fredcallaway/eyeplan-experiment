@@ -11,7 +11,7 @@ from util import jsonify
 from trial import GraphTrial
 from graphics import Graphics
 from bonus import Bonus
-from eyetracking import EyeLink
+from eyetracking import EyeLink, MouseLink
 
 import subprocess
 from copy import deepcopy
@@ -265,12 +265,15 @@ class Experiment(object):
         self.message("Great job!", space=True)
 
     @stage
-    def setup_eyetracker(self):
+    def setup_eyetracker(self, mouse=False):
         self.message("Now we're going to calibrate the eyetracker. Please tell the experimenter.",
             tip_text="Wait for the experimenter (space)", space=True)
         self.hide_message()
         self.win.flip()
-        self.eyelink = EyeLink(self.win, self.id)
+        if mouse:
+            self.eyelink = MouseLink(self.win, self.id)
+        else:
+            self.eyelink = EyeLink(self.win, self.id)
         self.eyelink.setup_calibration()
         self.eyelink.calibrate()
 

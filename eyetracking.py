@@ -200,6 +200,47 @@ class EyeLink(object):
         if self.tracker.isConnected():
             self.tracker.close()
 
+class MouseLink(object):
+    """Fake eyelink"""
+    def __init__(self, win, uniqueid, dummy_mode=False):
+        self.win = win
+        self.mouse = event.Mouse()
+
+    def drift_check(self, pos=(0,0)):
+        logging.info('MouseLink drift_check')
+        return
+
+    def message(self, msg, log=True):
+        logging.info('MouseLink message')
+        return
+
+    def start_recording(self):
+        logging.info('MouseLink start_recording')
+        return
+
+    def stop_recording(self):
+        logging.info('MouseLink stop_recording')
+        return
+
+    def setup_calibration(self, full_screen=False):
+        logging.info('MouseLink setup_calibration')
+        return
+
+    def calibrate(self):
+        logging.info('MouseLink calibrate')
+        return
+
+    def save_data(self):
+        logging.info('MouseLink save_data')
+        return
+
+    def gaze_position(self):
+        return self.mouse.getPos()
+
+    def close_connection(self):
+        logging.info('MouseLink close_connection')
+        return
+
 
 if __name__ == '__main__':
     mon = monitors.Monitor('myMonitor', width=53.0, distance=70.0)
