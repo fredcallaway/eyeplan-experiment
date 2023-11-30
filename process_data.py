@@ -11,7 +11,7 @@ if len(sys.argv) > 1:
 
 
 trials = []
-for file in os.listdir(f"data/exp/{VERSION}/"):
+for file in sorted(os.listdir(f"data/exp/{VERSION}/")):
     if 'test' in file:
         continue
     wid = file.replace('.json', '')
