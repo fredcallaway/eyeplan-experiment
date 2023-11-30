@@ -8,7 +8,7 @@ from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
 
 from util import jsonify
-from trial import GraphTrial
+from trial import GraphTrial, CalibrationTrial
 from graphics import Graphics
 from bonus import Bonus
 from eyetracking import EyeLink, MouseLink
@@ -310,6 +310,26 @@ class Experiment(object):
         self.win.flip()
 
     @stage
+    def calibrate_gaze_tolerance(self):
+        t = deepcopy(self.trials['practice'][0])
+        t['graph'] = [[] for edges in t['graph']]
+
+        result = None
+        for tol in [.1, .25, .5, .75, 1, 1.25, 1.5, 2]:
+            self.parameters['gaze_tolerance'] = tol
+            prm = {**self.parameters, **t, 'time_limit': 10}
+            gt = CalibrationTrial(self.win, **prm, eyelink=self.eyelink)
+            self.practice_data.append(gt.data)
+            result = gt.run()
+            if result == 'success':
+                break
+        else:
+            logging.warning('disabling gaze contingency')
+            self.disable_gaze_contingency = True
+
+
+
+    @stage
     def intro_gaze(self):
         self.message("At the beginning of each round, a circle will appear. "
                      "Look straight at it and press space to start the round.",
@@ -321,6 +341,8 @@ class Experiment(object):
         gt.eyelink.stop_recording()
 
         self.message("Yup just like that. Make sure you hold your gaze steady on the circle before pressing space.", space=True)
+
+    def intro_contingent(self):
         self.message("There's just one more thing...", space=True)
         self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
         self.message("Try it out!\nShow all the points\nto continue", tip_text='press X to recalibrate', space=False)

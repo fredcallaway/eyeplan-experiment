@@ -19,16 +19,20 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, time_limit=None,
-                 gaze_contingent=False, gaze_tolerance=1.2, eyelink=None, pos=(0, 0), space_start=True, max_score=None, **kws):
+                 eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5,
+                 pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
         self.graph = graph
         self.rewards = list(rewards)
         self.start = start
         self.layout = layout
         self.time_limit = time_limit
+
+        self.eyelink = eyelink
         self.gaze_contingent = gaze_contingent
         self.gaze_tolerance = gaze_tolerance
-        self.eyelink = eyelink
+        self.fixation_lag = fixation_lag
+
         self.pos = pos
         self.space_start = space_start
         self.max_score = max_score
@@ -47,7 +51,8 @@ class GraphTrial(object):
                 "start": start,
                 "time_limit": time_limit,
                 "gaze_contingent": gaze_contingent,
-                "gaze_tolerance": gaze_tolerance
+                "gaze_tolerance": gaze_tolerance,
+                "fixation_lag": fixation_lag
             },
             "events": [],
             "flips": [],
@@ -196,7 +201,7 @@ class GraphTrial(object):
                 self.fix_verified = core.getTime()
                 break
 
-        if self.fixated is not None and core.getTime() - self.fix_verified > .5:
+        if self.fixated is not None and core.getTime() - self.fix_verified > self.fixation_lag:
             self.log('unfixate state', {'state': self.fixated})
             self.fixated = None
 
@@ -340,3 +345,71 @@ class GraphTrial(object):
         return self.fade_out()
 
 
+class CalibrationTrial(GraphTrial):
+    """docstring for CalibrationTrial"""
+    def __init__(self, *args, **kwargs):
+        kwargs['gaze_contingent'] = True
+        kwargs['fixation_lag'] = .1
+        # kwargs['time_limit'] = None
+        self.current_target = None
+        self.completed = set()
+        self.result = None
+        super().__init__(*args, **kwargs)
+
+    def node_label(self, i):
+        if i in self.completed:
+            return 'X'
+        elif i == self.fixated:
+            return '.'
+        elif i == self.current_target:
+            return 'O'
+        else:
+            return ''
+
+    def do_timeout(self):
+        self.log('timeout')
+        logging.info('timeout')
+        self.result = 'timeout'
+
+    def run(self, timeout=15):
+        assert self.eyelink
+        self.start_recording(drift_check=True)
+        self.show()
+        self.start_time = self.tick()
+        self.log('start', {'flip_time': self.start_time})
+
+        targets = list(range(len(self.nodes)))
+        np.random.shuffle(targets)
+        targets = iter(targets)
+        self.current_target = next(targets)
+        self.update_node_labels()
+
+        while self.result is None:
+            self.update_fixation()
+            if self.fixated == self.current_target:
+                logging.info(f'fixated target {self.fixated}')
+                self.completed.add(self.fixated)
+                try:
+                    self.current_target = next(targets)
+                    self.update_node_labels()
+                except StopIteration:
+                    self.result = 'success'
+                    self.update_node_labels()
+                    break
+
+            if not self.done and self.time_limit is not None and self.start_time + self.time_limit < core.getTime():
+                self.do_timeout()
+
+            pressed = event.getKeys()
+            if 'x' in pressed:
+                logging.info('press x')
+                self.result = 'cancelled'
+
+            self.tick()
+
+        self.log('done')
+        self.log('CalibrationTrial result', {"result": self.result})
+        self.eyelink.stop_recording()
+        wait(.3)
+        self.fade_out()
+        return self.result

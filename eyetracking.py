@@ -211,7 +211,7 @@ class MouseLink(object):
         return
 
     def message(self, msg, log=True):
-        logging.info('MouseLink message')
+        logging.debug('MouseLink message')
         return
 
     def start_recording(self):
