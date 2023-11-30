@@ -396,7 +396,7 @@ class Experiment(object):
         block_possible = 0
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}")
-            if i == 49:
+            if i == 50:
                 self.recalibrate()
             try:
                 if i > 0 and i % summarize_every == 0:
