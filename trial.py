@@ -239,6 +239,7 @@ class GraphTrial(object):
         return t
 
     def do_timeout(self):
+        self.log('timeout')
         logging.info('timeout')
         for i in range(3):
             self.timer_wrap.setColor('red'); self.win.flip()
