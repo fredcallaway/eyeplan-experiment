@@ -405,7 +405,7 @@ class Experiment(object):
                     block_earned = block_possible = 0
                     if self.bonus:
                         msg += f"\n{self.bonus.report_bonus()}"
-                    msg += f'\n\nThere are {self.n_trial - i} rounds left. Feel free to take a quick break. Then press space to continue.'
+                    msg += f'\n\nThere are {len(trials) - i} rounds left. Feel free to take a quick break. Then press space to continue.'
                     visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
                     self.win.flip()
                     event.waitKeys(keyList=['space'])
@@ -416,12 +416,14 @@ class Experiment(object):
 
                 gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
                 gt.run()
+                self.trial_data.append(gt.data)
 
-                if gt.status == 'ok':
+                if gt.status != 'recalibrate':
+                    logging.info('gt.status is %s', gt.status)
                     block_earned += gt.score
                     block_possible += gt.max_score
                     self.bonus.add_points(gt.score)
-                    self.trial_data.append(gt.data)
+
 
                 if gt.status == 'recalibrate':
                     self.recalibrate()
