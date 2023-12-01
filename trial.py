@@ -86,10 +86,10 @@ class GraphTrial(object):
 
         self.nodes = nodes = []
         for i, (x, y) in enumerate(self.layout):
-            nodes.append(self.gfx.circle(0.7 * np.array([x, y]), name=i))
+            nodes.append(self.gfx.circle(0.7 * np.array([x, y]), name=f'node{i}'))
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
 
-        self.reward_labels = [self.gfx.text('', n.pos) for n in self.nodes]
+        self.reward_labels = [self.gfx.text('', n.pos, name=f'lab{i}') for i, n in enumerate(self.nodes)]
         self.update_node_labels()
 
         self.arrows = {}

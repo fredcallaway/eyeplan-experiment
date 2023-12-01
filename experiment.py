@@ -3,6 +3,7 @@ import logging
 import json
 import re
 from datetime import datetime
+import psychopy
 from psychopy import core, visual, gui, data, event
 from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
@@ -21,6 +22,7 @@ from config import VERSION
 DATA_PATH = f'data/exp/{VERSION}'
 CONFIG_PATH = f'config/{VERSION}'
 LOG_PATH = 'log'
+PSYCHO_LOG_PATH = 'log'
 for p in (DATA_PATH, CONFIG_PATH, LOG_PATH, ):
     os.makedirs(p, exist_ok=True)
 
@@ -147,6 +149,9 @@ class Experiment(object):
         rootLogger.addHandler(consoleHandler)
 
         logging.info(f'starting up {self.id} at {core.getTime()}')
+
+        psychopy.logging.LogFile(f"{LOG_PATH}/{self.id}-psycho.log", level=logging.INFO, filemode='w')
+        psychopy.logging.log(datetime.now().strftime('time is %Y-%m-%d %H:%M:%S,%f'), logging.INFO)
 
 
     def setup_window(self):
