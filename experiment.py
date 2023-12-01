@@ -91,6 +91,9 @@ class Experiment(object):
             self.parameters = conf['parameters']
             logging.info('parameters %s', self.parameters)
 
+        if 'gaze_tolerance' not in self.parameters:
+            self.parameters['gaze_tolerance'] = 0.5
+
         self.win = self.setup_window()
         self.bonus = Bonus(0, 50)
         # self.bonus = Bonus(self.parameters['points_per_cent'], 50)
@@ -174,9 +177,7 @@ class Experiment(object):
         logging.debug('message: %s (%s)', msg, tip_text)
         self.show_message()
         self._message.setText(msg)
-        self._tip.setText(tip_text if tip_text else
-                    'press space to continue' if space else
-                    'click the board to continue')
+        self._tip.setText(tip_text if tip_text else 'press space to continue' if space else '')
         self.win.flip()
         if space:
             event.waitKeys(keyList=['space'])
@@ -311,21 +312,33 @@ class Experiment(object):
 
     @stage
     def calibrate_gaze_tolerance(self):
+        self.message("We're going to check how well the eyetracker is working.", space=True)
+        self.message(
+            "When the board comes up, just look at the O's as they appear. "
+            "They should become X's. If it's not working, press X.",
+            space=True)
+        self.hide_message()
+
         t = deepcopy(self.trials['practice'][0])
         t['graph'] = [[] for edges in t['graph']]
 
-        result = None
-        for tol in [.25, .5, .75, 1, 1.25, 1.5, 2]:
-            self.parameters['gaze_tolerance'] = tol
+        while self.parameters['gaze_tolerance'] < 2:
             prm = {**self.parameters, **t, 'time_limit': 10}
             gt = CalibrationTrial(self.win, **prm, eyelink=self.eyelink)
             self.practice_data.append(gt.data)
             result = gt.run()
             if result == 'success':
                 break
+            else:
+                self.message("OK let's make some quick adjustments...", space=True)
+                self.hide_message()
+                self.parameters['gaze_tolerance'] += 0.25
+
         else:
             logging.warning('disabling gaze contingency')
             self.disable_gaze_contingency = True
+
+        self.message("Great! It looks like the eyetracker is working well.", space=True)
 
     @stage
     def intro_gaze(self):
@@ -339,42 +352,11 @@ class Experiment(object):
     def intro_contingent(self):
         self.message("There's just one more thing...", space=True)
         self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
-        self.message("Try it out!\nShow all the points\nto continue", tip_text='press X to recalibrate', space=False)
-
-        def on_done():
-            self.message("Great! Keep looking\naround as long\nas you like", tip_text='press space to continue\n or X to recalibrate', space=False)
-
-
-        for attempt in range(1, 4):
-            result = gt.practice_gazecontingent(on_done, timeout=60)
-            if result == 'success':
-                break
-            else:
-                if attempt == 1:
-                    self.message("It seems like the eyetracker isn't calibrated correctly. Let's try to fix that.", space=True)
-                if attempt == 2:
-                    self.parameters['gaze_tolerance'] = 2
-                    logging.warning('Setting gaze_tolerance to 2')
-                    self.message("Hmmm, let's try one more time", space=True)
-                if attempt == 3:
-                    logging.warning('disabling gaze contingency')
-                    self.disable_gaze_contingency = True
-                    self.message("OK. We'll just leave the number visible all the time", space=True)
-                    return
-
-                self.hide_message()
-                gt.hide()
-                self.win.flip()
-                self.eyelink.calibrate()
-                self.message("OK we're going to try again.", space=True)
-                self.message("Show all the points\nto continue", tip_text='press X to recalibrate', space=False)
-
-                gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0), repeat=True)
-                # self.hide_message()
-
-        self.message("Great! It looks like the eyetracker is working well.", space=True)
-        self.message("By the way, if it ever seems like the eyetracker isn't working correctly, "
-                     "please let the experimenter know so we can fix it!", space=True)
+        self.message("Try it out!", space=False)
+        gt = self.get_practice_trial(gaze_contingent=True, drift_check=False, eyelink=self.eyelink, pos=(0,0))
+        gt.run()
+        self.message("Great! If you ever find that the points don't appear when you look at them, "
+            "please let the experimenter know so we can fix it!", space=True)
 
     @stage
     def intro_main(self):

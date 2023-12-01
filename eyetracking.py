@@ -208,6 +208,11 @@ class MouseLink(object):
 
     def drift_check(self, pos=(0,0)):
         logging.info('MouseLink drift_check')
+        self.win.showMessage('DRIFT CHECK')
+        self.win.flip()
+        event.waitKeys(keyList=['space'])
+        self.win.showMessage(None)
+        self.win.flip()
         return
 
     def message(self, msg, log=True):

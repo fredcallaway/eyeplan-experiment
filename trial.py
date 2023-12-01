@@ -65,7 +65,7 @@ class GraphTrial(object):
 
     def log(self, event, info={}):
         time = core.getTime()
-        logging.debug(f'GraphTrial.log {time:3.3f} {event} ' + ', '.join(f'{k} = {v}' for k, v in info.items()))
+        logging.debug(f'{self.__class__.__name__}.log {time:3.3f} {event} ' + ', '.join(f'{k} = {v}' for k, v in info.items()))
         datum = {
             'time': time,
             'event': event,
@@ -300,9 +300,9 @@ class GraphTrial(object):
         self.fade_out()
         return result
 
-    def run(self, one_step=False, stop_on_space=True, highlight_edges=False):
+    def run(self, one_step=False, drift_check=True, stop_on_space=True, highlight_edges=False):
         if self.eyelink:
-            self.start_recording()
+            self.start_recording(drift_check)
         elif self.space_start:
             visual.TextStim(self.win,  'press space to start', pos=self.pos, color='white', height=.035).draw()
             self.win.flip()
@@ -387,13 +387,15 @@ class CalibrationTrial(GraphTrial):
         while self.result is None:
             self.update_fixation()
             if self.fixated == self.current_target:
-                logging.info(f'fixated target {self.fixated}')
+                self.log(f'fixated target', {"state": self.fixated})
                 self.completed.add(self.fixated)
                 try:
                     self.current_target = next(targets)
+                    self.log(f'new target', {"state": self.current_target})
                     self.update_node_labels()
                 except StopIteration:
                     self.result = 'success'
+                    self.log('success')
                     self.update_node_labels()
                     break
 
@@ -402,13 +404,13 @@ class CalibrationTrial(GraphTrial):
 
             pressed = event.getKeys()
             if 'x' in pressed:
-                logging.info('press x')
+                self.log('cancel')
                 self.result = 'cancelled'
+                self.fade_out()
+                return self.result
 
             self.tick()
 
-        self.log('done')
-        self.log('CalibrationTrial result', {"result": self.result})
         self.eyelink.stop_recording()
         wait(.3)
         self.fade_out()
