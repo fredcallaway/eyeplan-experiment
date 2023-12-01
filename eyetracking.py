@@ -48,6 +48,7 @@ def configure_data(tracker):
     tracker.sendCommand("link_sample_data = %s" % link_sample_flags)
 
     tracker.sendCommand("calibration_type = HV9")
+    tracker.sendCommand("enable_automatic_calibration = NO")
 
 def pix2height(win, pos):
     assert win.units == 'height'
@@ -111,6 +112,15 @@ class EyeLink(object):
             logging.info('escape in drift correct')
             self.tracker.doDriftCorrect(x, y, 1, 1)
         self.win.units = 'height'
+
+    def fake_drift_check(self, pos=(0,0)):
+        x, y = map(int, height2pix(self.win, pos))
+        self.genv.update_cal_target()
+        self.genv.draw_cal_target(x, y)
+        self.win.units = 'height'
+        event.waitKeys(keyList=['space'])
+        self.win.flip()
+        return
 
     def message(self, msg, log=True):
         if log:
@@ -205,15 +215,21 @@ class MouseLink(object):
     def __init__(self, win, uniqueid, dummy_mode=False):
         self.win = win
         self.mouse = event.Mouse()
+        print("UNITS", self.win.units)
+
+        self.genv = genv = EyeLinkCoreGraphicsPsychoPy(None, self.win)
+        foreground_color = (-1, -1, -1)
+        genv.setCalibrationColors(foreground_color, self.win.color)
+        genv.setTargetType('circle')
+        genv.setTargetSize(24)
+        # genv.setCalibrationSounds('', '', '')
+        genv.fixMacRetinaDisplay()
+        self.win.units = 'height'
+        print("UNITS", self.win.units)
 
     def drift_check(self, pos=(0,0)):
         logging.info('MouseLink drift_check')
-        self.win.showMessage('DRIFT CHECK')
-        self.win.flip()
-        event.waitKeys(keyList=['space'])
-        self.win.showMessage(None)
-        self.win.flip()
-        return
+        self.fake_drift_check()
 
     def message(self, msg, log=True):
         logging.debug('MouseLink message')
