@@ -281,22 +281,9 @@ class Experiment(object):
     @stage
     def recalibrate(self):
         self.message("We're going to recalibrate the eyetracker. Please tell the experimenter.",
-            tip_text="Wait for the experimenter (c or x)")
-        keys = event.waitKeys(keyList=['c', 'x'])
-        self.hide_message()
-        self.win.flip()
-        if 'x' in keys:
-            if self.parameters.get('gaze_tolerance') == 2:
-                logging.warning("Disabling gaze-contingency")
-                self.disable_gaze_contingency = True
-                self.message("Gaze-contingency disabled for the remainder of the experiment.", space=True)
-            else:
-                logging.warning('Setting gaze_tolerance to 2')
-                self.parameters['gaze_tolerance'] = 2
-                self.eyelink.calibrate()
-
-        else:
-            self.eyelink.calibrate()
+            tip_text="Wait for the experimenter")
+        self.eyelink.calibrate()
+        self.calibrate_gaze_tolerance()
 
 
     @stage
@@ -322,6 +309,7 @@ class Experiment(object):
         t = deepcopy(self.trials['practice'][0])
         t['graph'] = [[] for edges in t['graph']]
 
+        result = None
         while self.parameters['gaze_tolerance'] < 2:
             prm = {**self.parameters, **t, 'time_limit': 10}
             gt = CalibrationTrial(self.win, **prm, eyelink=self.eyelink)
@@ -330,15 +318,24 @@ class Experiment(object):
             if result == 'success':
                 break
             else:
-                self.message("OK let's make some quick adjustments...", space=True)
-                self.hide_message()
-                self.parameters['gaze_tolerance'] += 0.25
+                self.message("OK let's make some quick adjustments...", tip_text='press space to continue')
+                keys = event.waitKeys(keyList=['space', 'x'])
+                if 'x' in keys:
+                    logging.warning('disabling gaze contingency')
+                    self.disable_gaze_contingency = True
+                    break
+                else:
+                    self.hide_message()
+                    self.parameters['gaze_tolerance'] += 0.25
 
+        if result == 'success':
+            self.message("Great! It looks like the eyetracker is working well.", space=True)
         else:
+            self.message("OK let's move on.", space=True)
             logging.warning('disabling gaze contingency')
             self.disable_gaze_contingency = True
 
-        self.message("Great! It looks like the eyetracker is working well.", space=True)
+
 
     @stage
     def intro_gaze(self):
@@ -394,8 +391,6 @@ class Experiment(object):
         block_possible = 0
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}")
-            if i == 50:
-                self.recalibrate()
             try:
                 if i > 0 and i % summarize_every == 0:
                     msg = f"In the last {summarize_every} rounds, you earned {int(block_earned)} points out of {int(block_possible)} possible points."
