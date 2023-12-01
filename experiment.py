@@ -121,6 +121,7 @@ class Experiment(object):
             'gaze_contingent': False,
             'time_limit': None,
             'pos': (.3, 0),
+            'start_mode': 'immediate',
             'space_start': False,
             **self.trials['practice'][self.practice_i],
             **kws
@@ -316,7 +317,7 @@ class Experiment(object):
         t['graph'] = [[] for edges in t['graph']]
 
         result = None
-        while self.parameters['gaze_tolerance'] < 2:
+        while self.parameters['gaze_tolerance'] <= 2:
             prm = {**self.parameters, **t, 'time_limit': 10}
             gt = CalibrationTrial(self.win, **prm, eyelink=self.eyelink)
             self.practice_data.append(gt.data)
@@ -355,9 +356,10 @@ class Experiment(object):
     def intro_contingent(self):
         self.message("There's just one more thing...", space=True)
         self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
-        self.message("Try it out!", space=False)
+        self.message("Try it out!", tip_text='select a path to continue', space=False)
         gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0))
-        gt.run(drift_check=False)
+        gt.start_mode = 'immediate'
+        gt.run()
         self.message("Great! If you ever find that the points don't appear when you look at them, "
             "please let the experimenter know so we can fix it!", space=True)
 
@@ -378,7 +380,7 @@ class Experiment(object):
         prm = {
             **self.parameters,
             **trial,
-            **kws
+            **kws,
         }
         gt = GraphTrial(self.win, **prm, eyelink=self.eyelink)
         gt.run()
@@ -409,16 +411,22 @@ class Experiment(object):
                     event.waitKeys(keyList=['space'])
                 if self.disable_gaze_contingency:
                     trial['gaze_contingent'] = False
-                gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
-                gt.run(drift_check=not self.disable_gaze_contingency)
-                block_earned += gt.score
-                block_possible += gt.max_score
-                self.bonus.add_points(gt.score)
+                    trial['start_mode'] = 'fixation'
 
-                self.trial_data.append(gt.data)
-                if gt.status == 'x':
+
+                gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
+                gt.run()
+
+                if gt.status == 'ok':
+                    block_earned += gt.score
+                    block_possible += gt.max_score
+                    self.bonus.add_points(gt.score)
+                    self.trial_data.append(gt.data)
+
+                if gt.status == 'recalibrate':
                     self.recalibrate()
-                elif gt.status == 'a':
+                    
+                elif gt.status == 'abort':
                     self.win.clearAutoDraw()
                     self.win.showMessage(
                        'Abort key was pressed!\n'
@@ -443,7 +451,6 @@ class Experiment(object):
                 if 'c' in keys:
                     continue
                 else:
-                    print('return')
                     return
 
     @property

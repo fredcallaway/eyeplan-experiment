@@ -18,7 +18,7 @@ def distance(p1, p2):
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, time_limit=None,
+    def __init__(self, win, graph, rewards, start, layout, time_limit=None, start_mode=None,
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5,
                  pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
@@ -27,6 +27,9 @@ class GraphTrial(object):
         self.start = start
         self.layout = layout
         self.time_limit = time_limit
+        if start_mode is None:
+            start_mode = 'drift_check' if eyelink else 'space'
+        self.start_mode = start_mode
 
         self.eyelink = eyelink
         self.gaze_contingent = gaze_contingent
@@ -257,20 +260,32 @@ class GraphTrial(object):
             self.set_state(np.random.choice(self.graph[self.current_state]))
             core.wait(.5)
 
-    def start_recording(self, drift_check=True):
-        self.log('drift check')
-        if drift_check:
-            self.eyelink.drift_check(self.pos)
-        self.eyelink.start_recording()
+    def start_recording(self):
         self.log('start recording')
+        self.eyelink.start_recording()
 
-    def run(self, one_step=False, drift_check=True, stop_on_space=True, highlight_edges=False):
-        if self.eyelink:
-            self.start_recording(drift_check)
-        elif self.space_start:
-            visual.TextStim(self.win,  'press space to start', pos=self.pos, color='white', height=.035).draw()
+    def run(self, one_step=False, highlight_edges=False):
+        self.status = None
+
+        if self.start_mode == 'drift_check':
+            self.log('begin drift_check')
+            self.status = self.eyelink.drift_check(self.pos)
+        elif self.start_mode == 'fixation':
+            self.log('begin fixation')
+            self.status = self.eyelink.fake_drift_check(self.pos)
+        elif self.start_mode == 'space':
+            self.log('begin space')
+            visual.TextStim(self.win, 'press space to start', pos=self.pos, color='white', height=.035).draw()
             self.win.flip()
             event.waitKeys(keyList=['space'])
+
+        self.log('initialize status', {'status': self.status})
+
+        if self.status in ('abort', 'recalibrate'):
+            return self.status
+
+        if self.eyelink:
+            self.start_recording()
 
         self.show()
 
@@ -291,14 +306,14 @@ class GraphTrial(object):
                 self.do_timeout()
 
             keys = event.getKeys()
-            if 'x' in keys:
+            if 'x' in keys or 'c' in keys:
                 logging.warning('press x')
                 self.log('press x')
-                self.status = 'x'
+                self.status = 'recalibrate'
             elif 'a' in keys:
                 logging.warning('press a')
                 self.log('press a')
-                self.status = 'a'
+                self.status = 'abort'
             self.tick()
 
         self.log('done')
@@ -306,7 +321,8 @@ class GraphTrial(object):
         if self.eyelink:
             self.eyelink.stop_recording()
         wait(.3)
-        return self.fade_out()
+        self.fade_out()
+        return self.status
 
 
 class CalibrationTrial(GraphTrial):
@@ -337,7 +353,8 @@ class CalibrationTrial(GraphTrial):
 
     def run(self, timeout=15):
         assert self.eyelink
-        self.start_recording(drift_check=True)
+        self.eyelink.drift_check(self.pos)
+        self.start_recording()
         self.show()
         self.start_time = self.tick()
         self.log('start', {'flip_time': self.start_time})

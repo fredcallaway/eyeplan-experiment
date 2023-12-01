@@ -87,6 +87,7 @@ class EyeLink(object):
         self.dummy_mode = dummy_mode
         self.uniqueid = uniqueid
         self.edf_file = ensure_edf_filename(uniqueid)
+        self.disable_drift_checks = False
 
         if pylink.getEYELINK():
             logging.info('Using existing tracker')
@@ -105,22 +106,55 @@ class EyeLink(object):
 
     def drift_check(self, pos=(0,0)):
         # TODO: might want to implement this myself, to make it more stringent
+        if self.disable_drift_checks:
+            return self.fake_drift_check(pos)
+
         x, y = map(int, height2pix(self.win, pos))
         try:
             self.tracker.doDriftCorrect(x, y, 1, 1)
         except RuntimeError:
             logging.info('escape in drift correct')
-            self.tracker.doDriftCorrect(x, y, 1, 1)
-        self.win.units = 'height'
+            self.win.showMessage('Experimenter, choose:\n(C)ontinue  (A)bort  (R)ecalibrate  (D)isable drift check')
+            keys = event.waitKeys(keyList=['space', 'c', 'a', 'r', 'd'])
+            logging.info('drift check keys %s', keys)
+            self.win.showMessage(None)
+            if 'a' in keys:
+                return 'abort'
+            elif 'r' in keys:
+                return 'recalibrate'
+            elif 'd' in keys:
+                self.disable_drift_checks = True
+                return 'disable'
+            else:
+                self.drift_check(pos)
+                return 'success'
+        finally:
+            self.win.units = 'height'
 
     def fake_drift_check(self, pos=(0,0)):
         x, y = map(int, height2pix(self.win, pos))
         self.genv.update_cal_target()
         self.genv.draw_cal_target(x, y)
         self.win.units = 'height'
-        event.waitKeys(keyList=['space'])
+        keys = event.waitKeys(keyList=['space', 'escape'])
+        if 'space' in keys:
+            return 'success'
+
+        self.win.showMessage('Experimenter, choose:\n(C)ontinue  (A)bort  (R)ecalibrate  (D)isable drift check')
         self.win.flip()
-        return
+        keys = event.waitKeys(keyList=['space', 'c', 'a', 'r', 'd'])
+        logging.info('drift check keys %s', keys)
+        self.win.showMessage(None)
+        self.win.flip()
+        if 'a' in keys:
+            return 'abort'
+        elif 'r' in keys:
+            return 'recalibrate'
+        elif 'd' in keys:
+            return 'disable'
+        else:
+            return self.fake_drift_check(pos)
+
 
     def message(self, msg, log=True):
         if log:
@@ -210,11 +244,13 @@ class EyeLink(object):
         if self.tracker.isConnected():
             self.tracker.close()
 
-class MouseLink(object):
+class MouseLink(EyeLink):
     """Fake eyelink"""
     def __init__(self, win, uniqueid, dummy_mode=False):
         self.win = win
         self.mouse = event.Mouse()
+        self.disable_drift_checks = False
+
         print("UNITS", self.win.units)
 
         self.genv = genv = EyeLinkCoreGraphicsPsychoPy(None, self.win)
@@ -229,7 +265,7 @@ class MouseLink(object):
 
     def drift_check(self, pos=(0,0)):
         logging.info('MouseLink drift_check')
-        self.fake_drift_check()
+        return super().fake_drift_check()
 
     def message(self, msg, log=True):
         logging.debug('MouseLink message')

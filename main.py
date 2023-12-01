@@ -14,8 +14,8 @@ def main(config_number=None, name=None, test=False, fast=False, full=False):
         # exp.show_gaze_demo()
         # exp.intro_gaze()
         # exp.calibrate_gaze_tolerance()
-        exp.intro_contingent()
-        exp.intro_main()
+        # exp.intro_contingent()
+        # exp.intro_main()
         exp.run_main(50)
         return
     try:
