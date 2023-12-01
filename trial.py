@@ -264,42 +264,6 @@ class GraphTrial(object):
         self.eyelink.start_recording()
         self.log('start recording')
 
-    def practice_gazecontingent(self, callback, timeout=15):
-        assert self.eyelink
-        self.start_recording(drift_check=False)
-        self.show()
-        self.set_state(self.start)
-
-        self.start_time = self.tick()
-        self.log('start', {'flip_time': self.start_time})
-        fixated = set()
-        done = False
-        result = None
-        while result is None:
-            self.update_fixation()
-            fixated.add(self.fixated)
-            if not done and len(fixated) == len(self.nodes):
-                done = True
-                callback()
-            self.tick()
-
-            if (not done) and core.getTime() > self.start_time + timeout:
-                result = 'timeout'
-
-            pressed = event.getKeys()
-            if 'x' in pressed:
-                logging.info('press x')
-                result = 'cancelled'
-            if done and 'space' in pressed:
-                result = 'success'
-
-        self.log('done')
-        self.log('practice_gazecontingent result', {"result": result})
-        self.eyelink.stop_recording()
-        wait(.3)
-        self.fade_out()
-        return result
-
     def run(self, one_step=False, drift_check=True, stop_on_space=True, highlight_edges=False):
         if self.eyelink:
             self.start_recording(drift_check)
