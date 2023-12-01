@@ -326,14 +326,15 @@ class Experiment(object):
                 break
             else:
                 self.message("OK let's make some quick adjustments...", tip_text='press space to continue')
-                keys = event.waitKeys(keyList=['space', 'x'])
-                if 'x' in keys:
+                keys = event.waitKeys(keyList=['space', 'd'])
+                if 'd' in keys:
                     logging.warning('disabling gaze contingency')
                     self.disable_gaze_contingency = True
                     break
                 else:
                     self.hide_message()
                     self.parameters['gaze_tolerance'] += 0.25
+                    logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
 
         if result == 'success':
             self.message("Great! It looks like the eyetracker is working well.", space=True)
@@ -341,8 +342,6 @@ class Experiment(object):
             self.message("OK let's move on.", space=True)
             logging.warning('disabling gaze contingency')
             self.disable_gaze_contingency = True
-
-
 
     @stage
     def intro_gaze(self):
