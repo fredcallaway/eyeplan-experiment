@@ -287,7 +287,7 @@ class Experiment(object):
     @stage
     def recalibrate(self):
         self.message("We're going to recalibrate the eyetracker. Please tell the experimenter.",
-            tip_text="Wait for the experimenter", space=True)
+            tip_text="Wait for the experimenter (space)", space=True)
         self.hide_message()
         self.eyelink.calibrate()
         self.calibrate_gaze_tolerance()
@@ -352,13 +352,24 @@ class Experiment(object):
         self.eyelink.drift_check()
         self.message("Yup just like that. Make sure you hold your gaze steady on the circle before pressing space.", space=True)
 
+    @stage
     def intro_contingent(self):
         self.message("There's just one more thing...", space=True)
         self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
-        self.message("Try it out!", tip_text='select a path to continue', space=False)
-        gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0))
-        gt.start_mode = 'immediate'
-        gt.run()
+        tip = "select a path to continue\npress X if it's not working"
+        self.message("Try it out!", tip_text=tip, space=False)
+
+        status = None
+
+        while True:
+            gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0))
+            gt.start_mode = 'immediate'
+            gt.run(stop_on_x=True)
+            if gt.status == 'ok':
+                break
+            self.recalibrate()
+            self.message("Let's try again!", space=False, tip_text=tip)
+
         self.message("Great! If you ever find that the points don't appear when you look at them, "
             "please let the experimenter know so we can fix it!", space=True)
 

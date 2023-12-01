@@ -264,7 +264,7 @@ class GraphTrial(object):
         self.log('start recording')
         self.eyelink.start_recording()
 
-    def run(self, one_step=False, highlight_edges=False):
+    def run(self, one_step=False, highlight_edges=False, stop_on_x=False):
         if self.start_mode == 'drift_check':
             self.log('begin drift_check')
             self.status = self.eyelink.drift_check(self.pos)
@@ -308,6 +308,8 @@ class GraphTrial(object):
                 logging.warning('press x')
                 self.log('press x')
                 self.status = 'recalibrate'
+                if stop_on_x:
+                    return self.status
             elif 'a' in keys:
                 logging.warning('press a')
                 self.log('press a')
