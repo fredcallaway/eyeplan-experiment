@@ -127,7 +127,7 @@ class EyeLink(object):
                 return 'disable'
             else:
                 self.drift_check(pos)
-                return 'success'
+                return 'ok'
         finally:
             self.win.units = 'height'
 
@@ -138,7 +138,7 @@ class EyeLink(object):
         self.win.units = 'height'
         keys = event.waitKeys(keyList=['space', 'escape'])
         if 'space' in keys:
-            return 'success'
+            return 'ok'
 
         self.win.showMessage('Experimenter, choose:\n(C)ontinue  (A)bort  (R)ecalibrate  (D)isable drift check')
         self.win.flip()
@@ -178,7 +178,7 @@ class EyeLink(object):
         # Pass the display pixel coordinates (left, top, right, bottom) to the tracker
         # see the EyeLink Installation Guide, "Customizing Screen Settings"
 
-        scale = 0.9
+        scale = 0.8
         h_trim = int(((1 - scale) * scn_height) / 2)
         w_trim = int((scn_width - scale * scn_height) / 2)
 
