@@ -109,15 +109,18 @@ class EyeLink(object):
         if self.disable_drift_checks:
             return self.fake_drift_check(pos)
 
+        self.win.units = 'height'
         x, y = map(int, height2pix(self.win, pos))
         try:
             self.tracker.doDriftCorrect(x, y, 1, 1)
         except RuntimeError:
             logging.info('escape in drift correct')
             self.win.showMessage('Experimenter, choose:\n(C)ontinue  (A)bort  (R)ecalibrate  (D)isable drift check')
+            self.win.flip()
             keys = event.waitKeys(keyList=['space', 'c', 'a', 'r', 'd'])
             logging.info('drift check keys %s', keys)
             self.win.showMessage(None)
+            self.win.flip()
             if 'a' in keys:
                 return 'abort'
             elif 'r' in keys:
@@ -132,6 +135,7 @@ class EyeLink(object):
             self.win.units = 'height'
 
     def fake_drift_check(self, pos=(0,0)):
+        self.win.units = 'height'
         x, y = map(int, height2pix(self.win, pos))
         self.genv.update_cal_target()
         self.genv.draw_cal_target(x, y)
