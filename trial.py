@@ -122,9 +122,9 @@ class GraphTrial(object):
     def get_click(self):
         if self.mouse.getPressed()[0]:
             pos = self.mouse.getPos()
-            for n in self.nodes:
+            for (i, n) in enumerate(self.nodes):
                 if n.contains(pos):
-                    return int(n.name)
+                    return i
 
     def set_state(self, s):
         self.log('visit', {'state': s})
