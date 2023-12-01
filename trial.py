@@ -19,7 +19,7 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, time_limit=None, start_mode=None,
-                 eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5,
+                 eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=True,
                  pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
         self.graph = graph
@@ -35,6 +35,7 @@ class GraphTrial(object):
         self.gaze_contingent = gaze_contingent
         self.gaze_tolerance = gaze_tolerance
         self.fixation_lag = fixation_lag
+        self.show_gaze = show_gaze
 
         self.pos = pos
         self.space_start = space_start
@@ -110,6 +111,9 @@ class GraphTrial(object):
         self.mask = self.gfx.rect((.1,0), 1.1, 1, color='gray', opacity=0)
         self.gfx.shift(*self.pos)
 
+        if self.show_gaze:
+            self.gaze_dot = self.gfx.circle((0,0), .01, color='red', lineWidth=1, lineColor="red")
+
     def hide(self):
         self.gfx.clear()
 
@@ -175,7 +179,7 @@ class GraphTrial(object):
             if i == self.fixated:
                 return reward_string(self.rewards[i])
             elif self.rewards[i]:
-                return '?'
+                return 'O'
             else:
                 return ''
         else:
@@ -193,6 +197,8 @@ class GraphTrial(object):
         if not self.eyelink:
             return
         gaze = self.eyelink.gaze_position()
+        if self.show_gaze:
+            self.gaze_dot.setPos(gaze)
         self.last_fixated = self.fixated
         # visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
 

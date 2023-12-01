@@ -12,6 +12,11 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, hotf
         return
 
     if test:
+
+        exp.setup_eyetracker()
+        exp.intro_contingent()
+        return
+
         # exp.intro()
         # exp.practice(1)
         # exp.practice_timelimit()

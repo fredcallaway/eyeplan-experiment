@@ -69,12 +69,12 @@ class Graphics(object):
             o.setAutoDraw(True)
 
     @shape
-    def circle(self, pos, r=.05, **kws):
-        return visual.Circle(self.win, radius=r, pos=pos, lineColor='black', lineWidth=10, **kws)
+    def circle(self, pos, r=.05, lineColor='black', lineWidth=10, **kws):
+        return visual.Circle(self.win, radius=r, pos=pos, lineColor=lineColor, lineWidth=lineWidth, **kws)
 
     @shape
-    def line(self, start, end, **kws):
-        return visual.line.Line(self.win, start=start, end=end, lineColor='black', lineWidth=10, **kws)
+    def line(self, start, end, lineColor='black', lineWidth=10, **kws):
+        return visual.line.Line(self.win, start=start, end=end, lineColor=lineColor, lineWidth=lineWidth, **kws)
 
     @shape
     def text(self, text, pos=(0,0), height=.03, color='black', **kws):
