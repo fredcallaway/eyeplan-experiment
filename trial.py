@@ -265,8 +265,6 @@ class GraphTrial(object):
         self.eyelink.start_recording()
 
     def run(self, one_step=False, highlight_edges=False):
-        self.status = None
-
         if self.start_mode == 'drift_check':
             self.log('begin drift_check')
             self.status = self.eyelink.drift_check(self.pos)
@@ -353,7 +351,7 @@ class CalibrationTrial(GraphTrial):
 
     def run(self, timeout=15):
         assert self.eyelink
-        self.eyelink.drift_check(self.pos)
+        # self.eyelink.drift_check(self.pos)
         self.start_recording()
         self.show()
         self.start_time = self.tick()

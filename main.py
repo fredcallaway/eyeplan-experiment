@@ -2,19 +2,23 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-def main(config_number=None, name=None, test=False, fast=False, full=False):
+def main(config_number=None, name=None, test=False, fast=False, full=False, hotfix=False):
     if test and name is None:
         name = 'test'
     exp = Experiment(config_number, name, full_screen=(not test) or full)
+    if hotfix:
+        exp.setup_eyetracker()
+        exp.run_main(60)
+
     if test:
         # exp.intro()
         # exp.practice(1)
         # exp.practice_timelimit()
-        exp.setup_eyetracker(mouse=True)
+        # exp.setup_eyetracker(mouse=True)
         # exp.show_gaze_demo()
         # exp.intro_gaze()
         # exp.calibrate_gaze_tolerance()
-        # exp.intro_contingent()
+        exp.intro_contingent()
         # exp.intro_main()
         exp.run_main(50)
         return
