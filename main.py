@@ -9,18 +9,19 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, hotf
     if hotfix:
         exp.setup_eyetracker()
         exp.run_main(60)
+        return
 
     if test:
         # exp.intro()
         # exp.practice(1)
         # exp.practice_timelimit()
-        # exp.setup_eyetracker(mouse=True)
+        exp.setup_eyetracker(mouse=True)
         # exp.show_gaze_demo()
-        # exp.intro_gaze()
-        # exp.calibrate_gaze_tolerance()
+        exp.intro_gaze()
+        exp.calibrate_gaze_tolerance()
         exp.intro_contingent()
-        # exp.intro_main()
-        exp.run_main(50)
+        exp.parameters['summarize_every'] = 2
+        exp.run_main(10)
         return
     try:
         if fast:
