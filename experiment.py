@@ -355,8 +355,8 @@ class Experiment(object):
         self.message("There's just one more thing...", space=True)
         self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
         self.message("Try it out!", space=False)
-        gt = self.get_practice_trial(gaze_contingent=True, drift_check=False, eyelink=self.eyelink, pos=(0,0))
-        gt.run()
+        gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0))
+        gt.run(drift_check=False)
         self.message("Great! If you ever find that the points don't appear when you look at them, "
             "please let the experimenter know so we can fix it!", space=True)
 
@@ -409,7 +409,7 @@ class Experiment(object):
                 if self.disable_gaze_contingency:
                     trial['gaze_contingent'] = False
                 gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
-                gt.run()
+                gt.run(drift_check=not self.disable_gaze_contingency)
                 block_earned += gt.score
                 block_possible += gt.max_score
                 self.bonus.add_points(gt.score)
