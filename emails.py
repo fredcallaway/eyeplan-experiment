@@ -17,7 +17,8 @@ Hi {name},
 
 This is just a quick reminder about the study today ({date}) at {time}. We're
 running on a tight schedule, so it would really help us out if you could
-arrive a few minutes early.
+arrive a few minutes early. If you are more than 10 minutes late, you may be
+assigned as a no-show.
 
 The study is being run in Meyer 566. If you take one of main elevators, you
 take a right out of the elevator, then your first right, you'll walk down a
@@ -111,10 +112,10 @@ def send_reminder(email, full_name, dt):
     with open('reminded.txt', 'a') as f:
         f.write(email + '\n')
 
-
-def main(remind=False):
+def get_todays_participants(kind = "Sign-Up"):
     today = datetime.now()
-    query = f'from: nyu-psych-admin@sona-systems.net subject: "Study Sign-Up Notification"'
+    dstring = today.strftime('%A, %B %-d')
+    query = f'from: nyu-psych-admin@sona-systems.net subject: "Study {kind} Notification" "{dstring}"'
     result = GMAIL.users().messages().list(userId='me', q=query).execute()
     messages = result.get('messages', [])
 
@@ -127,19 +128,30 @@ def main(remind=False):
         # Extract the appointment details and email address
         full_name, email = re.search(r'The participant (.*) <(\S+@\S+)>', body).groups()
 
-        date = re.search(r'The study is scheduled to take place on (.*) in the location', body).group(1)
+        date = re.search(r'The study (is|was) scheduled to take place on (.*) in the location', body).group(2)
         start, end = date.split(' - ')
         dt = datetime.strptime(start, '%A, %B %d, %Y %I:%M %p')
         if today.date() == dt.date():
             participants.append((dt, full_name, email))
 
-    participants.sort()
-    if remind:
-        assert len(participants) < 10  # failsafe: make sure we don't email too many people
-        for (dt, full_name, email) in participants:
-            send_reminder(email, full_name, dt)
+    return participants
+
+def main(remind=False):
+    today = datetime.now()
+    signed_up = get_todays_participants()
+    cancelled = get_todays_participants("Cancellation")
+    for c in cancelled:
+        assert c in signed_up
+
+    participants = sorted(set(signed_up).difference(set(cancelled)))
+
     for (dt, full_name, email) in participants:
         print(dt.strftime('%I:%M %p'), full_name, email, sep='   ')
+
+    if remind and input('send reminders? [N/y]') == 'y':
+            assert len(participants) < 20  # failsafe: make sure we don't email too many people
+            for (dt, full_name, email) in participants:
+                send_reminder(email, full_name, dt)
 
 if __name__ == '__main__':
     Fire(main)
