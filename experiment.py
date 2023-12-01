@@ -287,6 +287,7 @@ class Experiment(object):
     def recalibrate(self):
         self.message("We're going to recalibrate the eyetracker. Please tell the experimenter.",
             tip_text="Wait for the experimenter", space=True)
+        self.hide_message()
         self.eyelink.calibrate()
         self.calibrate_gaze_tolerance()
 
