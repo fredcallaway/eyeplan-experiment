@@ -17,8 +17,8 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, hotf
         # exp.practice_timelimit()
         exp.setup_eyetracker()
         # exp.show_gaze_demo()
-        exp.intro_gaze()
-        exp.calibrate_gaze_tolerance()
+        # exp.intro_gaze()
+        # exp.calibrate_gaze_tolerance()
         exp.intro_contingent()
         exp.parameters['summarize_every'] = 2
         exp.run_main(10)
