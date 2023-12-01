@@ -11,12 +11,12 @@ def main(config_number=None, name=None, test=False, fast=False, full=False):
         # exp.practice(1)
         # exp.practice_timelimit()
         exp.setup_eyetracker()
-        # exp.show_gaze_demo()
-        # exp.intro_gaze()
-        # exp.calibrate_gaze_tolerance()
-        # exp.intro_contingent()
-        # exp.intro_main()
-        exp.run_main(2)
+        exp.show_gaze_demo()
+        exp.intro_gaze()
+        exp.calibrate_gaze_tolerance()
+        exp.intro_contingent()
+        exp.intro_main()
+        exp.run_main(50)
         return
     try:
         if fast:
@@ -31,9 +31,9 @@ def main(config_number=None, name=None, test=False, fast=False, full=False):
             exp.intro_main()
             exp.run_main(2)
         else:
-            exp.intro()
-            exp.practice(3)
-            exp.practice_timelimit()
+            # exp.intro()
+            # exp.practice(3)
+            # exp.practice_timelimit()
             exp.setup_eyetracker()
             exp.show_gaze_demo()
             exp.intro_gaze()
