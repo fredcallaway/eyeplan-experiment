@@ -315,7 +315,7 @@ class Experiment(object):
         t['graph'] = [[] for edges in t['graph']]
 
         result = None
-        for tol in [.1, .25, .5, .75, 1, 1.25, 1.5, 2]:
+        for tol in [.25, .5, .75, 1, 1.25, 1.5, 2]:
             self.parameters['gaze_tolerance'] = tol
             prm = {**self.parameters, **t, 'time_limit': 10}
             gt = CalibrationTrial(self.win, **prm, eyelink=self.eyelink)
@@ -327,19 +327,13 @@ class Experiment(object):
             logging.warning('disabling gaze contingency')
             self.disable_gaze_contingency = True
 
-
-
     @stage
     def intro_gaze(self):
         self.message("At the beginning of each round, a circle will appear. "
                      "Look straight at it and press space to start the round.",
                      tip_text="look at the circle and press space", space=False)
 
-        gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0))
-
-        gt.start_recording()
-        gt.eyelink.stop_recording()
-
+        self.eyelink.drift_check()
         self.message("Yup just like that. Make sure you hold your gaze steady on the circle before pressing space.", space=True)
 
     def intro_contingent(self):

@@ -7,9 +7,10 @@ def main(config_number=None, name=None, test=False, fast=False, full=False):
         name = 'test'
     exp = Experiment(config_number, name, full_screen=(not test) or full)
     if test:
-        exp.setup_eyetracker(mouse=False)
+        exp.setup_eyetracker(mouse=True)
+        exp.intro_gaze(mouse=True)
         exp.calibrate_gaze_tolerance()
-        exp.calibrate_gaze_tolerance()
+        exp.intro_contingent()
         return
     try:
         if fast:
