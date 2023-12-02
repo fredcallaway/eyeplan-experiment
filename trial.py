@@ -335,8 +335,12 @@ class GraphTrial(object):
         return self.status
 
 
+
+
 class CalibrationTrial(GraphTrial):
     """docstring for CalibrationTrial"""
+    all_failures = np.zeros(20)  # across separate runs
+
     def __init__(self, *args, saccade_time=.5, n_success=2, n_fail=3, target_delay=.2, **kwargs):
         kwargs['gaze_contingent'] = True
         kwargs['fixation_lag'] = .1
@@ -373,15 +377,18 @@ class CalibrationTrial(GraphTrial):
             self.arrow = self.gfx.arrow(self.nodes[self.last_target], self.nodes[self.target])
 
     def new_target(self):
+        initial = self.target is None
         self.last_target = self.target
 
-        p = -5 * self.successes
-        p += 1  # prevent divide by zero
-        p = np.exp(p)
-        if self.target is not None:
+        if initial:
+            self.target = np.random.choice(len(self.successes))
+        else:
+            p = self.all_failures
+            p .+= -5 * self.successes
+            p = np.exp(p)
             p[self.target] = 0
-        p /= sum(p)
-        self.target = np.random.choice(len(p), p=p)
+            p /= (sum(p) or 1)  # prevent divide by 0
+            self.target = np.random.choice(len(p), p=p)
 
         self.target_time = 'flip'  # updated to be next flip time
         self.draw_arrow()
@@ -416,6 +423,7 @@ class CalibrationTrial(GraphTrial):
             elif self.last_flip > self.target_time + self.saccade_time:  # timeout
                 self.log('timeout', {"state": self.target})
                 self.failures[self.target] += 1
+                self.all_failures[self.target] += 1
 
                 self.set_node_label(self.target, 'X')
                 lab = self.reward_labels[self.target]
