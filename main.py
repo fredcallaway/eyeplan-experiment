@@ -12,6 +12,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         return
 
     if test:
+        # TODO: hide mouse during calibration
 
         # exp.setup_eyetracker()
         # exp.intro_contingent()

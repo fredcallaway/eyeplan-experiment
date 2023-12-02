@@ -326,18 +326,18 @@ class Experiment(object):
             if result == 'success':
                 break
             else:
-                self.parameters['gaze_tolerance'] *= 1.2
-                if self.parameters['gaze_tolerance'] > 3:
+                logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
+                self.message("Let's make some quick adjustments...", tip_text='(C)ontinue (D)isable (R)ecalibrate')
+                keys = event.waitKeys(keyList=['space', 'c', 'd', 'r'])
+                self.hide_message()
+                if 'd' in keys:
                     break
+                if 'r' in keys:
+                    self.eyelink.calibrate()
                 else:
-                    logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
-                    self.message("Let's make some quick adjustments...", tip_text='(C)ontinue (D)isable (R)ecalibrate')
-                    keys = event.waitKeys(keyList=['space', 'c', 'd', 'r'])
-                    self.hide_message()
-                    if 'd' in keys:
+                    self.parameters['gaze_tolerance'] *= 1.2
+                    if self.parameters['gaze_tolerance'] > 3:
                         break
-                    if 'r' in keys:
-                        self.eyelink.calibrate()
 
         if result == 'success':
             self.message("Great! It looks like the eyetracker is working well.", space=True)
