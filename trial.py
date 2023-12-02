@@ -412,6 +412,8 @@ class CalibrationTrial(GraphTrial):
         self.start_time = self.tick()
         self.log('start', {'flip_time': self.start_time})
 
+        self.win.mouseVisible = False
+
         self.target_time += 5  # extra time for first fixation
         while self.result is None:
             self.update_fixation()
@@ -470,4 +472,6 @@ class CalibrationTrial(GraphTrial):
         self.eyelink.stop_recording()
         wait(.3)
         self.fade_out()
+        self.win.mouseVisible = True
+
         return self.result

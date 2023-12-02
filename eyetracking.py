@@ -206,6 +206,7 @@ class EyeLink(object):
         pylink.openGraphicsEx(genv)
 
     def calibrate(self):
+        self.win.mouseVisible = False
         self.genv.setup_cal_display()
         self.win.flip()
         logging.info('doTrackerSetup')
@@ -214,6 +215,7 @@ class EyeLink(object):
         self.genv.exit_cal_display()
         self.win.flip()
         self.win.units = 'height'
+        self.win.mouseVisible = True
 
     def save_data(self):
         self.tracker.closeDataFile()
