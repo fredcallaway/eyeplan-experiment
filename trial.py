@@ -422,6 +422,8 @@ class CalibrationTrial(GraphTrial):
                 for p in range(FRAME_RATE):
                     lab.setOpacity(1 - (p // 10) % 2)
                     self.tick()
+                wait(self.target_delay)
+                lab.setOpacity(1)
 
                 if sum(self.failures) == self.n_fail or self.failures[self.target] == 2:
                     self.result = 'failure'
