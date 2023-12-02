@@ -310,7 +310,7 @@ class Experiment(object):
         self.message("We're going to check how well the eyetracker is working.", space=True)
         self.message(
             "When the board comes up, just look at the O's as they appear. "
-            "They should become X's. If it's not working, press X.",
+            "They should pop and disappear. If it's not working, press X.",
             space=True)
         self.hide_message()
 
