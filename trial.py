@@ -19,7 +19,7 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, time_limit=None, start_mode=None,
-                 eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=True,
+                 eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
                  pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
         self.graph = graph
@@ -66,6 +66,7 @@ class GraphTrial(object):
         self.gfx = Graphics(win)
         self.mouse = event.Mouse()
         self.done = False
+
 
     def log(self, event, info={}):
         time = core.getTime()
@@ -187,11 +188,14 @@ class GraphTrial(object):
 
     def update_node_labels(self):
         for i in range(len(self.nodes)):
-            old = self.reward_labels[i].text
-            new = self.node_label(i)
-            if old != new:
-                logging.debug(f'Changing reward_label[%s] from %s to %s', i, old, new)
-                self.reward_labels[i].text = new
+            self.set_node_label(i, self.node_label(i))
+
+    def set_node_label(self, i, new):
+        old = self.reward_labels[i].text
+        if old != new:
+            logging.debug(f'Changing reward_label[%s] from %s to %s', i, old, new)
+            self.reward_labels[i].text = new
+
 
     def update_fixation(self):
         if not self.eyelink:
@@ -247,7 +251,7 @@ class GraphTrial(object):
                     original = -.2 * np.ones(3)
                     red = np.array([1, -1, -1])
                     self.timer.setColor(p2 * original + (1-p2) * red)
-        t = self.win.flip()
+        self.last_flip = t = self.win.flip()
         self.data["mouse"].append(self.mouse.getPos())
         self.data["flips"].append(t)
         return t
@@ -333,22 +337,27 @@ class GraphTrial(object):
 
 class CalibrationTrial(GraphTrial):
     """docstring for CalibrationTrial"""
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, saccade_time=.5, n_success=2, n_fail=3, **kwargs):
         kwargs['gaze_contingent'] = True
         kwargs['fixation_lag'] = .1
-        # kwargs['time_limit'] = None
-        self.current_target = None
+        kwargs['time_limit'] = None
+
+        self.saccade_time = saccade_time
+        self.n_success = n_success
+        self.n_fail = n_fail
+
+        self.target = None
         self.last_target = None
         self.arrow = None
-        self.completed = set()
         self.result = None
+
         super().__init__(*args, **kwargs)
 
     def node_label(self, i):
         return {
             # self.completed: ''
-            # self.fixated: ''
-            self.current_target: 'O'
+            # self.fixated: '',
+            self.target: 'O',
         }.get(i, '')
 
     def do_timeout(self):
@@ -360,52 +369,87 @@ class CalibrationTrial(GraphTrial):
         if self.arrow is not None:
             self.arrow.setAutoDraw(False)
         if self.last_target is not None:
-            self.arrow = self.gfx.arrow(self.nodes[self.last_target], self.nodes[self.current_target])
+            self.arrow = self.gfx.arrow(self.nodes[self.last_target], self.nodes[self.target])
 
+    def new_target(self):
+        self.last_target = self.target
+
+        p = -5 * self.successes
+        p += 1  # prevent divide by zero
+        p = np.exp(p)
+        if self.target is not None:
+            p[self.target] = 0
+        p /= sum(p)
+        self.target = np.random.choice(len(p), p=p)
+
+        self.target_time = 'flip'  # updated to be next flip time
+        self.draw_arrow()
+        self.update_node_labels()
+
+    def tick(self):
+        t = super().tick()
+        if self.target_time == 'flip':
+            self.target_time = t
 
     def run(self, timeout=15):
         assert self.eyelink
         # self.eyelink.drift_check(self.pos)
         self.start_recording()
         self.show()
+        self.successes = np.zeros(len(self.nodes))
+        self.failures = np.zeros(len(self.nodes))
+        self.uncomplete = set(range(len(self.nodes)))
+        self.new_target()
         self.start_time = self.tick()
         self.log('start', {'flip_time': self.start_time})
 
-        targets = list(range(len(self.nodes)))
-        np.random.shuffle(targets)
-        targets = iter(targets)
-        self.current_target = next(targets)
-        self.update_node_labels()
-
+        self.target_time += 5  # extra time for first fixation
         while self.result is None:
             self.update_fixation()
-            if self.fixated == self.current_target:
-                self.last_target = self.current_target
-                self.log(f'fixated target', {"state": self.fixated})
-                self.completed.add(self.fixated)
-                try:
-                    self.current_target = next(targets)
-                except StopIteration:
-                    self.result = 'success'
-                    self.log('success')
-                    self.update_node_labels()
-                    break
-                else:
-                    self.log(f'new target', {"state": self.current_target})
-                    self.update_node_labels()
-                    self.draw_arrow()
-
-            if not self.done and self.time_limit is not None and self.start_time + self.time_limit < core.getTime():
-                self.do_timeout()
-
-            pressed = event.getKeys()
-            if 'x' in pressed:
+            if 'x' in event.getKeys():  # cancel key
                 self.log('cancel')
                 self.result = 'cancelled'
                 self.fade_out()
                 return self.result
 
-            self.tick()
+            elif self.last_flip > self.target_time + self.saccade_time:  # timeout
+                self.log('timeout', {"state": self.target})
+                self.failures[self.target] += 1
+
+                self.set_node_label(self.target, 'X')
+                lab = self.reward_labels[self.target]
+                for p in range(FRAME_RATE):
+                    lab.setOpacity(1 - (p // 10) % 2)
+                    self.tick()
+
+                if sum(self.failures) == self.n_fail or self.failures[self.target] == 2:
+                    self.result = 'failure'
+                else:
+                    self.new_target()
+
+            elif self.fixated == self.target:  # fixated within time
+                self.log('fixated target', {"state": self.target})
+                self.successes[self.target] += 1
+
+                lab = self.reward_labels[self.target]
+                for p in self.gfx.animate(12/60):
+                    lab.setHeight(0.03 - p * 0.03)
+                    lab.setOpacity(1-p)
+                    self.tick()
+                lab.setOpacity(1)
+
+                if self.successes[self.target] == self.n_success:
+                    self.uncomplete.remove(self.target)
+                if self.uncomplete:
+                    self.new_target()
+                else:
+                    self.result = 'success'
+
+            # if not self.done and self.time_limit is not None and self.start_time + self.time_limit < core.getTime():
+            #     self.do_timeout()
+
+
+            t = self.tick()
 
         self.eyelink.stop_recording()
         wait(.3)
