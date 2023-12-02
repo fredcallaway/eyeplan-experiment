@@ -2,10 +2,10 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-def main(config_number=None, name=None, test=False, fast=False, full=False, hotfix=False):
+def main(config_number=None, name=None, test=False, fast=False, full=False, hotfix=False, **kws):
     if test and name is None:
         name = 'test'
-    exp = Experiment(config_number, name, full_screen=(not test) or full)
+    exp = Experiment(config_number, name, full_screen=(not test) or full, **kws)
     if hotfix:
         exp.setup_eyetracker()
         exp.run_main(60)
