@@ -338,24 +338,30 @@ class CalibrationTrial(GraphTrial):
         kwargs['fixation_lag'] = .1
         # kwargs['time_limit'] = None
         self.current_target = None
+        self.last_target = None
+        self.arrow = None
         self.completed = set()
         self.result = None
         super().__init__(*args, **kwargs)
 
     def node_label(self, i):
-        if i in self.completed:
-            return 'X'
-        elif i == self.fixated:
-            return '.'
-        elif i == self.current_target:
-            return 'O'
-        else:
-            return ''
+        return {
+            # self.completed: ''
+            # self.fixated: ''
+            self.current_target: 'O'
+        }.get(i, '')
 
     def do_timeout(self):
         self.log('timeout')
         logging.info('timeout')
         self.result = 'timeout'
+
+    def draw_arrow(self):
+        if self.arrow is not None:
+            self.arrow.setAutoDraw(False)
+        if self.last_target is not None:
+            self.arrow = self.gfx.arrow(self.nodes[self.last_target], self.nodes[self.current_target])
+
 
     def run(self, timeout=15):
         assert self.eyelink
@@ -374,17 +380,20 @@ class CalibrationTrial(GraphTrial):
         while self.result is None:
             self.update_fixation()
             if self.fixated == self.current_target:
+                self.last_target = self.current_target
                 self.log(f'fixated target', {"state": self.fixated})
                 self.completed.add(self.fixated)
                 try:
                     self.current_target = next(targets)
-                    self.log(f'new target', {"state": self.current_target})
-                    self.update_node_labels()
                 except StopIteration:
                     self.result = 'success'
                     self.log('success')
                     self.update_node_labels()
                     break
+                else:
+                    self.log(f'new target', {"state": self.current_target})
+                    self.update_node_labels()
+                    self.draw_arrow()
 
             if not self.done and self.time_limit is not None and self.start_time + self.time_limit < core.getTime():
                 self.do_timeout()
