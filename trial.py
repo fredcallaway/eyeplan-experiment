@@ -339,7 +339,7 @@ class GraphTrial(object):
 
 class CalibrationTrial(GraphTrial):
     """docstring for CalibrationTrial"""
-    all_failures = np.zeros(20)  # across separate runs
+    all_failures = np.zeros(11)  # across separate runs ASSUME graph doesn't change
 
     def __init__(self, *args, saccade_time=.5, n_success=2, n_fail=3, target_delay=.2, **kwargs):
         kwargs['gaze_contingent'] = True
@@ -383,9 +383,10 @@ class CalibrationTrial(GraphTrial):
         if initial:
             self.target = np.random.choice(len(self.successes))
         else:
-            p = self.all_failures
-            p += -5 * self.successes
-            p = np.exp(p)
+            p = np.exp(
+                -5 * self.successes +
+                self.all_failures[:len(self.sucesses)]
+            )
             p[self.target] = 0
             p /= (sum(p) or 1)  # prevent divide by 0
             self.target = np.random.choice(len(p), p=p)
