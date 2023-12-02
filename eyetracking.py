@@ -206,6 +206,8 @@ class EyeLink(object):
         pylink.openGraphicsEx(genv)
 
     def calibrate(self):
+        self.genv.setup_cal_display()
+        self.win.flip()
         logging.info('doTrackerSetup')
         self.tracker.doTrackerSetup()
         logging.info('done doTrackerSetup')
