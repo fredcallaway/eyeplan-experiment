@@ -337,7 +337,7 @@ class GraphTrial(object):
 
 class CalibrationTrial(GraphTrial):
     """docstring for CalibrationTrial"""
-    def __init__(self, *args, saccade_time=.5, n_success=2, n_fail=3, **kwargs):
+    def __init__(self, *args, saccade_time=.5, n_success=2, n_fail=3, target_delay=.2, **kwargs):
         kwargs['gaze_contingent'] = True
         kwargs['fixation_lag'] = .1
         kwargs['time_limit'] = None
@@ -345,6 +345,7 @@ class CalibrationTrial(GraphTrial):
         self.saccade_time = saccade_time
         self.n_success = n_success
         self.n_fail = n_fail
+        self.target_delay = target_delay
 
         self.target = None
         self.last_target = None
@@ -432,10 +433,14 @@ class CalibrationTrial(GraphTrial):
                 self.successes[self.target] += 1
 
                 lab = self.reward_labels[self.target]
+                for p in self.gfx.animate(6/60):
+                    lab.setHeight(0.03 + p * 0.02)
+                    self.tick()
                 for p in self.gfx.animate(12/60):
-                    lab.setHeight(0.03 - p * 0.03)
+                    lab.setHeight(0.05 - p * 0.03)
                     lab.setOpacity(1-p)
                     self.tick()
+                wait(self.target_delay)
                 lab.setOpacity(1)
 
                 if self.successes[self.target] == self.n_success:
