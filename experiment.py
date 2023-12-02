@@ -70,7 +70,7 @@ def get_next_config_number():
 
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False):
+    def __init__(self, config_number, name=None, full_screen=False, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number
@@ -91,10 +91,11 @@ class Experiment(object):
             conf = json.load(f)
             self.trials = conf['trials']
             self.parameters = conf['parameters']
-            logging.info('parameters %s', self.parameters)
+        self.parameters.update(kws)
+        logging.info('parameters %s', self.parameters)
 
         if 'gaze_tolerance' not in self.parameters:
-            self.parameters['gaze_tolerance'] = 0.5
+            self.parameters['gaze_tolerance'] = 1.
 
         self.win = self.setup_window()
         self.bonus = Bonus(0, 50)
@@ -317,7 +318,7 @@ class Experiment(object):
         t['graph'] = [[] for edges in t['graph']]
 
         result = None
-        while self.parameters['gaze_tolerance'] <= 2:
+        while True:
             prm = {**self.parameters, **t, 'time_limit': 10}
             gt = CalibrationTrial(self.win, **prm, eyelink=self.eyelink)
             self.practice_data.append(gt.data)
@@ -325,23 +326,23 @@ class Experiment(object):
             if result == 'success':
                 break
             else:
-                self.message("OK let's make some quick adjustments...", tip_text='press space to continue')
-                keys = event.waitKeys(keyList=['space', 'd'])
-                if 'd' in keys:
-                    logging.warning('disabling gaze contingency')
-                    self.disable_gaze_contingency = True
+                self.parameters['gaze_tolerance'] *= 1.2
+                if self.parameters['gaze_tolerance'] > 3:
                     break
                 else:
-                    self.hide_message()
-                    self.parameters['gaze_tolerance'] += 0.25
                     logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
+                    self.message("Let's make some quick adjustments...", tip_text='press space to continue')
+                    keys = event.waitKeys(keyList=['space', 'd'])
+                    self.hide_message()
+                    if 'd' in keys:
+                        break
 
         if result == 'success':
             self.message("Great! It looks like the eyetracker is working well.", space=True)
         else:
-            self.message("OK let's move on.", space=True)
             logging.warning('disabling gaze contingency')
             self.disable_gaze_contingency = True
+            self.message("OK let's move on.", space=True)
 
     @stage
     def intro_gaze(self):

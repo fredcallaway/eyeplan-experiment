@@ -90,7 +90,7 @@ class GraphTrial(object):
 
         self.nodes = nodes = []
         for i, (x, y) in enumerate(self.layout):
-            nodes.append(self.gfx.circle(0.7 * np.array([x, y]), name=f'node{i}'))
+            nodes.append(self.gfx.circle(0.7 * np.array([x, y]), name=f'node{i}', r=.03))
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
 
         self.reward_labels = [self.gfx.text('', n.pos, name=f'lab{i}') for i, n in enumerate(self.nodes)]
@@ -112,7 +112,7 @@ class GraphTrial(object):
         self.gfx.shift(*self.pos)
 
         if self.show_gaze:
-            self.gaze_dot = self.gfx.circle((0,0), .01, color='red', lineWidth=1, lineColor="red")
+            self.gaze_dot = self.gfx.circle((0,0), .005, color='red', lineWidth=1, lineColor="red")
 
     def hide(self):
         self.gfx.clear()
@@ -179,7 +179,7 @@ class GraphTrial(object):
             if i == self.fixated:
                 return reward_string(self.rewards[i])
             elif self.rewards[i]:
-                return 'O'
+                return '?'
             else:
                 return ''
         else:
