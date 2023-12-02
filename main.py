@@ -2,12 +2,12 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-def main(config_number=None, name=None, test=False, fast=False, full=False, hotfix=False, **kws):
+def main(config_number=None, name=None, test=False, fast=False, full=False, mouse=False, hotfix=False, **kws):
     if test and name is None:
         name = 'test'
     exp = Experiment(config_number, name, full_screen=(not test) or full, **kws)
     if hotfix:
-        exp.setup_eyetracker()
+        exp.setup_eyetracker(mouse=mouse)
         exp.run_main(60)
         return
 
@@ -20,14 +20,14 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, hotf
         # exp.intro()
         # exp.practice(1)
         # exp.practice_timelimit()
-        exp.setup_eyetracker(mouse=True)
+        exp.setup_eyetracker(mouse=mouse)
         # exp.show_gaze_demo()
         # exp.intro_gaze()
         exp.calibrate_gaze_tolerance()
         # exp.intro_contingent()
         # exp.parameters['summarize_every'] = 2
         # exp.trials['main'][0]['gaze_contingent'] = False
-        # exp.run_main(10)
+        exp.run_main(10)
         return
     try:
         if fast:
