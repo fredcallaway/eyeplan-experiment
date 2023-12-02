@@ -384,7 +384,7 @@ class CalibrationTrial(GraphTrial):
             self.target = np.random.choice(len(self.successes))
         else:
             p = self.all_failures
-            p .+= -5 * self.successes
+            p += -5 * self.successes
             p = np.exp(p)
             p[self.target] = 0
             p /= (sum(p) or 1)  # prevent divide by 0
