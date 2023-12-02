@@ -240,8 +240,8 @@ class EyeLink(object):
         if sample is None:
             return (-100000, -100000)
         else:
-            gaze = sample.getLeftEye() or sample.getRightEye()
-            return pix2height(self.win, gaze)
+            eye = sample.getLeftEye() or sample.getRightEye()
+            return pix2height(self.win, eye.getGaze())
 
     def close_connection(self):
         # TODO make sure this gets called
