@@ -469,6 +469,7 @@ class CalibrationTrial(GraphTrial):
 
             t = self.tick()
 
+        self.log('done')
         self.eyelink.stop_recording()
         wait(.3)
         self.fade_out()
