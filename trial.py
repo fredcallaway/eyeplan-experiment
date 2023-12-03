@@ -290,6 +290,7 @@ class GraphTrial(object):
         self.log('initialize status', {'status': self.status})
 
         if self.status in ('abort', 'recalibrate'):
+            self.log('done', {"status": self.status})
             return self.status
 
         if self.eyelink:
@@ -319,7 +320,7 @@ class GraphTrial(object):
                 self.log('press x')
                 self.status = 'recalibrate'
                 if stop_on_x:
-                    return self.status
+                    self.done = True
             elif 'a' in keys:
                 logging.warning('press a')
                 self.log('press a')
@@ -420,8 +421,6 @@ class CalibrationTrial(GraphTrial):
             if 'x' in event.getKeys():  # cancel key
                 self.log('cancel')
                 self.result = 'cancelled'
-                self.fade_out()
-                return self.result
 
             elif self.last_flip > self.target_time + self.saccade_time:  # timeout
                 self.log('timeout', {"state": self.target})
