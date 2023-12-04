@@ -22,8 +22,8 @@ from config import VERSION
 DATA_PATH = f'data/exp/{VERSION}'
 CONFIG_PATH = f'config/{VERSION}'
 LOG_PATH = 'log'
-PSYCHO_LOG_PATH = 'log'
-for p in (DATA_PATH, CONFIG_PATH, LOG_PATH, ):
+PSYCHO_LOG_PATH = 'psycho-log'
+for p in (DATA_PATH, CONFIG_PATH, LOG_PATH, PSYCHO_LOG_PATH):
     os.makedirs(p, exist_ok=True)
 
 
@@ -151,7 +151,7 @@ class Experiment(object):
 
         logging.info(f'starting up {self.id} at {core.getTime()}')
 
-        psychopy.logging.LogFile(f"{LOG_PATH}/{self.id}-psycho.log", level=logging.INFO, filemode='w')
+        psychopy.logging.LogFile(f"{PSYCHO_LOG_PATH}/{self.id}-psycho.log", level=logging.INFO, filemode='w')
         psychopy.logging.log(datetime.now().strftime('time is %Y-%m-%d %H:%M:%S,%f'), logging.INFO)
 
 
@@ -432,6 +432,7 @@ class Experiment(object):
 
                 gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
                 gt.run()
+                psychopy.logging.flush()
                 self.trial_data.append(gt.data)
 
                 if gt.status != 'recalibrate':
@@ -485,6 +486,7 @@ class Experiment(object):
     @stage
     def save_data(self):
         self.message("You're done! Let's just save your data...", tip_text="give us a few seconds", space=False)
+        psychopy.logging.flush()
 
         fp = f'{DATA_PATH}/{self.id}.json'
         with open(fp, 'w') as f:
