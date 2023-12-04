@@ -396,6 +396,7 @@ class CalibrationTrial(GraphTrial):
         self.target_time = 'flip'  # updated to be next flip time
         self.draw_arrow()
         self.update_node_labels()
+        self.log('new target', {"state": self.target})
 
     def tick(self):
         t = super().tick()
