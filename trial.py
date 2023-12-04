@@ -50,6 +50,7 @@ class GraphTrial(object):
         self.fix_verified = None
         self.data = {
             "trial": {
+                "kind": self.__class__.__name__,
                 "graph": graph,
                 "rewards": rewards,
                 "start": start,
