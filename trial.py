@@ -456,6 +456,7 @@ class CalibrationTrial(GraphTrial):
                     self.tick()
                 wait(self.target_delay)
                 lab.setOpacity(1)
+                lab.setHeight(.03)
 
                 if self.successes[self.target] == self.n_success:
                     self.uncomplete.remove(self.target)
