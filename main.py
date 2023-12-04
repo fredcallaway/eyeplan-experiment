@@ -7,26 +7,16 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         name = 'test'
     exp = Experiment(config_number, name, full_screen=(not test) or full, **kws)
     if test:
-        exp.setup_eyetracker(mouse=mouse)
-        exp.calibrate_gaze_tolerance()
-        return
-        # TODO: hide mouse during calibration
-
-        # exp.setup_eyetracker()
-        # exp.intro_contingent()
-        # return
-
-        # exp.intro()
-        # exp.practice(1)
-        # exp.practice_timelimit()
-        exp.setup_eyetracker(mouse=mouse)
+        exp.intro()
+        exp.practice(1)
+        exp.practice_timelimit()
+        exp.setup_eyetracker(mouse)
+        exp.show_gaze_demo()
         exp.intro_gaze()
         exp.calibrate_gaze_tolerance()
         exp.intro_contingent()
         exp.intro_main()
-        for t in exp.trials['main']:
-            t['gaze_contingent'] = True
-        exp.run_main(10)
+        exp.run_main(2)
         return
     try:
         if fast:

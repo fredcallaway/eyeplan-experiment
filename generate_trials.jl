@@ -64,7 +64,13 @@ function default_problem_requirement(problem)
     if n_steps == -1
         n_steps = length(states(problem))
     end
-    length(paths(problem; n_steps)) ≥ 2
+    two_paths = length(paths(problem; n_steps)) ≥ 2
+
+    no_skip2 = !any(enumerate(problem.graph)) do (n, kids)
+        mod1(n+2, 11) in kids || mod1(n-2, 11) in kids
+    end
+
+    two_paths && no_skip2
 end
 
 function sample_problem_(;n, n_steps=-1, rdist=nothing, rewards=rand(rdist), graph=missing, start=missing)
@@ -126,21 +132,18 @@ function make_trials(; )
     rdist = IIDSampler(n, rewards)
     kws = (;n, rdist)
 
+
     practice = repeatedly(10) do
         p = sample_problem(;kws...) do p
-            minimum(length, paths(p)) == 2 && value(p) > 0
+            default_problem_requirement(p) && minimum(length, paths(p)) == 2 && value(p) > 0
         end
         (;JSON.lower(p)..., max_score=value(p))
     end
 
-    gaze_contingent = mapreduce(vcat, 1:25) do i
-        shuffle([true, true, false, false])
-    end
-    main = map(gaze_contingent) do gaze_contingent
+    main = repeatedly(100) do
         p = sample_problem(;kws...)
-        (;JSON.lower(p)..., gaze_contingent, max_score=value(p))
+        (;JSON.lower(p)..., max_score=value(p))
     end
-
     (; practice, main )
 end
 
@@ -184,7 +187,7 @@ dest = "config/$(version)"
 rm(dest, recursive=true, force=true)
 mkpath(dest)
 foreach(enumerate(subj_trials)) do (i, trials)
-    parameters = (;points_per_cent, layout, time_limit=15, summarize_every=10)
+    parameters = (;points_per_cent, layout, time_limit=15, summarize_every=10, gaze_contingent=true)
     write("$dest/$i.json", json((;parameters, trials)))
     println("$dest/$i.json")
 end

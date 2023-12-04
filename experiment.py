@@ -317,9 +317,11 @@ class Experiment(object):
         t['graph'] = [[] for edges in t['graph']]
 
         result = None
+        attempt = 0
         while True:
             prm = {**self.parameters, **t, 'time_limit': 10}
             gt = CalibrationTrial(self.win, **prm, eyelink=self.eyelink)
+            attempt += 1
             self.practice_data.append(gt.data)
             result = gt.run()
             if result == 'success':
@@ -337,10 +339,11 @@ class Experiment(object):
                     self.message("OK let's try again. Look at the O's as they appear.", space=True)
                     self.hide_message()
                 else:
-                    self.parameters['gaze_tolerance'] *= 1.2
-                    logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
-                    if self.parameters['gaze_tolerance'] > 3:
-                        break
+                    if attempt > 1:  # first failure might just be figuring out the task
+                        self.parameters['gaze_tolerance'] *= 1.2
+                        logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
+                        if self.parameters['gaze_tolerance'] > 3:
+                            break
 
         if result == 'success':
             self.message("Great! It looks like the eyetracker is working well.", space=True)
@@ -361,7 +364,7 @@ class Experiment(object):
     @stage
     def intro_contingent(self):
         self.message("There's just one more thing...", space=True)
-        self.message("On some rounds, the points will only be visible when you're looking at them.", space=True)
+        self.message("For the rest of the experiment, the points will only be visible when you're looking at them.", space=True)
         tip = "select a path to continue\npress X if it's not working"
         self.message("Try it out!", tip_text=tip, space=False)
 
