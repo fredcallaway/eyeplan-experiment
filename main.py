@@ -6,12 +6,10 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
     if test and name is None:
         name = 'test'
     exp = Experiment(config_number, name, full_screen=(not test) or full, **kws)
-    if hotfix:
-        exp.setup_eyetracker(mouse=mouse)
-        exp.run_main(60)
-        return
-
     if test:
+        exp.setup_eyetracker(mouse=mouse)
+        exp.calibrate_gaze_tolerance()
+        return
         # TODO: hide mouse during calibration
 
         # exp.setup_eyetracker()
@@ -35,7 +33,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
             exp.intro()
             exp.practice(1)
             exp.practice_timelimit()
-            exp.setup_eyetracker()
+            exp.setup_eyetracker(mouse)
             exp.show_gaze_demo()
             exp.intro_gaze()
             exp.calibrate_gaze_tolerance()
@@ -46,7 +44,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
             exp.intro()
             exp.practice(3)
             exp.practice_timelimit()
-            exp.setup_eyetracker()
+            exp.setup_eyetracker(mouse)
             exp.show_gaze_demo()
             exp.intro_gaze()
             exp.calibrate_gaze_tolerance()

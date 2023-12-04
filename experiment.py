@@ -53,7 +53,6 @@ def stage(f):
     return wrapper
 
 def get_next_config_number():
-    print("FIX ME!")
     used = set()
     for fn in os.listdir(DATA_PATH):
         m = re.match(r'.*_P(\d+)\.', fn)
@@ -175,6 +174,7 @@ class Experiment(object):
     def hide_message(self):
         self._message.autoDraw = False
         self._tip.autoDraw = False
+        self.win.flip()
 
     def show_message(self):
         self._message.autoDraw = True
@@ -277,7 +277,6 @@ class Experiment(object):
         self.message("Now we're going to calibrate the eyetracker. Please tell the experimenter.",
             tip_text="Wait for the experimenter (space)", space=True)
         self.hide_message()
-        self.win.flip()
         if mouse:
             self.eyelink = MouseLink(self.win, self.id)
         else:
@@ -326,16 +325,20 @@ class Experiment(object):
             if result == 'success':
                 break
             else:
-                logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
                 self.message("Let's make some quick adjustments...", tip_text='(C)ontinue (D)isable (R)ecalibrate')
-                keys = event.waitKeys(keyList=['space', 'c', 'd', 'r'])
+                keys = event.waitKeys(keyList=['c', 'd', 'r', 'space'])
                 self.hide_message()
                 if 'd' in keys:
                     break
                 if 'r' in keys:
+                    self.message("We're going to try recalibrating the eyetracker", space=True)
+                    self.hide_message()
                     self.eyelink.calibrate()
+                    self.message("OK let's try again. Look at the O's as they appear.", space=True)
+                    self.hide_message()
                 else:
                     self.parameters['gaze_tolerance'] *= 1.2
+                    logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
                     if self.parameters['gaze_tolerance'] > 3:
                         break
 
