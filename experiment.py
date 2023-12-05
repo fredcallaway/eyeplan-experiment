@@ -363,6 +363,8 @@ class Experiment(object):
 
     @stage
     def intro_contingent(self):
+        if self.disable_gaze_contingency:
+            return
         self.message("There's just one more thing...", space=True)
         self.message("For the rest of the experiment, the points will only be visible when you're looking at them.", space=True)
         tip = "select a path to continue\npress X if it's not working"
@@ -428,12 +430,14 @@ class Experiment(object):
                     visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
                     self.win.flip()
                     event.waitKeys(keyList=['space'])
+
+                prm = {**self.parameters, **trial}
                 if self.disable_gaze_contingency:
-                    trial['gaze_contingent'] = False
-                    trial['start_mode'] = 'fixation'
+                    prm['gaze_contingent'] = False
+                    prm['start_mode'] = 'fixation'
 
 
-                gt = GraphTrial(self.win, **trial, **self.parameters, eyelink=self.eyelink)
+                gt = GraphTrial(self.win, **prm, eyelink=self.eyelink)
                 gt.run()
                 psychopy.logging.flush()
                 self.trial_data.append(gt.data)
