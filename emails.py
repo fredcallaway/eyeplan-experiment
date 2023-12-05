@@ -15,17 +15,30 @@ SCOPES = [f'https://www.googleapis.com/auth/gmail.{f}' for f in ('send', 'modify
 BODY = """
 Hi {name},
 
-This is just a quick reminder about the study today ({date}) at {time}. We're
-running on a tight schedule, so it would really help us out if you could
-arrive a few minutes early. If you are more than 10 minutes late, you may be
-assigned as a no-show.
+This is just a quick reminder about the study today ({date}) at {time}. Please
+arrive on time, or a bit early if you can. If you are more than 10 minutes late, you may be
+assigned as a no-show. To ensure the accuracy of our data and your comfort during the experiment,
+please follow the guidelines below regarding eye makeup and eyewear.
 
-The study is being run in Meyer 566. If you take one of main elevators, you
-take a right out of the elevator, then your first right, you'll walk down a
-hallway and up some stairs, and then when you hit the end of the hallway, 566
-will be directly to your left. If you instead take the side elevator, you'll
-come out into a waiting area with seats. Then the experiment will be down the
-hall to your left.
+Eye Makeup: Please avoid heavy eye makeup on the day of the experiment. This
+includes thick eyeliner, heavy mascara, glittery or shimmery eyeshadows, and
+false eyelashes. Understanding that you may be coming directly from other
+commitments, we will provide makeup removal facilities and products in the
+lab. This will allow you to participate if you are wearing makeup upon
+arrival.
+
+Vision Correction: If you require vision correction, we recommend clear and
+non-tinted contact lenses. Glasses, especially those with
+thick, reflective, or tinted lenses, can interfere with the eye-tracking
+equipment. If you must wear glasses, please choose a pair with thin, plastic
+frames and clear, non-reflective lenses.
+
+Location: The study is being run in Meyer 566. If you take one of the main
+elevators, you take a right out of the elevator, then your first right, you'll
+walk down a hallway and up some stairs, and then when you hit the end of the
+hallway, 566 will be directly to your left. If you instead take the side
+elevator, you'll come out into a waiting area with seats. Then, the experiment
+will be down the hall to your left.
 
 Thanks for participating!
 
