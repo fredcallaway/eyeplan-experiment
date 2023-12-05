@@ -182,7 +182,7 @@ class EyeLink(object):
         # Pass the display pixel coordinates (left, top, right, bottom) to the tracker
         # see the EyeLink Installation Guide, "Customizing Screen Settings"
 
-        scale = 0.8
+        scale = 0.85
         h_trim = int(((1 - scale) * scn_height) / 2)
         w_trim = int((scn_width - scale * scn_height) / 2)
 
