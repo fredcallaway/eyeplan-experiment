@@ -168,6 +168,7 @@ class EyeLink(object):
     def start_recording(self):
         logging.info('start_recording')
         self.tracker.startRecording(1, 1, 1, 1)
+        pylink.pumpDelay(100)  # maybe necessary to clear out old samples??
 
     def stop_recording(self):
         logging.info('stop_recording')
