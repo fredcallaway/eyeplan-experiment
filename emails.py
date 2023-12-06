@@ -17,8 +17,9 @@ Hi {name},
 
 This is just a quick reminder about the study today ({date}) at {time}. Please
 arrive on time, or a bit early if you can. If you are more than 10 minutes late, you may be
-assigned as a no-show. To ensure the accuracy of our data and your comfort during the experiment,
-please follow the guidelines below regarding eye makeup and eyewear.
+assigned as a no-show.
+
+IMPORTANT: please review the guidelines below regarding eye makeup and eyewear.
 
 Eye Makeup: Please avoid heavy eye makeup on the day of the experiment. This
 includes thick eyeliner, heavy mascara, glittery or shimmery eyeshadows, and
