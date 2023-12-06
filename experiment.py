@@ -420,16 +420,6 @@ class Experiment(object):
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}")
             try:
-                if i > 0 and i % summarize_every == 0:
-                    msg = f"In the last {summarize_every} rounds, you earned {int(block_earned)} points out of {int(block_possible)} possible points."
-                    block_earned = block_possible = 0
-                    if self.bonus:
-                        msg += f"\n{self.bonus.report_bonus()}"
-                    msg += f'\n\nThere are {len(trials) - i} rounds left. Feel free to take a quick break. Then press space to continue.'
-                    visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
-                    self.win.flip()
-                    event.waitKeys(keyList=['space'])
-
                 prm = {**self.parameters, **trial}
                 if self.disable_gaze_contingency:
                     prm['gaze_contingent'] = False
@@ -462,6 +452,21 @@ class Experiment(object):
                     self.win.showMessage(None)
                     if 'a' in keys:
                         break
+
+                if i % summarize_every == (summarize_every - 1):
+                    msg = f"In the last {summarize_every} rounds, you earned {int(block_earned)} points out of {int(block_possible)} possible points."
+                    block_earned = block_possible = 0
+                    if self.bonus:
+                        msg += f"\n{self.bonus.report_bonus()}"
+                    n_left = len(trials) - i - 1
+                    if n_left:
+                        msg += f'\n\nThere are {n_left} rounds left. Feel free to take a quick break. Then press space to continue.'
+                    else:
+                        msg += "\n\nYou've completed all the rounds! Press space to continue."
+                    visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
+                    self.win.flip()
+                    event.waitKeys(keyList=['space'])
+
             except:
                 logging.exception(f"Caught exception in run_main")
                 self.win.clearAutoDraw()
