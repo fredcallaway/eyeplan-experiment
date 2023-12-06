@@ -94,7 +94,7 @@ class Experiment(object):
         logging.info('parameters %s', self.parameters)
 
         if 'gaze_tolerance' not in self.parameters:
-            self.parameters['gaze_tolerance'] = 1.
+            self.parameters['gaze_tolerance'] = 1.2
 
         self.win = self.setup_window()
         self.bonus = Bonus(0, 50)
@@ -339,11 +339,10 @@ class Experiment(object):
                     self.message("OK let's try again. Look at the O's as they appear.", space=True)
                     self.hide_message()
                 else:
-                    if attempt > 1:  # first failure might just be figuring out the task
-                        self.parameters['gaze_tolerance'] *= 1.2
-                        logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
-                        if self.parameters['gaze_tolerance'] > 3:
-                            break
+                    self.parameters['gaze_tolerance'] *= 1.2
+                    logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
+                    if self.parameters['gaze_tolerance'] > 3:
+                        break
 
         if result == 'success':
             self.message("Great! It looks like the eyetracker is working well.", space=True)
