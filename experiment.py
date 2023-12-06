@@ -146,7 +146,7 @@ class Experiment(object):
 
         consoleHandler = logging.StreamHandler()
         consoleHandler.setFormatter(logFormatter)
-        consoleHandler.setLevel('DEBUG')
+        consoleHandler.setLevel('INFO')
         rootLogger.addHandler(consoleHandler)
 
         logging.info(f'starting up {self.id} at {core.getTime()}')
