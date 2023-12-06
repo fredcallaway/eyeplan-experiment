@@ -12,7 +12,7 @@ if len(sys.argv) > 1:
 
 trials = []
 for file in sorted(os.listdir(f"data/exp/{VERSION}/")):
-    if 'test' in file:
+    if 'test' in file or 'txt' in file:
         continue
     wid = file.replace('.json', '')
     # wid = uid.rsplit('-', 1)[1]
