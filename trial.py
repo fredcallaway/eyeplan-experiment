@@ -188,11 +188,13 @@ class GraphTrial(object):
             return reward_string(self.rewards[i])
 
     def update_node_labels(self):
+        logging.debug('update_node_labels')
         for i in range(len(self.nodes)):
             self.set_node_label(i, self.node_label(i))
 
     def set_node_label(self, i, new):
         old = self.reward_labels[i].text
+        logging.debug('set_node_label [%s] %s -> %s', i, old, new)
         if old != new:
             logging.debug(f'Changing reward_label[%s] from %s to %s', i, old, new)
             self.reward_labels[i].text = new
