@@ -11,11 +11,11 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         # exp.practice(1)
         # exp.practice_timelimit()
         exp.setup_eyetracker(mouse)
-        # exp.show_gaze_demo()
-        # exp.intro_gaze()
-        # exp.calibrate_gaze_tolerance()
-        # exp.intro_contingent()
-        # exp.intro_main()
+        exp.show_gaze_demo()
+        exp.intro_gaze()
+        exp.calibrate_gaze_tolerance()
+        exp.intro_contingent()
+        exp.intro_main()
         exp.run_main(2)
         return
     try:
