@@ -101,7 +101,7 @@ def send_reminder(email, full_name, dt):
     # assert datetime.now().date() == dt.date()
     date = dt.strftime('%A, %B %d')
     time = dt.strftime('%l:%M%p').strip()
-    subject = f"Reminder: study today at {time} in Meyer 566"
+    subject = f"Reminder: study tomorrow at {time} in Meyer 566"
     name = full_name.split()[0]
     my_body = BODY.format(name=name, date=date, time=time)
     # my_body = my_body.replace('\n\n', 'BREAK').replace('\n', ' ').replace('BREAK', '\n\n')
