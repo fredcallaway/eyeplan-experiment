@@ -344,7 +344,7 @@ class CalibrationTrial(GraphTrial):
     """docstring for CalibrationTrial"""
     all_failures = np.zeros(11)  # across separate runs ASSUME graph doesn't change
 
-    def __init__(self, *args, saccade_time=.5, n_success=2, n_fail=3, target_delay=.2, **kwargs):
+    def __init__(self, *args, saccade_time=.5, n_success=2, n_fail=3, target_delay=.5 , **kwargs):
         kwargs['gaze_contingent'] = True
         kwargs['fixation_lag'] = .1
         kwargs['time_limit'] = None
