@@ -327,7 +327,7 @@ class Experiment(object):
             if result == 'success':
                 break
             else:
-                self.message("Let's make some quick adjustments...", tip_text='(C)ontinue (D)isable (R)ecalibrate')
+                self.message("Let's make some quick adjustments...", tip_text='Press space to continue')
                 keys = event.waitKeys(keyList=['c', 'd', 'r', 'space'])
                 self.hide_message()
                 if 'd' in keys:
