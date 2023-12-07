@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 import os
 from googleapiclient.discovery import build
@@ -7,44 +7,15 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 import base64
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import markdown2
 
 from fire import Fire
 
 # If modifying these SCOPES, delete the file token.json.
 SCOPES = [f'https://www.googleapis.com/auth/gmail.{f}' for f in ('send', 'modify')]
-BODY = """
-Hi {name},
-
-This is just a quick reminder about the study today ({date}) at {time}. Please
-arrive on time, or a bit early if you can. If you are more than 10 minutes late, you may be
-assigned as a no-show.
-
-IMPORTANT: please review the guidelines below regarding eye makeup and eyewear.
-
-Eye Makeup: Please avoid heavy eye makeup on the day of the experiment. This
-includes thick eyeliner, heavy mascara, glittery or shimmery eyeshadows, and
-false eyelashes. Understanding that you may be coming directly from other
-commitments, we will provide makeup removal facilities and products in the
-lab. This will allow you to participate if you are wearing makeup upon
-arrival.
-
-Vision Correction: If you require vision correction, we recommend clear and
-non-tinted contact lenses. Glasses, especially those with
-thick, reflective, or tinted lenses, can interfere with the eye-tracking
-equipment. If you must wear glasses, please choose a pair with thin, plastic
-frames and clear, non-reflective lenses.
-
-Location: The study is being run in Meyer 566. If you take one of the main
-elevators, you take a right out of the elevator, then your first right, you'll
-walk down a hallway and up some stairs, and then when you hit the end of the
-hallway, 566 will be directly to your left. If you instead take the side
-elevator, you'll come out into a waiting area with seats. Then, the experiment
-will be down the hall to your left.
-
-Thanks for participating!
-
-Fred
-""".strip()
+with open('email_template.md') as f:
+    BODY = f.read().strip()
 
 CRED_HELP = """
 To use this script you must create a credentials file.
@@ -100,10 +71,24 @@ def get_message_body(msg):
         return base64.urlsafe_b64decode(msg['payload']['body']['data']).decode('utf-8')
 
 def create_message(to, subject, message_text):
-    message = MIMEText(message_text)
+    message = MIMEMultipart('alternative')
     message['to'] = to
     message['subject'] = subject
+
+    # Plain text version of the message
+    part1 = MIMEText(message_text, 'plain')
+
+    # HTML version of the message
+    message_text_html = markdown2.markdown(message_text)
+    part2 = MIMEText(message_text_html, 'html')
+
+    # Attach parts into message container
+    # According to RFC 2046, the last part of a multipart message is best and preferred.
+    message.attach(part1)
+    message.attach(part2)
+
     return {'raw': base64.urlsafe_b64encode(message.as_bytes()).decode()}
+
 
 def send_email(to, subject, message_text):
     message = create_message(to, subject, message_text)
@@ -113,22 +98,21 @@ def send_reminder(email, full_name, dt):
     if email in reminded:
         print(f'{email} has already been reminded. Skipping.')
         return
-    assert datetime.now().date() == dt.date()
+    # assert datetime.now().date() == dt.date()
     date = dt.strftime('%A, %B %d')
     time = dt.strftime('%l:%M%p').strip()
     subject = f"Reminder: study today at {time} in Meyer 566"
     name = full_name.split()[0]
     my_body = BODY.format(name=name, date=date, time=time)
-    my_body = my_body.replace('\n\n', 'BREAK').replace('\n', ' ').replace('BREAK', '\n\n')
+    # my_body = my_body.replace('\n\n', 'BREAK').replace('\n', ' ').replace('BREAK', '\n\n')
 
     send_email(email, subject, my_body)
     print(f'Sent a reminder to {email}')
     with open('reminded.txt', 'a') as f:
         f.write(email + '\n')
 
-def get_todays_participants(kind = "Sign-Up"):
-    today = datetime.now()
-    dstring = today.strftime('%A, %B %-d')
+def get_participants(when, kind = "Sign-Up"):
+    dstring = when.strftime('%A, %B %-d')
     query = f'from: nyu-psych-admin@sona-systems.net subject: "Study {kind} Notification" "{dstring}"'
     result = GMAIL.users().messages().list(userId='me', q=query).execute()
     messages = result.get('messages', [])
@@ -145,15 +129,15 @@ def get_todays_participants(kind = "Sign-Up"):
         date = re.search(r'The study (is|was) scheduled to take place on (.*) in the location', body).group(2)
         start, end = date.split(' - ')
         dt = datetime.strptime(start, '%A, %B %d, %Y %I:%M %p')
-        if today.date() == dt.date():
+        if when.date() == dt.date():
             participants.append((dt, full_name, email))
 
     return participants
 
 def main(remind=False):
-    today = datetime.now()
-    signed_up = get_todays_participants()
-    cancelled = get_todays_participants("Cancellation")
+    dt = datetime.now() + timedelta(1)  # tomorrow
+    signed_up = get_participants(dt)
+    cancelled = get_participants(dt, "Cancellation")
     for c in cancelled:
         assert c in signed_up
 
