@@ -386,6 +386,7 @@ class Experiment(object):
     @stage
     def intro_main(self):
         self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
+        self.message("Remember: at the beginning of each round, look at the circle and press space.", space=True)
         if self.bonus:
             self.message(f"There will be {self.n_trial} rounds. "
                          f"Remember, you'll earn {self.bonus.describe_scheme()} you make in the game. "
