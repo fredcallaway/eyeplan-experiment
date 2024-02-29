@@ -192,7 +192,7 @@ class Experiment(object):
     @stage
     def intro(self):
         self.message('Welcome!', space=True)
-        gt = self.get_practice_trial()
+        gt = self.get_practice_trial(highlight_edges=True)
 
         gt.show()
         for l in gt.reward_labels:

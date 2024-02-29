@@ -18,7 +18,8 @@ def distance(p1, p2):
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, time_limit=None, start_mode=None,
+    def __init__(self, win, graph, rewards, start, layout, plan_time=15, act_time=6, start_mode=None,
+                 highlight_edges=False, stop_on_x=False,
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
                  pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
@@ -26,10 +27,13 @@ class GraphTrial(object):
         self.rewards = list(rewards)
         self.start = start
         self.layout = layout
-        self.time_limit = time_limit
+        self.plan_time = plan_time
+        self.act_time = act_time
         if start_mode is None:
             start_mode = 'drift_check' if eyelink else 'space'
         self.start_mode = start_mode
+        self.highlight_edges = highlight_edges
+        self.stop_on_x = stop_on_x
 
         self.eyelink = eyelink
         self.gaze_contingent = gaze_contingent
@@ -41,8 +45,13 @@ class GraphTrial(object):
         self.space_start = space_start
         self.max_score = max_score
 
-        self.status = 'ok'
+        # all for current stage
+        self.stage = None
+        self.current_time = None
         self.start_time = None
+        self.end_time = None
+
+        self.status = 'ok'
         self.disable_click = False
         self.score = 0
         self.current_state = None
@@ -54,7 +63,8 @@ class GraphTrial(object):
                 "graph": graph,
                 "rewards": rewards,
                 "start": start,
-                "time_limit": time_limit,
+                "plan_time": plan_time,
+                "act_time": act_time,
                 "gaze_contingent": gaze_contingent,
                 "gaze_tolerance": gaze_tolerance,
                 "fixation_lag": fixation_lag
@@ -104,7 +114,7 @@ class GraphTrial(object):
                 self.arrows[(i, j)] = self.gfx.arrow(nodes[i], nodes[j])
 
 
-        if self.time_limit is not None:
+        if self.plan_time is not None or self.act_time is not None:
             self.timer_wrap = self.gfx.rect((0.5,-0.45), .02, 0.9, anchor='bottom', color=-.1)
             self.timer = self.gfx.rect((0.5,-0.45), .02, 0.9, anchor='bottom', color=-.2)
         else:
@@ -142,6 +152,7 @@ class GraphTrial(object):
         self.score += self.rewards[s]
         prev = self.current_state
 
+        self.set_node_label(s, reward_string(self.rewards[s]))
 
         self.current_state = s
         if len(self.graph[self.current_state]) == 0:
@@ -206,7 +217,6 @@ class GraphTrial(object):
         if self.show_gaze:
             self.gaze_dot.setPos(gaze)
         self.last_fixated = self.fixated
-        # visual.Circle(self.win, radius=.01, pos=gaze, color='red',).draw()
 
         for i in range(len(self.nodes)):
             if distance(gaze, self.nodes[i].pos) < self.gaze_tolerance * self.nodes[i].radius:
@@ -243,12 +253,13 @@ class GraphTrial(object):
                 self.nodes[j].setLineColor('black')
 
     def tick(self):
-        if self.start_time is not None and self.time_limit is not None:
-            time_left = self.start_time + self.time_limit - core.getTime()
+        self.current_time = core.getTime()
+        if self.end_time is not None: # TODO
+            time_left = self.end_time - self.current_time
             if time_left > 0:
-                p = time_left / self.time_limit
+                p = time_left / (self.end_time - self.start_time)
                 self.timer.setHeight(0.9 * p)
-                if time_left < 3:
+                if self.stage == 'acting' and time_left < 3:
                     p2 = time_left / 3
                     original = -.2 * np.ones(3)
                     red = np.array([1, -1, -1])
@@ -276,7 +287,59 @@ class GraphTrial(object):
         self.log('start recording')
         self.eyelink.start_recording()
 
-    def run(self, one_step=False, highlight_edges=False, stop_on_x=False):
+    def run_planning(self):
+        self.log('start planning')
+        self.stage = 'planning'
+        self.start_time = self.current_time = core.getTime()
+        self.end_time = self.start_time + self.plan_time
+
+        while True:
+            if self.current_time > self.end_time:
+                self.log('timeout planning')
+                break
+
+            self.update_fixation()
+            keys = event.getKeys()
+
+            if 'space' in keys:
+                self.log('end planning')
+                break
+            elif 'x' in keys or 'c' in keys:
+                logging.warning('press x')
+                self.log('press x')
+                self.status = 'recalibrate'
+                if self.stop_on_x:
+                    self.done = True
+            elif 'a' in keys:
+                logging.warning('press a')
+                self.log('press a')
+                self.status = 'abort'
+            self.tick()
+
+        self.fixated = None
+        for i in range(len(self.nodes)):
+            self.set_node_label(i, '')
+        self.win.flip()
+
+    def run_acting(self, one_step):
+        self.log('start acting')
+        self.stage = 'acting'
+        self.start_time = self.current_time = core.getTime()
+        self.end_time = self.start_time + self.act_time
+
+        while not self.done:
+            moved = self.check_click()
+            if moved and one_step:
+                return
+            if self.highlight_edges:
+                self.highlight_current_edges()
+            if not self.done and self.current_time > self.end_time:
+                self.do_timeout()
+            self.tick()
+
+
+
+    def run(self, one_step=False):
         if self.start_mode == 'drift_check':
             self.log('begin drift_check')
             self.status = self.eyelink.drift_check(self.pos)
@@ -306,28 +369,8 @@ class GraphTrial(object):
         self.start_time = self.tick()
         self.log('start', {'flip_time': self.start_time})
 
-        while not self.done:
-            moved = self.check_click()
-            if moved and one_step:
-                return
-            self.update_fixation()
-            if highlight_edges:
-                self.highlight_current_edges()
-            if not self.done and self.time_limit is not None and self.start_time + self.time_limit < core.getTime():
-                self.do_timeout()
-
-            keys = event.getKeys()
-            if 'x' in keys or 'c' in keys:
-                logging.warning('press x')
-                self.log('press x')
-                self.status = 'recalibrate'
-                if stop_on_x:
-                    self.done = True
-            elif 'a' in keys:
-                logging.warning('press a')
-                self.log('press a')
-                self.status = 'abort'
-            self.tick()
+        self.run_planning()
+        self.run_acting(one_step)
 
         self.log('done')
         logging.info("end trial " + jsonify(self.data["events"]))
@@ -347,7 +390,7 @@ class CalibrationTrial(GraphTrial):
     def __init__(self, *args, saccade_time=.5, n_success=2, n_fail=3, target_delay=.3 , **kwargs):
         kwargs['gaze_contingent'] = True
         kwargs['fixation_lag'] = .1
-        kwargs['time_limit'] = None
+        kwargs['end_time'] = None
 
         self.saccade_time = saccade_time
         self.n_success = n_success
@@ -466,7 +509,7 @@ class CalibrationTrial(GraphTrial):
                 else:
                     self.result = 'success'
 
-            # if not self.done and self.time_limit is not None and self.start_time + self.time_limit < core.getTime():
+            # if not self.done and self.end_time is not None and self.start_time + self.end_time < core.getTime():
             #     self.do_timeout()
 
 
