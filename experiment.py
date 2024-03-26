@@ -9,7 +9,7 @@ from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
 
 from util import jsonify
-from trial import GraphTrial, CalibrationTrial
+from trial import GraphTrial, CalibrationTrial, COLOR_ACT, COLOR_PLAN
 from graphics import Graphics
 from bonus import Bonus
 from eyetracking import EyeLink, MouseLink
@@ -235,13 +235,14 @@ class Experiment(object):
         gt.run_planning()
         gt.nodes[gt.start].setLineColor('black')
 
-        gt.nodes[gt.start].fillColor = '#1B79FF'
+        gt.nodes[gt.start].fillColor = COLOR_PLAN
         self.message("It will turn blue, indicating that you have entered the movement phase.", space=True)
 
         gt.hide_rewards()
         self.message("But be warned! The points will also disappear!", space=True)
 
         gt.update_node_labels()
+        gt.nodes[gt.start].fillColor = COLOR_ACT
         self.message("So, you should only enter the movement phase after deciding on a full path.", space=True)
         self.message("Give it a shot!", tip_text='click the red circle', space=False)
 
