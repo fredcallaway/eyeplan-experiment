@@ -244,7 +244,6 @@ class EyeLink(object):
             return (-100000, -100000)
         else:
             eye = sample.getLeftEye() or sample.getRightEye()
-            import IPython, time; IPython.embed(); time.sleep(0.5)
             return pix2height(self.win, eye.getGaze())
 
     def close_connection(self):
