@@ -218,14 +218,22 @@ class GraphTrial(object):
         if not self.eyelink:
             return
         gaze = self.eyelink.gaze_position()
+
+        gaze_distance = distance(gaze, self.last_gaze)
+        self.last_gaze = gaze
+        print('  ', gaze_distance)
+
         if self.show_gaze:
             self.gaze_dot.setPos(gaze)
         self.last_fixated = self.fixated
 
         for i in range(len(self.nodes)):
             if distance(gaze, self.nodes[i].pos) < self.gaze_tolerance * self.nodes[i].radius:
+
+
                 if self.fixated != i:
                     self.log('fixate state', {'state': i})
+                    print('FIXATE', i)
                 self.fixated = i
                 self.fix_verified = core.getTime()
                 break
@@ -290,6 +298,15 @@ class GraphTrial(object):
     def start_recording(self):
         self.log('start recording')
         self.eyelink.start_recording()
+
+        # TODO: draw reference
+        # left = int(scn_width/2.0) - 60
+        # top = int(scn_height/2.0) - 60
+        # right = int(scn_width/2.0) + 60
+        # bottom = int(scn_height/2.0) + 60
+        # draw_cmd = 'draw_filled_box %d %d %d %d 1' % (left, top, right, bottom)
+        # el_tracker.sendCommand(draw_cmd)
+
 
     def run_planning(self):
         self.log('start planning')
