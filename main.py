@@ -7,16 +7,16 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         name = 'test'
     exp = Experiment(config_number, name, full_screen=(not test) or full, **kws)
     if test:
-        # exp.intro()
-        # exp.practice(1)
+        exp.intro()
+        exp.practice_start()
+        exp.practice(1)
         # exp.practice_timelimit()
         exp.setup_eyetracker(mouse)
         # exp.show_gaze_demo()
-        # exp.intro_gaze()
+        exp.intro_gaze()
         # exp.calibrate_gaze_tolerance()
-        # exp.intro_contingent()
-        # exp.intro_main()
-        # exp.parameters['gaze_contingent'] = False
+        exp.intro_contingent()
+        exp.intro_main()
         exp.run_main()
         # exp.save_data()
         return
@@ -47,6 +47,8 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
 
             exp.save_data()
         except:
+            if test:
+                exit(1)
             logging.exception('Uncaught exception in main')
             exp.win.clearAutoDraw()
             exp.win.showMessage("Drat! The experiment has encountered an error.\nPlease inform the experimenter.")

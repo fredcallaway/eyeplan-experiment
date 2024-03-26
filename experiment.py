@@ -192,7 +192,7 @@ class Experiment(object):
     @stage
     def intro(self):
         self.message('Welcome!', space=True)
-        gt = self.get_practice_trial(highlight_edges=True)
+        gt = self.get_practice_trial(highlight_edges=True, hide_rewards_while_acting=False, initial_stage='acting')
 
         gt.show()
         for l in gt.reward_labels:
@@ -205,17 +205,53 @@ class Experiment(object):
         for l in gt.reward_labels:
             l.setOpacity(1)
         self.message("The goal of the game is to collect as many points as you can.", space=True)
+
         if self.bonus:
             self.message(f"The points will be converted to a cash bonus: {self.bonus.describe_scheme()}!", space=True)
+        else:
+            pass
+            # self.message(f"", space=True)
 
         self.message("You can move by clicking on a location that has an arrow pointing from your current location. Try it now!",
                      tip_text='click one of the highlighted locations', space=False)
-        gt.run(one_step=True, highlight_edges=True)
+        gt.run(one_step=True)
         gt.start = gt.current_state
 
         self.message("The round ends when you get to a location with no outgoing connections.",
                      tip_text='click one of the highlighted locations', space=False)
-        gt.run(highlight_edges=True)
+        gt.run(skip_planning=True)
+
+    @stage
+    def practice_start(self):
+        gt = self.get_practice_trial()
+        gt.show()
+        gt.set_state(gt.start)
+
+        self.message("At the beginning of each round, your initial location will be red.", space=True)
+
+        self.message("Before you can move, you have to click the red circle.", space=False,
+                     tip_text='click the red circle to continue')
+        gt.nodes[gt.start].setLineColor('#FFC910')
+        gt.run_planning()
+        gt.nodes[gt.start].setLineColor('black')
+
+        gt.nodes[gt.start].fillColor = '#1B79FF'
+        self.message("It will turn blue, indicating that you have entered the movement phase.", space=True)
+
+        gt.hide_rewards()
+        self.message("But be warned! The points will also disappear!", space=True)
+
+        gt.update_node_labels()
+        self.message("So, you should only enter the movement phase after deciding on a full path.", space=True)
+        self.message("Give it a shot!", tip_text='click the red circle', space=False)
+
+        gt.start_time = gt.tick()
+        gt.run_planning()
+        self.message("Now you can select which locations to visit.",
+                     tip_text='complete the round to continue', space=False)
+        gt.run(skip_planning=True)
+
+
 
     @stage
     def practice_change(self):
@@ -372,9 +408,9 @@ class Experiment(object):
         status = None
 
         while True:
-            gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0))
+            gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0), stop_on_x=True)
             gt.start_mode = 'immediate'
-            gt.run(stop_on_x=True)
+            gt.run()
             if gt.status == 'ok':
                 break
             self.recalibrate()
