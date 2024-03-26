@@ -7,13 +7,13 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         name = 'test'
     exp = Experiment(config_number, name, full_screen=(not test) or full, **kws)
     if test:
-        exp.intro()
-        exp.practice_start()
-        exp.practice(1)
+        # exp.intro()
+        # exp.practice_start()
+        # exp.practice(1)
         # exp.practice_timelimit()
         exp.setup_eyetracker(mouse)
-        # exp.show_gaze_demo()
-        exp.intro_gaze()
+        exp.show_gaze_demo()
+        # exp.intro_gaze()
         # exp.calibrate_gaze_tolerance()
         exp.intro_contingent()
         exp.intro_main()
