@@ -44,6 +44,7 @@ class GraphTrial(object):
         self.gaze_tolerance = gaze_tolerance
         self.fixation_lag = fixation_lag
         self.show_gaze = show_gaze
+        self.last_gaze = None
 
         self.pos = pos
         self.space_start = space_start
@@ -219,9 +220,10 @@ class GraphTrial(object):
             return
         gaze = self.eyelink.gaze_position()
 
-        gaze_distance = distance(gaze, self.last_gaze)
+        if self.last_gaze is not None:
+            gaze_distance = distance(gaze, self.last_gaze)
+            print('  ', gaze_distance)
         self.last_gaze = gaze
-        print('  ', gaze_distance)
 
         if self.show_gaze:
             self.gaze_dot.setPos(gaze)
