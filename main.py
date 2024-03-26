@@ -24,8 +24,8 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         try:
             if fast:
                 exp.intro()
-                exp.practice(1)
                 exp.practice_start()
+                exp.practice(1)
                 exp.setup_eyetracker(mouse)
                 exp.show_gaze_demo()
                 exp.intro_gaze()
