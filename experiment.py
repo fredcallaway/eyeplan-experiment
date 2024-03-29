@@ -69,12 +69,13 @@ def get_next_config_number():
 
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False, **kws):
+    def __init__(self, config_number, name=None, full_screen=False, score_limit=400, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number
         print('>>>', self.config_number)
         self.full_screen = full_screen
+        self.score_limit = score_limit
 
         timestamp = datetime.now().strftime('%y-%m-%d-%H%M')
         self.id = f'{timestamp}_P{config_number}'
@@ -98,6 +99,7 @@ class Experiment(object):
 
         self.win = self.setup_window()
         self.bonus = Bonus(0, 50)
+        self.total_score = 0
         # self.bonus = Bonus(self.parameters['points_per_cent'], 50)
         self.eyelink = None
         self.disable_gaze_contingency = False
@@ -420,17 +422,27 @@ class Experiment(object):
         self.message("Great! If you ever find that the points don't appear when you look at them, "
             "please let the experimenter know so we can fix it!", space=True)
 
+
     @stage
     def intro_main(self):
-        self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
-        self.message("Remember: at the beginning of each round, look at the circle and press space.", space=True)
-        if self.bonus:
-            self.message(f"There will be {self.n_trial} rounds. "
-                         f"Remember, you'll earn {self.bonus.describe_scheme()} you make in the game. "
-                         "We'll start you off with 50 points for all your hard work so far.", space=True )
+        if self.score_limit:
+            self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
+            self.message("But first, you might be asking \"What's in it for me?\" ...Well, we thought of that!", space=True)
+            self.message("Unlike other experiments you might have done, we don't have a fixed number of rounds.", space=True)
+            self.message(f"Instead, you will do as as many rounds as it takes to earn {self.score_limit} points.", space=True)
+            self.message("To finish the study as quickly as possible, you'll have to balance making fast choices and selecting the best possible path.", space=True)
             self.message("Good luck!", space=True)
+
         else:
-            self.message(f"There will be {self.n_trial} rounds. Good luck!", space=True)
+            self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
+            self.message("Remember: at the beginning of each round, look at the circle and press space.", space=True)
+            if self.bonus:
+                self.message(f"There will be {self.n_trial} rounds. "
+                             f"Remember, you'll earn {self.bonus.describe_scheme()} you make in the game. "
+                             "We'll start you off with 50 points for all your hard work so far.", space=True )
+                self.message("Good luck!", space=True)
+            else:
+                self.message(f"There will be {self.n_trial} rounds. Good luck!", space=True)
 
     @stage
     def run_one(self, i, **kws):
@@ -445,6 +457,11 @@ class Experiment(object):
         self.bonus.add_points(gt.score)
         self.trial_data.append(gt.data)
 
+    def center_message(self, msg, space=True):
+        visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
+        self.win.flip()
+        event.waitKeys(keyList=['space'])
+
     @stage
     def run_main(self, n=None):
         summarize_every = self.parameters.get('summarize_every', 5)
@@ -458,6 +475,14 @@ class Experiment(object):
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}")
             try:
+                if self.score_limit:
+                    if self.total_score >= self.score_limit:
+                        self.center_message(f"Congratulations! You hit {self.score_limit} points!")
+                        return
+                    else:
+                        self.center_message(f"Your current score is {self.total_score}.\n"
+                                            f"You're {self.score_limit - self.total_score} points away from finishing.")
+
                 prm = {**self.parameters, **trial}
                 if self.disable_gaze_contingency:
                     prm['gaze_contingent'] = False
@@ -474,7 +499,7 @@ class Experiment(object):
                     block_earned += gt.score
                     block_possible += gt.max_score
                     self.bonus.add_points(gt.score)
-
+                    self.total_score += int(gt.score)
 
                 if gt.status == 'recalibrate':
                     self.recalibrate()
@@ -501,9 +526,7 @@ class Experiment(object):
                         msg += f'\n\nThere are {n_left} rounds left. Feel free to take a quick break. Then press space to continue.'
                     else:
                         msg += "\n\nYou've completed all the rounds! Press space to continue."
-                    visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
-                    self.win.flip()
-                    event.waitKeys(keyList=['space'])
+                    self.center_message(msg)
 
             except:
                 logging.exception(f"Caught exception in run_main")
