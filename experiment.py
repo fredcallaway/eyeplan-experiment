@@ -237,14 +237,14 @@ class Experiment(object):
         gt.run_planning()
         gt.nodes[gt.start].setLineColor('black')
 
-        gt.nodes[gt.start].fillColor = COLOR_PLAN
+        gt.nodes[gt.start].fillColor = COLOR_ACT
         self.message("It will turn blue, indicating that you have entered the movement phase.", space=True)
 
         gt.hide_rewards()
         self.message("But be warned! The points will also disappear!", space=True)
 
         gt.update_node_labels()
-        gt.nodes[gt.start].fillColor = COLOR_ACT
+        gt.nodes[gt.start].fillColor = COLOR_PLAN
         self.message("So, you should only enter the movement phase after deciding on a full path.", space=True)
         self.message("Give it a shot!", tip_text='click the red circle', space=False)
 
