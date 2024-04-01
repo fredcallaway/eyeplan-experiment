@@ -70,7 +70,11 @@ function default_problem_requirement(problem)
         mod1(n+2, 11) in kids || mod1(n-2, 11) in kids
     end
 
-    two_paths && no_skip2
+    no_skip1 = !any(enumerate(problem.graph)) do (n, kids)
+        mod1(n+1, 11) in kids || mod1(n-1, 11) in kids
+    end
+
+    two_paths && no_skip2 && no_skip1
 end
 
 function sample_problem_(;n, n_steps=-1, rdist=nothing, rewards=rand(rdist), graph=missing, start=missing)
