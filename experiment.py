@@ -69,7 +69,7 @@ def get_next_config_number():
 
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False, score_limit=400, **kws):
+    def __init__(self, config_number, name=None, full_screen=False, score_limit=300, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number

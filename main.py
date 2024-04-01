@@ -5,6 +5,8 @@ import logging
 def main(config_number=None, name=None, test=False, fast=False, full=False, mouse=False, hotfix=False, **kws):
     if test and name is None:
         name = 'test'
+    if fast:
+        kws['score_limit'] = 10
     exp = Experiment(config_number, name, full_screen=(not test) or full, **kws)
     if test:
         # exp.intro()
@@ -15,8 +17,8 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         exp.show_gaze_demo()
         # exp.intro_gaze()
         # exp.calibrate_gaze_tolerance()
-        exp.intro_contingent()
-        exp.intro_main()
+        # exp.intro_contingent()
+        # exp.intro_main()
         exp.run_main()
         # exp.save_data()
         return
@@ -32,11 +34,11 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
                 exp.calibrate_gaze_tolerance()
                 exp.intro_contingent()
                 exp.intro_main()
-                exp.run_main(2)
+                exp.run_main()
             else:
                 exp.intro()
-                exp.practice(3)
                 exp.practice_start()
+                exp.practice(3)
                 exp.setup_eyetracker(mouse)
                 exp.show_gaze_demo()
                 exp.intro_gaze()
