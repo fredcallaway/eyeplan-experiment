@@ -107,10 +107,10 @@ class GraphTrial(object):
 
         self.nodes = nodes = []
         for i, (x, y) in enumerate(self.layout):
-            nodes.append(self.gfx.circle(0.7 * np.array([x, y]), name=f'node{i}', r=.03))
+            nodes.append(self.gfx.circle(0.7 * np.array([x, y]), name=f'node{i}', r=.04))
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
 
-        self.reward_labels = [self.gfx.text('', n.pos, name=f'lab{i}') for i, n in enumerate(self.nodes)]
+        self.reward_labels = [self.gfx.text('', n.pos, height=.04, name=f'lab{i}') for i, n in enumerate(self.nodes)]
         self.update_node_labels()
 
         self.arrows = {}
@@ -168,10 +168,10 @@ class GraphTrial(object):
             lab.color = 'white'
             # lab.bold = True
             for p in self.gfx.animate(6/60):
-                lab.setHeight(0.03 + p * 0.02)
+                lab.setHeight(0.04 + p * 0.02)
                 self.tick()
             for p in self.gfx.animate(12/60):
-                lab.setHeight(0.05 - p * 0.05)
+                lab.setHeight(0.06 - p * 0.05)
                 lab.setOpacity(1-p)
                 self.tick()
 
@@ -425,7 +425,7 @@ class CalibrationTrial(GraphTrial):
     """docstring for CalibrationTrial"""
     all_failures = np.zeros(11)  # across separate runs ASSUME graph doesn't change
 
-    def __init__(self, *args, saccade_time=.5, n_success=2, n_fail=3, target_delay=.3 , **kwargs):
+    def __init__(self, *args, saccade_time=.7, n_success=2, n_fail=3, target_delay=.3 , **kwargs):
         kwargs['gaze_contingent'] = True
         kwargs['fixation_lag'] = .1
         kwargs['end_time'] = None
@@ -530,10 +530,10 @@ class CalibrationTrial(GraphTrial):
 
                 lab = self.reward_labels[self.target]
                 for p in self.gfx.animate(6/60):
-                    lab.setHeight(0.03 + p * 0.02)
+                    lab.setHeight(0.04 + p * 0.02)
                     self.tick()
                 for p in self.gfx.animate(12/60):
-                    lab.setHeight(0.05 - p * 0.03)
+                    lab.setHeight(0.06 - p * 0.03)
                     lab.setOpacity(1-p)
                     self.tick()
                 wait(self.target_delay)
