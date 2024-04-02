@@ -11,7 +11,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
     if test:
         # exp.intro()
         # exp.practice_start()
-        # exp.practice(1)
+        exp.practice(2)
         # exp.practice_timelimit()
         exp.setup_eyetracker(mouse)
         exp.show_gaze_demo()
@@ -38,7 +38,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
             else:
                 exp.intro()
                 exp.practice_start()
-                exp.practice(3)
+                exp.practice(2)
                 exp.setup_eyetracker(mouse)
                 exp.show_gaze_demo()
                 exp.intro_gaze()

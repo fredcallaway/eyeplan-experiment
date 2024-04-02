@@ -139,12 +139,24 @@ function make_trials(; )
 
     practice = repeatedly(10) do
         p = sample_problem(;kws...) do p
-            default_problem_requirement(p) && minimum(length, paths(p)) == 2 && value(p) > 0
+            default_problem_requirement(p) || return false
+            # value(p) > 0 || return false
+            # opaths = optimal_paths(p)
+            # length(opaths) == 1 || return false
+
+            ps = paths(p)
+            pv = value.(p, ps)
+            is_optimal = pv .== maximum(pv)
+            sum(is_optimal) == 1 || return false
+            opt_i = findall(is_optimal)[1]
+            pv[opt_i] > 0 || return false
+            maximum(pv[.!is_optimal]) ≤ pv[opt_i] - 2 || return false
+            2 ≤ length(ps[opt_i]) ≤ 3 || return false
         end
         (;JSON.lower(p)..., max_score=value(p))
     end
 
-    main = repeatedly(100) do
+    main = repeatedly(300) do
         p = sample_problem(;kws...)
         (;JSON.lower(p)..., max_score=value(p))
     end
