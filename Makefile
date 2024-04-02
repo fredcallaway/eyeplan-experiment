@@ -9,5 +9,5 @@ test:
 	python main.py --test
 
 fetch:
-	rsync -av ~/drive/eyeplan-data/ data/
-	rsync -av ~/drive/eyeplan-log/ log/
+	rsync -av mattar-mini:/Users/labadmin/eyeplan-experiment/data/ data/
+	rsync -av mattar-mini:/Users/labadmin/eyeplan-experiment/log/ log/
