@@ -1,50 +1,61 @@
 using Graphs
 using Random
 
-model_dir = "../model"
+model_dir = "../model/"
 include("$model_dir/problem.jl")
 include("$model_dir/utils.jl")
 
-
 neighbor_list(sgraph) = neighbors.(Ref(sgraph), vertices(sgraph))
 
-"Adjacency list representation of the tree with specified branching at each depth"
-AdjacenyList = Vector{Vector{Int}}
-function regular_tree(branching::Vector{Int})
-    t = AdjacenyList()
-    function rec!(d)
-        children = Int[]
-        push!(t, children)
-        idx = length(t)
-        if d <= length(branching)
-            for i in 1:branching[d]
-                child = rec!(d+1)
-                push!(children, child)
+
+function build_graph(n_layer, n_per_layer)
+    n_state = 3 + 2 * (n_per_layer * n_layer)
+    g = DiGraph(n_state)
+    gg = 1:n_per_layer*n_layer
+
+    lft = gg .+ 3
+    rht = gg .+ length(gg) .+ 3
+
+    add_edge!(g, 1, 2)
+    add_edge!(g, 1, 3)
+
+    sides = chunk.((lft, rht), n_per_layer)
+
+    for n in sides[1][1]
+        add_edge!(g, 2, n)
+    end
+    for n in sides[2][1]
+        add_edge!(g, 3, n)
+    end
+
+    for layers in sides
+        for i in 1:n_layer-1
+            next = shuffle(layers[i+1])
+            for (i, n) in enumerate(layers[i])
+                add_edge!(g, n, next[i])
+                add_edge!(g, n, next[mod1(i+1, n_per_layer)])
             end
         end
-        return idx
     end
-    rec!(1)
-    t
+    outcomes = [sides[1][end]; sides[2][end]]
+    g, outcomes
 end
 
-empty_tree = AdjacenyList([[]])
-
-function tree_join(g1, g2)
-    n1 = length(g1)
-
-    g1 = map(x -> x .+ 1, g1)
-    g2 = map(x -> x .+ 1 .+ n1, g2)
-
-    [[[2, n1+2]]; g1; g2]
+function grid_layout(n_layer, n_per_layer, left)
+    a = (left ? -1 : 1) * 1.4
+    offset = (n_per_layer + 1) / 2
+    layout = map(Iterators.product(1:n_per_layer, 1:n_layer)) do (i, j)
+        j += 1
+        (a * j, i - offset)
+    end[:]
 end
 
-function random_tree(splits)
-    splits == 0 && return empty_tree
-    splits == 1 && return tree_join(empty_tree, empty_tree)
-    left = rand(0:splits-1)
-    right = splits-1 - left
-    tree_join(random_tree(left), random_tree(right))
+function build_layout(n_layer, n_per_layer)
+    [
+        [(0, 0), (-1, 0), (1, 0)];
+        grid_layout(n_layer, n_per_layer, true);
+        grid_layout(n_layer, n_per_layer, false)
+    ]
 end
 
 function sample_graph(n)
@@ -59,43 +70,23 @@ function sample_graph(n)
     graph, start
 end
 
-function default_problem_requirement(problem)
-    n_steps = problem.n_steps
-    if n_steps == -1
-        n_steps = length(states(problem))
-    end
-    two_paths = length(paths(problem; n_steps)) ≥ 2
+function sample_trial(rdist; n_layer = 3, n_per_layer = 6)
+    graph, outcomes = build_graph(n_layer, n_per_layer)
+    rewards = zeros(Int, nv(graph))
+    rewards[outcomes] .= rand(rdist, length(outcomes))
+    layout = build_layout(n_layer, n_per_layer)
 
-    no_skip2 = !any(enumerate(problem.graph)) do (n, kids)
-        mod1(n+2, 11) in kids || mod1(n-2, 11) in kids
-    end
-
-    no_skip1 = !any(enumerate(problem.graph)) do (n, kids)
-        mod1(n+1, 11) in kids || mod1(n-1, 11) in kids
-    end
-
-    two_paths && no_skip2 && no_skip1
+    graph = map(x -> x .- 1, neighbor_list(graph))
+    (;graph, rewards, layout, start=0)
 end
 
-function sample_problem_(;n, n_steps=-1, rdist=nothing, rewards=rand(rdist), graph=missing, start=missing)
-    if ismissing(graph)
-        graph, start = sample_graph(n)
-    end
-    @assert !ismissing(start)
-    rewards = copy(rewards)
-    rewards[start] = 0
-    Problem(graph, rewards, start, n_steps)
-end
-
-function sample_problem(requirement=default_problem_requirement; kws...)
-    for i in 1:10000
-        problem = sample_problem_(;kws...)
-        requirement(problem) && return problem
-    end
-    error("Can't sample a problem!")
-end
-
-discrete_uniform(v) = DiscreteNonParametric(v, ones(length(v)) / length(v))
+# function sample_problem(requirement=default_problem_requirement; kws...)
+#     for i in 1:10000
+#         problem = sample_problem_(;kws...)
+#         requirement(problem) && return problem
+#     end
+#     error("Can't sample a problem!")
+# end
 
 function linear_rewards(n)
     @assert iseven(n)
@@ -110,73 +101,23 @@ function exponential_rewards(n; base=2)
     sort!([-v; v])
 end
 
-struct Shuffler{T}
-    x::Vector{T}
-end
-
-function Random.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:Shuffler})
-    shuffle(s[].x)
-end
-
-struct IIDSampler{T}
-    n::Int
-    x::Vector{T}
-end
-
-function Random.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:IIDSampler})
-    (;n, x) = s[]
-    rand(x, n)
-end
-
-
-
 function make_trials(; )
-    n = 11
-    rewards = exponential_rewards(8)
-    rdist = IIDSampler(n, rewards)
-    kws = (;n, rdist)
+    rdist = exponential_rewards(8)
 
-
-    practice = repeatedly(10) do
-        p = sample_problem(;kws...) do p
-            default_problem_requirement(p) || return false
-            # value(p) > 0 || return false
-            # opaths = optimal_paths(p)
-            # length(opaths) == 1 || return false
-
-            ps = paths(p)
-            pv = value.(p, ps)
-            is_optimal = pv .== maximum(pv)
-            sum(is_optimal) == 1 || return false
-            opt_i = findall(is_optimal)[1]
-            pv[opt_i] > 0 || return false
-            maximum(pv[.!is_optimal]) ≤ pv[opt_i] - 2 || return false
-            2 ≤ length(ps[opt_i]) ≤ 3 || return false
-        end
-        (;JSON.lower(p)..., max_score=value(p))
-    end
-
-    main = repeatedly(300) do
-        p = sample_problem(;kws...)
-        (;JSON.lower(p)..., max_score=value(p))
-    end
-    (; practice, main )
-end
-
-# %% --------
-
-function circle_layout(N)
-    # we use 0:N-1 to match python's 0 indexing
-    map(0:N-1) do s
-        angle = π/2 + s * 2 * π / N
-        x = (cos(angle) + 1) / 2 - 0.5
-        y = (sin(angle) + 1) / 2 - 0.5
-        (x, y)
-    end
+    (;
+        # intro = [sample_problem(;graph = neighbor_list(intro_graph(n)), start=1, kws..., rewards=zeros(n))],
+        # vary_transition = [sample_problem(;kws...)],
+        # practice_revealed = [sample_problem(;kws...) for i in 1:2],
+        # intro_hover = [sample_problem(;kws...)],
+        # practice_hover = [sample_problem(;kws...) for i in 1:2],
+        main = [sample_trial(rdist) for i in 1:100],
+    )
 end
 
 
-# %% --------
+
+# # %% --------
+
 
 function get_version()
     for line in readlines("config.py")
@@ -188,12 +129,10 @@ function get_version()
     error("Cannot find version")
 end
 
-
 version = get_version()
 n_subj = 200  # better safe than sorry
 Random.seed!(hash(version))
 subj_trials = repeatedly(make_trials, n_subj)
-layout = circle_layout(11)
 
 # %% --------
 
@@ -203,7 +142,7 @@ dest = "config/$(version)"
 rm(dest, recursive=true, force=true)
 mkpath(dest)
 foreach(enumerate(subj_trials)) do (i, trials)
-    parameters = (;points_per_cent, layout, time_limit=15, summarize_every=10, gaze_contingent=true)
+    parameters = (;)
     write("$dest/$i.json", json((;parameters, trials)))
     println("$dest/$i.json")
 end
