@@ -18,7 +18,6 @@ import subprocess
 from copy import deepcopy
 from config import VERSION
 
-
 DATA_PATH = f'data/exp/{VERSION}'
 CONFIG_PATH = f'config/{VERSION}'
 LOG_PATH = 'log'
@@ -34,6 +33,8 @@ def stage(f):
         try:
             f(self, *args, **kwargs)
         except:
+            if self.test_mode:
+                raise
             stage = f.__name__
             logging.exception(f"Caught exception in stage {stage}")
             if f.__name__ == "run_main":
@@ -69,13 +70,14 @@ def get_next_config_number():
 
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False, score_limit=400, **kws):
+    def __init__(self, config_number, name=None, full_screen=False, test_mode=False, score_limit=400, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number
         print('>>>', self.config_number)
         self.full_screen = full_screen
         self.score_limit = score_limit
+        self.test_mode = test_mode
 
         timestamp = datetime.now().strftime('%y-%m-%d-%H%M')
         self.id = f'{timestamp}_P{config_number}'
@@ -464,14 +466,12 @@ class Experiment(object):
 
     @stage
     def run_main(self, n=None):
-        summarize_every = 10000
         # summarize_every = self.parameters.get('summarize_every', 5)
 
         trials = self.trials['main']
         if n is not None:
             trials = trials[:n]
 
-        block_earned = 0
         block_possible = 0
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}")
@@ -497,8 +497,6 @@ class Experiment(object):
 
                 if gt.status != 'recalibrate':
                     logging.info('gt.status is %s', gt.status)
-                    block_earned += gt.score
-                    block_possible += gt.max_score
                     self.bonus.add_points(gt.score)
                     self.total_score += int(gt.score)
 
@@ -516,18 +514,6 @@ class Experiment(object):
                     self.win.showMessage(None)
                     if 'a' in keys:
                         break
-
-                if i % summarize_every == (summarize_every - 1):
-                    msg = f"In the last {summarize_every} rounds, you earned {int(block_earned)} points out of {int(block_possible)} possible points."
-                    block_earned = block_possible = 0
-                    if self.bonus:
-                        msg += f"\n{self.bonus.report_bonus()}"
-                    n_left = len(trials) - i - 1
-                    if n_left:
-                        msg += f'\n\nThere are {n_left} rounds left. Feel free to take a quick break. Then press space to continue.'
-                    else:
-                        msg += "\n\nYou've completed all the rounds! Press space to continue."
-                    self.center_message(msg)
 
             except:
                 logging.exception(f"Caught exception in run_main")
