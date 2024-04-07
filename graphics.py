@@ -81,8 +81,11 @@ class Graphics(object):
         return visual.TextStim(self.win, text, pos=pos, height=height, color=color, **kws)
 
     @shape
-    def arrow(self, c0, c1):
+    def arrow(self, c0, c1, head=True):
         line = self.line(c0.pos, c1.pos, depth=2, sub_shape=True)
+        if not head:
+            return MultiShape(line)
+
         vertices = .01 * np.array([[-1, -2], [1, -2], [0, 0]])
         point = visual.ShapeStim(self.win, vertices=vertices, fillColor='black',
                          pos=move_towards(c1.pos, c0.pos, c1.radius),

@@ -2,6 +2,7 @@ from psychopy import core, visual, gui, data, event
 import numpy as np
 import logging
 import json
+import random
 from eyetracking import height2pix
 from util import jsonify
 
@@ -22,7 +23,7 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, plan_time=None, act_time=None, start_mode=None,
-                 highlight_edges=False, stop_on_x=False, hide_rewards_while_acting=True, initial_stage='planning',
+                 highlight_edges=False, stop_on_x=False, hide_rewards_while_acting=False, initial_stage='acting',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
                  pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
@@ -119,7 +120,7 @@ class GraphTrial(object):
         self.arrows = {}
         for i, js in enumerate(self.graph):
             for j in js:
-                self.arrows[(i, j)] = self.gfx.arrow(nodes[i], nodes[j])
+                self.arrows[(i, j)] = self.gfx.arrow(nodes[i], nodes[j], head=False)
 
 
         if self.plan_time is not None or self.act_time is not None:
@@ -376,6 +377,8 @@ class GraphTrial(object):
 
 
     def run(self, one_step=False, skip_planning=False):
+        if self.stage == 'acting':
+            skip_planning=True
         if self.start_mode == 'drift_check':
             self.log('begin drift_check')
             self.status = self.eyelink.drift_check(self.pos)
