@@ -222,7 +222,6 @@ class GraphTrial(object):
 
         if self.last_gaze is not None:
             gaze_distance = distance(gaze, self.last_gaze)
-            print('  ', gaze_distance)
         self.last_gaze = gaze
 
         if self.show_gaze:
@@ -235,7 +234,6 @@ class GraphTrial(object):
 
                 if self.fixated != i:
                     self.log('fixate state', {'state': i})
-                    print('FIXATE', i)
                 self.fixated = i
                 self.fix_verified = core.getTime()
                 break
@@ -404,7 +402,6 @@ class GraphTrial(object):
         if not (one_step or skip_planning):
             self.run_planning()
 
-        print('here', self.done)
         if not self.done:
             self.run_acting(one_step)
             if one_step:
