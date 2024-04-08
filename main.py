@@ -7,18 +7,19 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         name = 'test'
     if fast:
         kws['score_limit'] = 10
-    exp = Experiment(config_number, name, full_screen=(not test) or full, **kws)
+    exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=test, **kws)
     if test:
+        exp.run_one(1, start_mode='')
         # exp.intro()
         # exp.practice_start()
-        exp.practice(2)
+        # exp.practice(2)
         # exp.practice_timelimit()
-        exp.setup_eyetracker(mouse)
-        exp.show_gaze_demo()
-        exp.intro_gaze()
-        exp.calibrate_gaze_tolerance()
-        exp.intro_contingent()
-        exp.intro_main()
+        # exp.setup_eyetracker(mouse)
+        # exp.show_gaze_demo()
+        # exp.intro_gaze()
+        # exp.calibrate_gaze_tolerance()
+        # exp.intro_contingent()
+        # exp.intro_main()
         exp.run_main()
         # exp.save_data()
         return

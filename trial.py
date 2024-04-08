@@ -5,6 +5,7 @@ import json
 import random
 from eyetracking import height2pix
 from util import jsonify
+from copy import deepcopy
 
 wait = core.wait
 
@@ -23,11 +24,11 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, plan_time=None, act_time=None, start_mode=None,
-                 highlight_edges=False, stop_on_x=False, hide_rewards_while_acting=False, initial_stage='acting',
+                 highlight_edges=True, stop_on_x=False, hide_rewards_while_acting=False, initial_stage='acting',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
                  pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
-        self.graph = graph
+        self.graph = deepcopy(graph)
         self.rewards = list(rewards)
         self.start = start
         self.layout = layout
@@ -156,6 +157,7 @@ class GraphTrial(object):
                     return i
 
     def set_state(self, s):
+        print("SET STATE")
         self.log('visit', {'state': s})
         self.nodes[s].fillColor = COLOR_PLAN if self.stage == 'planning' else COLOR_ACT
         lab = self.reward_labels[s]
@@ -164,21 +166,27 @@ class GraphTrial(object):
 
         self.set_node_label(s, reward_string(self.rewards[s]))
 
+
         self.current_state = s
         if len(self.graph[self.current_state]) == 0:
             self.done = True
 
+
+
         if prev is not None and prev != s:  # not initial
             self.nodes[prev].fillColor = 'white'
-            lab.color = 'white'
-            # lab.bold = True
-            for p in self.gfx.animate(6/60):
-                lab.setHeight(0.04 + p * 0.02)
-                self.tick()
-            for p in self.gfx.animate(12/60):
-                lab.setHeight(0.06 - p * 0.05)
-                lab.setOpacity(1-p)
-                self.tick()
+            self.maybe_drop_edges()
+            if lab.text:
+                print('animate')
+                lab.color = 'white'
+                # lab.bold = True
+                for p in self.gfx.animate(6/60):
+                    lab.setHeight(0.04 + p * 0.02)
+                    self.tick()
+                for p in self.gfx.animate(12/60):
+                    lab.setHeight(0.06 - p * 0.05)
+                    lab.setOpacity(1-p)
+                    self.tick()
 
         lab.setText('')
 
@@ -260,16 +268,35 @@ class GraphTrial(object):
             self.set_state(clicked)
             return True
 
+    def maybe_drop_edges(self):
+        print(core.getTime(), 'maybe_drop')
+        if not self.graph[self.current_state]:
+            return
+        if random.random() < 0.8:
+            forced = random.choice(self.graph[self.current_state])
+            for j in self.graph[self.current_state]:
+                if j != forced:
+                    self.arrows[(self.current_state, j)].setAutoDraw(False)
+
+            self.graph[self.current_state] = [forced]
+        print(core.getTime(), 'maybe_drop done')
+
     def highlight_current_edges(self):
-        for (i, j), arrow in self.arrows.items():
-            if i == self.current_state:
-                arrow.setColor('#FFC910')
-                arrow.objects[0].setDepth(1)  # make sure the line is on top
-                self.nodes[j].setLineColor('#FFC910')
-            else:
-                arrow.setColor('black')
-                arrow.objects[0].setDepth(2)
-                self.nodes[j].setLineColor('black')
+        if not hasattr(self, 'highlighted'):
+            self.highlighted = []
+
+        for arrow in self.highlighted:
+            arrow.setColor('black')
+            arrow.objects[0].setDepth(2)
+
+        for j in self.graph[self.current_state]:
+            arrow = self.arrows[(self.current_state, j)]
+            arrow.setColor('#FFC910')
+            arrow.objects[0].setDepth(1)
+            self.highlighted.append(arrow)
+
+        # self.nodes[j].setLineColor('#FFC910')
+        # self.nodes[j].setLineColor('black')
 
     def tick(self):
         self.current_time = core.getTime()
