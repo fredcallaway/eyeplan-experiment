@@ -86,6 +86,7 @@ class GraphTrial(object):
         self.gfx = Graphics(win)
         self.mouse = event.Mouse()
         self.done = False
+        self._message = kws.get('_message', None)
 
 
     def log(self, event, info={}):
@@ -200,12 +201,14 @@ class GraphTrial(object):
         return len(self.graph[self.current_state]) == 0
 
     def fade_out(self):
-        for p in self.gfx.animate(.2):
+        if self._message:
+            self.gfx.move_to_top(self._message)
+        for p in self.gfx.animate(.3):
             self.mask.setOpacity(p)
             self.win.flip()
         self.gfx.clear()
         self.win.flip()
-        wait(.3)
+        wait(.4)
 
     def node_label(self, i):
         if self.gaze_contingent:

@@ -13,12 +13,11 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
 
     exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=test, **kws)
     if test:
-        exp.run_main()
+        # exp.run_main()
         # exp.intro_forced()
 
-        exp.intro()
-        exp.practice_start()
-        exp.practice(2)
+        # exp.intro()
+        # exp.practice(2)
         exp.intro_forced()
         exp.practice_forced(3)
         exp.setup_eyetracker(mouse)
@@ -45,7 +44,6 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
                 exp.run_main()
             else:
                 exp.intro()
-                exp.practice_start()
                 exp.practice(2)
                 exp.intro_forced()
                 exp.practice_forced(3)

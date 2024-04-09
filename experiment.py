@@ -106,8 +106,10 @@ class Experiment(object):
         self.eyelink = None
         self.disable_gaze_contingency = False
 
-        self._message = visual.TextBox2(self.win, '', pos=(-.83, 0.3), color='white', autoDraw=True, size=(0.65, None), letterHeight=.035, anchor='left')
-        self._tip = visual.TextBox2(self.win, '', pos=(-.83, 0.12), color='white', autoDraw=True, size=(0.65, None), letterHeight=.025, anchor='left')
+        self._message = visual.TextBox2(self.win, '', pos=(-.83, 0.3), color='white', autoDraw=True, size=(0.75, 0.25), letterHeight=.035, anchor='left')
+        self._message.alignment = 'top-left'
+        self._tip = visual.TextBox2(self.win, '', pos=(-.83, .2), color='white', autoDraw=True, size=(0.65, 0.1), letterHeight=.025, anchor='left')
+        self._tip.alignment = 'top-left'
 
         # self._practice_trials = iter(self.trials['practice'])
         self.practice_i = -1
@@ -130,7 +132,8 @@ class Experiment(object):
             'start_mode': 'immediate',
             'space_start': False,
             **self.trials['practice'][self.practice_i],
-            **kws
+            **kws,
+            '_message': self._message
         }
         gt = GraphTrial(self.win, **prm)
         self.practice_data.append(gt.data)
@@ -201,7 +204,7 @@ class Experiment(object):
     @stage
     def intro(self):
         self.message('Welcome!', space=True)
-        gt = self.get_practice_trial(highlight_edges=True, hide_rewards_while_acting=False, initial_stage='acting')
+        gt = self.get_practice_trial(highlight_edges=False, hide_rewards_while_acting=False, initial_stage='acting')
         gt.show()
 
         for l in gt.reward_labels:
@@ -222,14 +225,13 @@ class Experiment(object):
 
         self.message("You can move by clicking on a location that is connected to your current location. Try it now!",
                      tip_text='click one of the connected locations', space=False)
+        gt.highlight_edges = True
+        gt.highlight_current_edges()
         gt.run(one_step=True)
         gt.start = gt.current_state
 
-        self.message("Note that you can only move down, never back up.",
-                     space=True)
-
-        self.message("The round ends when you get to a location with no outgoing connections.",
-                     tip_text='click one of the connected locations', space=False)
+        self.message("You can only move down, never back up. The round ends when you get to a location with no outgoing connections.",
+                     tip_text='finish the round to continue', space=False)
         gt.run(skip_planning=True)
 
 
@@ -241,14 +243,16 @@ class Experiment(object):
                          space=False, tip_text=f'complete {n - i} practice rounds to continue')
 
             gt = self.get_practice_trial()
+            max_score = int(max(filter(lambda x: x != 0, gt.rewards)))
             for i in range(3):
                 gt.run()
-                if intervened or gt.score == gt.max_score:
+                if intervened or gt.score == max_score:
                     break
                 else:
                     self.message(
-                        f"You got {int(gt.score)} points on that round, but you could have gotten {int(gt.max_score)}.\n"
-                        f"Let's try again. Try to make as many points as possible!"
+                        f"You got {int(gt.score)} points on that round, but you could have gotten {max_score}. "
+                        f"Let's try again. Try to make as many points as possible!",
+                        tip_text=f'get {max_score} points to continue'
                     )
                 gt = self.get_practice_trial(repeat=True)
             else:  # never succeeded
