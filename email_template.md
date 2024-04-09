@@ -1,6 +1,6 @@
 Hi {name},
 
-This is just a quick reminder about the study tomorrow ({date}) at {time}. Please arrive on time. If you are more than 10 minutes late, you may be assigned as a no-show.
+This is just a quick reminder about the study today ({date}) at {time}. Please arrive on time. If you are more than 10 minutes late, you may be assigned as a no-show.
 
 __IMPORTANT__: Please review the guidelines below regarding _makeup_ and _glasses_.
 

@@ -101,7 +101,7 @@ def send_reminder(email, full_name, dt):
     # assert datetime.now().date() == dt.date()
     date = dt.strftime('%A, %B %d')
     time = dt.strftime('%l:%M%p').strip()
-    subject = f"Reminder: study tomorrow at {time} in Meyer 566"
+    subject = f"Reminder: study today at {time} in Meyer 566"
     name = full_name.split()[0]
     my_body = BODY.format(name=name, date=date, time=time)
     # my_body = my_body.replace('\n\n', 'BREAK').replace('\n', ' ').replace('BREAK', '\n\n')
@@ -135,7 +135,7 @@ def get_participants(when, kind = "Sign-Up"):
     return participants
 
 def main(remind=False):
-    dt = datetime.now() + timedelta(1)  # tomorrow
+    dt = datetime.now() #+ timedelta(1)  # tomorrow
     signed_up = get_participants(dt)
     cancelled = get_participants(dt, "Cancellation")
     for c in cancelled:
