@@ -7,19 +7,26 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         name = 'test'
     if fast:
         kws['score_limit'] = 10
+
+    kws['force_rate'] = .3
+    kws['score_limit'] = 250
+
     exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=test, **kws)
     if test:
-        exp.run_one(1, start_mode='')
-        # exp.intro()
-        # exp.practice_start()
-        # exp.practice(2)
-        # exp.practice_timelimit()
-        # exp.setup_eyetracker(mouse)
-        # exp.show_gaze_demo()
-        # exp.intro_gaze()
+        exp.run_main()
+        # exp.intro_forced()
+
+        exp.intro()
+        exp.practice_start()
+        exp.practice(2)
+        exp.intro_forced()
+        exp.practice_forced(3)
+        exp.setup_eyetracker(mouse)
+        exp.show_gaze_demo()
+        exp.intro_gaze()
         # exp.calibrate_gaze_tolerance()
         # exp.intro_contingent()
-        # exp.intro_main()
+        exp.intro_main()
         exp.run_main()
         # exp.save_data()
         return
@@ -40,11 +47,13 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
                 exp.intro()
                 exp.practice_start()
                 exp.practice(2)
+                exp.intro_forced()
+                exp.practice_forced(3)
                 exp.setup_eyetracker(mouse)
                 exp.show_gaze_demo()
                 exp.intro_gaze()
-                exp.calibrate_gaze_tolerance()
-                exp.intro_contingent()
+                # exp.calibrate_gaze_tolerance()
+                # exp.intro_contingent()
                 exp.intro_main()
                 exp.run_main()
 

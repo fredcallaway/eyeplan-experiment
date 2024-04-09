@@ -106,8 +106,8 @@ class Experiment(object):
         self.eyelink = None
         self.disable_gaze_contingency = False
 
-        self._message = visual.TextBox2(self.win, '', pos=(-.83, 0), color='white', autoDraw=True, size=(0.65, None), letterHeight=.035, anchor='left')
-        self._tip = visual.TextBox2(self.win, '', pos=(-.83, -0.2), color='white', autoDraw=True, size=(0.65, None), letterHeight=.025, anchor='left')
+        self._message = visual.TextBox2(self.win, '', pos=(-.83, 0.3), color='white', autoDraw=True, size=(0.65, None), letterHeight=.035, anchor='left')
+        self._tip = visual.TextBox2(self.win, '', pos=(-.83, 0.12), color='white', autoDraw=True, size=(0.65, None), letterHeight=.025, anchor='left')
 
         # self._practice_trials = iter(self.trials['practice'])
         self.practice_i = -1
@@ -122,9 +122,11 @@ class Experiment(object):
             self.practice_i += 1
         prm = {
             **self.parameters,
+            'force_rate': 0,
             'gaze_contingent': False,
             'time_limit': None,
-            'pos': (.3, 0),
+            'pos': (.25, 0),
+            'scale': 0.5,
             'start_mode': 'immediate',
             'space_start': False,
             **self.trials['practice'][self.practice_i],
@@ -181,6 +183,9 @@ class Experiment(object):
         self.win.flip()
 
     def show_message(self):
+        # setting it to False and then True ensures that it's drawn last
+        self._message.autoDraw = False
+        self._tip.autoDraw = False
         self._message.autoDraw = True
         self._tip.autoDraw = True
 
@@ -197,8 +202,8 @@ class Experiment(object):
     def intro(self):
         self.message('Welcome!', space=True)
         gt = self.get_practice_trial(highlight_edges=True, hide_rewards_while_acting=False, initial_stage='acting')
-
         gt.show()
+
         for l in gt.reward_labels:
             l.setOpacity(0)
         self.message("In this experiment, you will play a game on the board shown to the right.", space=True)
@@ -214,75 +219,19 @@ class Experiment(object):
             self.message(f"The points will be converted to a cash bonus: {self.bonus.describe_scheme()}!", space=True)
         else:
             pass
-            # self.message(f"", space=True)
 
-        self.message("You can move by clicking on a location that has an arrow pointing from your current location. Try it now!",
-                     tip_text='click one of the highlighted locations', space=False)
+        self.message("You can move by clicking on a location that is connected to your current location. Try it now!",
+                     tip_text='click one of the connected locations', space=False)
         gt.run(one_step=True)
         gt.start = gt.current_state
 
+        self.message("Note that you can only move down, never back up.",
+                     space=True)
+
         self.message("The round ends when you get to a location with no outgoing connections.",
-                     tip_text='click one of the highlighted locations', space=False)
+                     tip_text='click one of the connected locations', space=False)
         gt.run(skip_planning=True)
 
-    @stage
-    def practice_start(self):
-        gt = self.get_practice_trial()
-        gt.show()
-        gt.set_state(gt.start)
-
-        self.message("At the beginning of each round, your initial location will be red.", space=True)
-
-        self.message("Before you can move, you have to click the red circle.", space=False,
-                     tip_text='click the red circle to continue')
-        gt.nodes[gt.start].setLineColor('#FFC910')
-        gt.run_planning()
-        gt.nodes[gt.start].setLineColor('black')
-
-        gt.nodes[gt.start].fillColor = COLOR_ACT
-        self.message("It will turn blue, indicating that you have entered the movement phase.", space=True)
-
-        gt.hide_rewards()
-        self.message("But be warned! The points will also disappear!", space=True)
-
-        gt.update_node_labels()
-        gt.nodes[gt.start].fillColor = COLOR_PLAN
-        self.message("So, you should only enter the movement phase after deciding on a full path.", space=True)
-        self.message("Give it a shot!", tip_text='click the red circle', space=False)
-
-        gt.start_time = gt.tick()
-        gt.run_planning()
-        self.message("Now you can select which locations to visit.",
-                     tip_text='complete the round to continue', space=False)
-        gt.run(skip_planning=True)
-
-
-
-    @stage
-    def practice_change(self):
-        gt = self.get_practice_trial()
-
-        self.message("Both the connections and points change on every round of the game.",
-                     tip_text='complete the round to continue', space=False)
-        gt.run()
-
-    @stage
-    def practice_timelimit(self):
-        gt = self.get_practice_trial(time_limit=3)
-        gt.disable_click = True
-
-        self.message("To make things more exciting, each round has a time limit.", space=True)
-        gt.show()
-        gt.timer.setLineColor('#FFC910')
-        gt.timer.setLineWidth(5)
-        gt.win.flip()
-
-        self.message("The time left is indicated by a bar on the right.", space=True)
-        gt.timer.setLineWidth(0)
-        self.message("Let's see what happens when it runs out...", space=False,
-            tip_text='wait for it')
-        gt.run()
-        self.message("If you run out of time, we'll make random decisions for you. Probably something to avoid.", space=True)
 
     @stage
     def practice(self, n):
@@ -312,6 +261,42 @@ class Experiment(object):
 
 
         self.message("Great job!", space=True)
+
+    @stage
+    def intro_forced(self):
+        gt = self.get_practice_trial(highlight_edges=True, hide_rewards_while_acting=False, initial_stage='acting')
+        gt.show()
+
+        self.message(
+            "One more thing. Some of the locations have unstable connections!", tip_text="click on a connected location", space=False)
+
+        gt.force_rate = 1.
+        gt.run(one_step=True)
+        gt.start = gt.current_state
+
+        self.message("When you reach a location with unstable connections, they will dissapear, leaving you with only one way down.",
+                     tip_text='click on "one of" the connected locations', space=False)
+        gt.force_rate = 0.
+        gt.run(one_step=True)
+        gt.start = gt.current_state
+
+
+        force_rate = self.parameters['force_rate']
+        self.message(f"Overall, {100*force_rate:n}% of locations have unstable connections.",
+                     tip_text='finish the round to continue', space=False)
+        gt.run()
+
+    @stage
+    def practice_forced(self, n):
+        for i in range(n):
+            self.message("Let's try a few more practice rounds.",
+                         space=False, tip_text=f'complete {n - i} practice rounds to continue')
+
+            gt = self.get_practice_trial(force_rate = self.parameters['force_rate'])
+            gt.run()
+
+
+
 
     @stage
     def setup_eyetracker(self, mouse=False):

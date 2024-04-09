@@ -44,7 +44,6 @@ class MultiShape(object):
         for o in self.objects:
             shift(o, x, y)
 
-
 def shape(f):
     def wrapper(self, *args, sub_shape=False, **kwargs):
         obj = f(self, *args, **kwargs)
@@ -59,6 +58,14 @@ class Graphics(object):
         self.win = win
         self.animating = False
         self.objects = []
+
+    def remove(self, x):
+        x.setAutoDraw(False)
+        self.objects.remove(x)
+
+    def move_to_top(self, x):
+        x.setAutoDraw(False)
+        x.setAutoDraw(True)
 
     def clear(self):
         for o in self.objects:

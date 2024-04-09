@@ -42,20 +42,33 @@ function build_graph(n_layer, n_per_layer)
 end
 
 function grid_layout(n_layer, n_per_layer, left)
-    a = (left ? -1 : 1) * 1.4
-    offset = (n_per_layer + 1) / 2
+    offset = left * -(n_per_layer+1)
     layout = map(Iterators.product(1:n_per_layer, 1:n_layer)) do (i, j)
-        j += 1
-        (a * j, i - offset)
+        (i + offset, -j)
     end[:]
 end
 
+function center_and_scale(x::Vector{<:Real})
+    lo = minimum(x)
+    hi = maximum(x)
+    x = float.(x)
+    x .-= (lo + hi) / 2
+    x ./= (hi - lo)
+end
+
+function center_and_scale(layout::Vector{<:Tuple})
+    x, y = center_and_scale.(invert(layout))
+    x .*= 2
+    collect(zip(x, y))
+end
+
 function build_layout(n_layer, n_per_layer)
+    x = (1 + n_per_layer) / 2
     [
-        [(0, 0), (-1, 0), (1, 0)];
+        [(0, 0), (-x, -0.3), (x, -0.3)];
         grid_layout(n_layer, n_per_layer, true);
         grid_layout(n_layer, n_per_layer, false)
-    ]
+    ] |> center_and_scale
 end
 
 function sample_graph(n)
@@ -80,14 +93,6 @@ function sample_trial(rdist; n_layer = 3, n_per_layer = 6)
     (;graph, rewards, layout, start=0)
 end
 
-# function sample_problem(requirement=default_problem_requirement; kws...)
-#     for i in 1:10000
-#         problem = sample_problem_(;kws...)
-#         requirement(problem) && return problem
-#     end
-#     error("Can't sample a problem!")
-# end
-
 function linear_rewards(n)
     @assert iseven(n)
     n2 = div(n,2)
@@ -110,11 +115,14 @@ function make_trials(; )
         # practice_revealed = [sample_problem(;kws...) for i in 1:2],
         # intro_hover = [sample_problem(;kws...)],
         # practice_hover = [sample_problem(;kws...) for i in 1:2],
+        practice = [sample_trial(rdist, n_layer=2, n_per_layer=3) for i in 1:20],
         main = [sample_trial(rdist) for i in 1:100],
     )
 end
 
-
+# t = make_trials().main[1]
+# graph = map(x -> x .+ 1, t.graph)
+# prob = Problem(graph, t.rewards, t.start+1, -1)
 
 # # %% --------
 

@@ -26,7 +26,7 @@ class GraphTrial(object):
     def __init__(self, win, graph, rewards, start, layout, plan_time=None, act_time=None, start_mode=None,
                  highlight_edges=True, stop_on_x=False, hide_rewards_while_acting=False, initial_stage='acting',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
-                 pos=(0, 0), space_start=True, max_score=None, **kws):
+                 pos=(0, 0), scale=0.7, space_start=True, max_score=None, force_rate=0., **kws):
         self.win = win
         self.graph = deepcopy(graph)
         self.rewards = list(rewards)
@@ -49,8 +49,10 @@ class GraphTrial(object):
         self.last_gaze = None
 
         self.pos = pos
+        self.scale = scale
         self.space_start = space_start
         self.max_score = max_score
+        self.force_rate = force_rate
 
         # all for current stage
         self.stage = initial_stage
@@ -109,8 +111,7 @@ class GraphTrial(object):
 
         self.nodes = nodes = []
         L = np.array(self.layout)
-        L /= L[:, 1].max()
-        L *= 0.3
+        L *= self.scale
         for i, pos in enumerate(L):
             nodes.append(self.gfx.circle(pos, name=f'node{i}', r=.04))
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
@@ -150,14 +151,15 @@ class GraphTrial(object):
         self.reward_labels[s].text = reward_string(r)
 
     def get_click(self):
-        if self.mouse.getPressed()[0]:
+        buttons, times = self.mouse.getPressed(getTime=True)
+        self.mouse.clickReset()
+        if buttons[0]:
             pos = self.mouse.getPos()
             for (i, n) in enumerate(self.nodes):
                 if n.contains(pos):
                     return i
 
     def set_state(self, s):
-        print("SET STATE")
         self.log('visit', {'state': s})
         self.nodes[s].fillColor = COLOR_PLAN if self.stage == 'planning' else COLOR_ACT
         lab = self.reward_labels[s]
@@ -171,13 +173,13 @@ class GraphTrial(object):
         if len(self.graph[self.current_state]) == 0:
             self.done = True
 
-
+        if self.highlight_edges:
+            self.highlight_current_edges()
 
         if prev is not None and prev != s:  # not initial
             self.nodes[prev].fillColor = 'white'
             self.maybe_drop_edges()
             if lab.text:
-                print('animate')
                 lab.color = 'white'
                 # lab.bold = True
                 for p in self.gfx.animate(6/60):
@@ -235,7 +237,6 @@ class GraphTrial(object):
 
         if self.last_gaze is not None:
             gaze_distance = distance(gaze, self.last_gaze)
-            print('  ', gaze_distance)
         self.last_gaze = gaze
 
         if self.show_gaze:
@@ -248,7 +249,6 @@ class GraphTrial(object):
 
                 if self.fixated != i:
                     self.log('fixate state', {'state': i})
-                    print('FIXATE', i)
                 self.fixated = i
                 self.fix_verified = core.getTime()
                 break
@@ -261,25 +261,25 @@ class GraphTrial(object):
             self.update_node_labels()
 
     def check_click(self):
+        clicked = self.get_click()
         if self.disable_click:
             return
-        clicked = self.get_click()
         if clicked is not None and clicked in self.graph[self.current_state]:
             self.set_state(clicked)
             return True
 
     def maybe_drop_edges(self):
-        print(core.getTime(), 'maybe_drop')
         if not self.graph[self.current_state]:
             return
-        if random.random() < 0.3:
+        if random.random() < self.force_rate:
+            print("forced!")
             forced = random.choice(self.graph[self.current_state])
             for j in self.graph[self.current_state]:
                 if j != forced:
-                    self.arrows[(self.current_state, j)].setAutoDraw(False)
+                    arrow = self.arrows.pop((self.current_state, j))
+                    self.gfx.remove(arrow)
 
             self.graph[self.current_state] = [forced]
-        print(core.getTime(), 'maybe_drop done')
 
     def highlight_current_edges(self):
         if not hasattr(self, 'highlighted'):
@@ -292,7 +292,8 @@ class GraphTrial(object):
         for j in self.graph[self.current_state]:
             arrow = self.arrows[(self.current_state, j)]
             arrow.setColor('#FFC910')
-            arrow.objects[0].setDepth(1)
+            # arrow.objects[0].setDepth(1)
+            self.gfx.move_to_top(arrow)
             self.highlighted.append(arrow)
 
         # self.nodes[j].setLineColor('#FFC910')
@@ -349,6 +350,7 @@ class GraphTrial(object):
         self.start_time = self.current_time = core.getTime()
         self.end_time = None if self.plan_time is None else self.start_time + self.plan_time
 
+        self.mouse.clickReset()
         while not self.done:
             if self.end_time is not None and self.current_time > self.end_time:
                 self.log('timeout planning')
@@ -391,15 +393,14 @@ class GraphTrial(object):
         self.start_time = self.current_time = core.getTime()
         self.end_time = None if self.act_time is None else self.start_time + self.act_time
 
+        self.mouse.clickReset()
         while not self.done:
             moved = self.check_click()
-            if moved and one_step:
-                return
-            if self.highlight_edges:
-                self.highlight_current_edges()
             if not self.done and self.end_time is not None and self.current_time > self.end_time:
                 self.do_timeout()
             self.tick()
+            if moved and one_step:
+                return
 
 
 
@@ -438,7 +439,6 @@ class GraphTrial(object):
         if not (one_step or skip_planning):
             self.run_planning()
 
-        print('here', self.done)
         if not self.done:
             self.run_acting(one_step)
             if one_step:
