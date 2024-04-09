@@ -272,7 +272,7 @@ class GraphTrial(object):
         print(core.getTime(), 'maybe_drop')
         if not self.graph[self.current_state]:
             return
-        if random.random() < 0.8:
+        if random.random() < 0.3:
             forced = random.choice(self.graph[self.current_state])
             for j in self.graph[self.current_state]:
                 if j != forced:
