@@ -101,7 +101,7 @@ def send_reminder(email, full_name, dt):
     # assert datetime.now().date() == dt.date()
     date = dt.strftime('%A, %B %d')
     time = dt.strftime('%l:%M%p').strip()
-    subject = f"Reminder: study tomorrow at {time} in Meyer 566"
+    subject = f"Reminder: study today at {time} in Meyer 566"
     name = full_name.split()[0]
     my_body = BODY.format(name=name, date=date, time=time)
     # my_body = my_body.replace('\n\n', 'BREAK').replace('\n', ' ').replace('BREAK', '\n\n')
@@ -134,22 +134,18 @@ def get_participants(when, kind = "Sign-Up"):
 
     return participants
 
-def main(remind=False):
-    dt = datetime.now() + timedelta(1)  # tomorrow
+def main(remind=None):
+    dt = datetime.now() #+ timedelta(1)  # tomorrow
     signed_up = get_participants(dt)
     cancelled = get_participants(dt, "Cancellation")
     for c in cancelled:
         assert c in signed_up
 
     participants = sorted(set(signed_up).difference(set(cancelled)))
-
     for (dt, full_name, email) in participants:
         print(dt.strftime('%I:%M %p'), full_name, email, sep='   ')
-
-    if remind and input('send reminders? [N/y]') == 'y':
-            assert len(participants) < 20  # failsafe: make sure we don't email too many people
-            for (dt, full_name, email) in participants:
-                send_reminder(email, full_name, dt)
+        if (remind == 'all') or remind and input('   remind? [y/N] ') == 'y':
+            send_reminder(email, full_name, dt)
 
 if __name__ == '__main__':
     Fire(main)
