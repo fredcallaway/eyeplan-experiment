@@ -26,7 +26,7 @@ class GraphTrial(object):
     def __init__(self, win, graph, rewards, start, layout, plan_time=None, act_time=None, start_mode=None,
                  highlight_edges=True, stop_on_x=False, hide_rewards_while_acting=False, initial_stage='acting',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
-                 pos=(0, 0), scale=0.7, space_start=True, max_score=None, force_rate=0., **kws):
+                 pos=(0, 0), scale=0.6, space_start=True, max_score=None, force_rate=0., **kws):
         self.win = win
         self.graph = deepcopy(graph)
         self.rewards = list(rewards)
@@ -116,6 +116,7 @@ class GraphTrial(object):
         for i, pos in enumerate(L):
             nodes.append(self.gfx.circle(pos, name=f'node{i}', r=.04))
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
+        self.data["trial"]["radius"] = .04 * self.win.size[1] / 2  # retina pixels
 
         self.reward_labels = [self.gfx.text('', n.pos, height=.04, name=f'lab{i}') for i, n in enumerate(self.nodes)]
         self.update_node_labels()
