@@ -8,8 +8,8 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
     if fast:
         kws['score_limit'] = 10
 
-    kws['force_rate'] = .2
-    kws['score_limit'] = 200
+    kws['force_rate'] = .4
+    kws['score_limit'] = 100
 
     exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=test, **kws)
     if test:
