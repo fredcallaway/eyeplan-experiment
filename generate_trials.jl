@@ -108,6 +108,9 @@ end
 
 function make_trials(; )
     rdist = exponential_rewards(8)
+    practice = [sample_trial(rdist, n_layer=2, n_per_layer=4) for i in 1:20]
+    mask = map(!isequal(0), practice[1].rewards)
+    practice[1].rewards[mask] .= rdist
 
     (;
         # intro = [sample_problem(;graph = neighbor_list(intro_graph(n)), start=1, kws..., rewards=zeros(n))],
@@ -115,7 +118,7 @@ function make_trials(; )
         # practice_revealed = [sample_problem(;kws...) for i in 1:2],
         # intro_hover = [sample_problem(;kws...)],
         # practice_hover = [sample_problem(;kws...) for i in 1:2],
-        practice = [sample_trial(rdist, n_layer=2, n_per_layer=3) for i in 1:20],
+        practice,
         main = [sample_trial(rdist) for i in 1:100],
     )
 end
@@ -138,7 +141,7 @@ function get_version()
 end
 
 version = get_version()
-n_subj = 200  # better safe than sorry
+n_subj = 30  # better safe than sorry
 Random.seed!(hash(version))
 subj_trials = repeatedly(make_trials, n_subj)
 

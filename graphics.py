@@ -23,6 +23,8 @@ def shift(obj, x, y):
     else:
         obj.setPos(obj.pos + np.array([x, y]))
 
+
+
 class MultiShape(object):
     """One shape composed of multiple visual objects."""
     def __init__(self, *objects):
@@ -47,7 +49,8 @@ class MultiShape(object):
 def shape(f):
     def wrapper(self, *args, sub_shape=False, **kwargs):
         obj = f(self, *args, **kwargs)
-        obj.setAutoDraw(True)
+        if 'autoDraw' not in kwargs:
+            obj.setAutoDraw(True)
         if not sub_shape:
             self.objects.append(obj)
         return obj
@@ -98,6 +101,11 @@ class Graphics(object):
                          pos=move_towards(c1.pos, c0.pos, c1.radius),
                          ori=90-angle(c0.pos, c1.pos))
         return MultiShape(line, point)
+
+    @shape
+    def diamond(self, pos, scale=.015, color='black', **kws):
+        vertices = scale * np.array([[-1, -.5], [0, -1.5], [1, -.5], [0, 1.5]])
+        return visual.ShapeStim(self.win, vertices=vertices, fillColor=color, pos=pos, **kws)
 
     @shape
     def rect(self, pos, width, height, **kws):

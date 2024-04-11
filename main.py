@@ -13,10 +13,12 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
 
     exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=test, **kws)
     if test:
+        exp.intro()
+        # exp.run_main()
+
         # exp.run_main()
         # exp.intro_forced()
 
-        # exp.intro()
         # exp.practice(2)
         # exp.intro_forced()
         # exp.practice_forced(3)

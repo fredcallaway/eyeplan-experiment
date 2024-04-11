@@ -106,6 +106,8 @@ class GraphTrial(object):
         # self.win.clearAutoDraw()
         if hasattr(self, 'nodes'):
             self.gfx.show()
+            for lab in self.reward_text:
+                lab.autoDraw = False
             if self.gaze_contingent:
                 self.update_fixation()
             return
@@ -118,8 +120,12 @@ class GraphTrial(object):
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
         self.data["trial"]["radius"] = .04 * self.win.size[1] / 2  # retina pixels
 
-        self.reward_labels = [self.gfx.text('', n.pos, height=.04, name=f'lab{i}') for i, n in enumerate(self.nodes)]
-        self.update_node_labels()
+        self.reward_labels = [self.gfx.diamond(n.pos, ori=10 * r) if r else None
+                              for (n, r) in zip(self.nodes, self.rewards)]
+        self.reward_text = [self.gfx.text(reward_string(r), n.pos, height=.04, autoDraw=False)
+                              for (n, r) in zip(self.nodes, self.rewards)]
+
+        # self.update_node_labels()
 
         self.arrows = {}
         for i, js in enumerate(self.graph):
@@ -147,11 +153,6 @@ class GraphTrial(object):
         self.gfx.shift(x, y)
         self.pos = np.array(self.pos) + [x, y]
 
-
-    def set_reward(self, s, r):
-        self.rewards[s] = r
-        self.reward_labels[s].text = reward_string(r)
-
     def get_click(self):
         buttons, times = self.mouse.getPressed(getTime=True)
         self.mouse.clickReset()
@@ -164,11 +165,10 @@ class GraphTrial(object):
     def set_state(self, s):
         self.log('visit', {'state': s})
         self.nodes[s].fillColor = COLOR_PLAN if self.stage == 'planning' else COLOR_ACT
-        lab = self.reward_labels[s]
         self.score += self.rewards[s]
         prev = self.current_state
 
-        self.set_node_label(s, reward_string(self.rewards[s]))
+        # self.set_node_label(s, reward_string(self.rewards[s]))
 
 
         self.current_state = s
@@ -181,18 +181,22 @@ class GraphTrial(object):
         if prev is not None and prev != s:  # not initial
             self.nodes[prev].fillColor = 'white'
             self.maybe_drop_edges()
-            if lab.text:
-                lab.color = 'white'
-                # lab.bold = True
-                for p in self.gfx.animate(6/60):
-                    lab.setHeight(0.04 + p * 0.02)
-                    self.tick()
-                for p in self.gfx.animate(12/60):
-                    lab.setHeight(0.06 - p * 0.05)
-                    lab.setOpacity(1-p)
-                    self.tick()
+            if self.rewards[s]:
+                self.gfx.remove(self.reward_labels[s])
+                lab = self.reward_text[s]
+                lab.autoDraw = True
+                if lab.text:
+                    lab.color = 'white'
+                    # lab.bold = True
+                    for p in self.gfx.animate(6/60):
+                        lab.setHeight(0.04 + p * 0.02)
+                        self.tick()
+                    for p in self.gfx.animate(24/60):
+                        lab.setHeight(0.06 - p * 0.05)
+                        lab.setOpacity(1-p)
+                        self.tick()
 
-        lab.setText('')
+                self.gfx.remove(lab)
 
     def click(self, s):
         if s in self.graph[self.current_state]:
@@ -222,16 +226,16 @@ class GraphTrial(object):
         else:
             return reward_string(self.rewards[i])
 
-    def update_node_labels(self):
-        for i in range(len(self.nodes)):
-            self.set_node_label(i, self.node_label(i))
-        logging.debug('update_node_labels %s', [lab.text for lab in self.reward_labels])
+    # def update_node_labels(self):
+    #     for i in range(len(self.nodes)):
+    #         self.set_node_label(i, self.node_label(i))
+    #     logging.debug('update_node_labels %s', [lab.text for lab in self.reward_labels])
 
-    def set_node_label(self, i, new):
-        old = self.reward_labels[i].text
-        if old != new:
-            logging.debug(f'Changing reward_label[%s] from %s to %s', i, old, new)
-            self.reward_labels[i].text = new
+    # def set_node_label(self, i, new):
+    #     old = self.reward_labels[i].text
+    #     if old != new:
+    #         logging.debug(f'Changing reward_label[%s] from %s to %s', i, old, new)
+    #         self.reward_labels[i].text = new
 
 
     def update_fixation(self):
@@ -284,6 +288,11 @@ class GraphTrial(object):
                     self.gfx.remove(arrow)
 
             self.graph[self.current_state] = [forced]
+
+    def set_reward_display(self, on=True):
+        for l in self.reward_labels:
+            if l:
+                l.setAutoDraw(on)
 
     def highlight_current_edges(self):
         if not hasattr(self, 'highlighted'):

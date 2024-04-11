@@ -8,6 +8,7 @@ from psychopy import core, visual, gui, data, event
 from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
 
+from time import sleep
 from util import jsonify
 from trial import GraphTrial, CalibrationTrial, COLOR_ACT, COLOR_PLAN
 from graphics import Graphics
@@ -203,25 +204,53 @@ class Experiment(object):
 
     @stage
     def intro(self):
-        self.message('Welcome!', space=True)
+        # self.message('Welcome!', space=True)
         gt = self.get_practice_trial(highlight_edges=False, hide_rewards_while_acting=False, initial_stage='acting')
         gt.show()
 
-        for l in gt.reward_labels:
-            l.setOpacity(0)
+        gt.set_reward_display(False)
         self.message("In this experiment, you will play a game on the board shown to the right.", space=True)
 
         gt.set_state(gt.start)
         self.message("Your current location on the board is highlighted in blue.", space=True)
 
-        for l in gt.reward_labels:
-            l.setOpacity(1)
-        self.message("The goal of the game is to collect as many points as you can.", space=True)
+        gt.set_reward_display(True)
+        self.message("The goal of the game is to collect these diamonds.", space=True)
 
-        if self.bonus:
-            self.message(f"The points will be converted to a cash bonus: {self.bonus.describe_scheme()}!", space=True)
-        else:
-            pass
+        for (n, r) in zip(gt.nodes, gt.rewards):
+            if r > 0:
+                n.setLineColor('#1BD30C')
+        self.message("Specifically, you want the ones that point to the right. These earn you points.", space=True)
+
+        for (n, r) in zip(gt.nodes, gt.rewards):
+            if r < 0:
+                n.setLineColor('#E3000A')
+            else:
+                n.setLineColor('black')
+        self.message("The diamonds that point left are bad. They take away points!", space=True)
+
+        for (n, r) in zip(gt.nodes, gt.rewards):
+            n.setLineColor('black')
+
+        self.message("The further the diamond points to either side, the more points it is worth.", space=True)
+        self.message("Hover over each diamond to see its point value",
+                     tip_text='hover over every diamond to cotntinue', space=False)
+
+
+        seen = set()
+        n_reward = sum(l is not None for l in gt.reward_labels)
+        while len(seen) < n_reward:
+            pos = gt.mouse.getPos()
+            for (i, n) in enumerate(gt.nodes):
+                if gt.reward_labels[i]:
+                    hovered = n.contains(pos)
+                    if hovered:
+                        seen.add(i)
+                    gt.reward_labels[i].autoDraw = not hovered
+                    gt.reward_text[i].autoDraw = hovered
+            self.win.flip()
+        sleep(0.5)
+
 
         self.message("You can move by clicking on a location that is connected to your current location. Try it now!",
                      tip_text='click one of the connected locations', space=False)
