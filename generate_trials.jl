@@ -1,5 +1,6 @@
 using Graphs
 using Random
+using Memoize
 
 model_dir = "../model/"
 include("$model_dir/problem.jl")
@@ -7,45 +8,55 @@ include("$model_dir/utils.jl")
 
 neighbor_list(sgraph) = neighbors.(Ref(sgraph), vertices(sgraph))
 
-
-function build_graph(n_layer, n_per_layer)
-    n_state = 3 + 2 * (n_per_layer * n_layer)
-    g = DiGraph(n_state)
-    gg = 1:n_per_layer*n_layer
-
-    lft = gg .+ 3
-    rht = gg .+ length(gg) .+ 3
-
-    add_edge!(g, 1, 2)
-    add_edge!(g, 1, 3)
-
-    sides = chunk.((lft, rht), n_per_layer)
-
-    for n in sides[1][1]
-        add_edge!(g, 2, n)
+@memoize function directed_binary_tree(k)
+    t = binary_tree(k)
+    g = DiGraph(nv(t))
+    for e in edges(t)
+        add_edge!(g, e)
     end
-    for n in sides[2][1]
-        add_edge!(g, 3, n)
-    end
-
-    for layers in sides
-        for i in 1:n_layer-1
-            next = shuffle(layers[i+1])
-            for (i, n) in enumerate(layers[i])
-                add_edge!(g, n, next[i])
-                add_edge!(g, n, next[mod1(i+1, n_per_layer)])
-            end
-        end
-    end
-    outcomes = [sides[1][end]; sides[2][end]]
-    g, outcomes
+    g
 end
 
-function grid_layout(n_layer, n_per_layer, left)
-    offset = left * -(n_per_layer+1)
-    layout = map(Iterators.product(1:n_per_layer, 1:n_layer)) do (i, j)
-        (i + offset, -j)
-    end[:]
+@memoize function tree_levels(g)
+    levels = Vector{Int}[]
+    function rec(i, d)
+        if length(levels) < d
+            push!(levels, Int[])
+        end
+        push!(levels[d], i)
+        for j in outneighbors(g, i)
+            rec(j, d+1)
+        end
+    end
+    rec(1, 1)
+    levels
+end
+
+@memoize descendants(g, i) = findall(!isequal(0), bfs_parents(g, i))
+
+function sample_perm(k)
+    for i in 1:1000
+        perm = randperm(k)
+        bad = any(sliding_window(perm, 2)) do (a, b)
+            d = abs(a - b)
+            d == 1 || d > 5
+        end
+        !bad && return perm
+    end
+    error("Can't sample a perm")
+end
+
+function scrambled_tree_layout(g; depth=3)
+    layout = buchheim(g)
+    levels = tree_levels(g)
+    for (i, level) in enumerate(levels[depth:end])
+        for section in chunk(level, 2^i)
+            layout[section] .= layout[shuffle(section)]
+        end
+    end
+    layout[descendants(g, 2)] .-= Point(.5, 0)
+    layout[descendants(g, 3)] .+= Point(.5, 0)
+    layout
 end
 
 function center_and_scale(x::Vector{<:Real})
@@ -56,40 +67,21 @@ function center_and_scale(x::Vector{<:Real})
     x ./= (hi - lo)
 end
 
-function center_and_scale(layout::Vector{<:Tuple})
+function center_and_scale(layout::Vector{<:Point})
     x, y = center_and_scale.(invert(layout))
     x .*= 2
     collect(zip(x, y))
 end
 
-function build_layout(n_layer, n_per_layer)
-    x = (1 + n_per_layer) / 2
-    [
-        [(0, 0), (-x, -0.3), (x, -0.3)];
-        grid_layout(n_layer, n_per_layer, true);
-        grid_layout(n_layer, n_per_layer, false)
-    ] |> center_and_scale
-end
 
-function sample_graph(n)
-    @assert !iseven(n)
-    # base = [[2, 3], [4, 5], [6, 7], [], [], [], []]
-    base = random_tree(div(n, 2))
-    perm = randperm(length(base))
-    graph = map(base[perm]) do x
-        Int[findfirst(isequal(i), perm) for i in x]
-    end
-    start = findfirst(isequal(1), perm)
-    graph, start
-end
-
-function sample_trial(rdist; n_layer = 3, n_per_layer = 6)
-    graph, outcomes = build_graph(n_layer, n_per_layer)
-    rewards = zeros(Int, nv(graph))
+function sample_trial(rdist; k=5)
+    g = directed_binary_tree(k)
+    outcomes = tree_levels(g)[end]
+    rewards = zeros(Int, nv(g))
     rewards[outcomes] .= rand(rdist, length(outcomes))
-    layout = build_layout(n_layer, n_per_layer)
+    layout = scrambled_tree_layout(g) |> center_and_scale
 
-    graph = map(x -> x .- 1, neighbor_list(graph))
+    graph = map(x -> x .- 1, neighbor_list(g))
     (;graph, rewards, layout, start=0)
 end
 
@@ -108,7 +100,7 @@ end
 
 function make_trials(; )
     rdist = exponential_rewards(8)
-    practice = [sample_trial(rdist, n_layer=2, n_per_layer=4) for i in 1:20]
+    practice = [sample_trial(rdist; k=4) for i in 1:20]
     mask = map(!isequal(0), practice[1].rewards)
     practice[1].rewards[mask] .= rdist
 
