@@ -76,7 +76,8 @@ class GraphTrial(object):
                 "act_time": act_time,
                 "gaze_contingent": gaze_contingent,
                 "gaze_tolerance": gaze_tolerance,
-                "fixation_lag": fixation_lag
+                "fixation_lag": fixation_lag,
+                "force_rate": force_rate,
             },
             "events": [],
             "flips": [],
@@ -180,7 +181,7 @@ class GraphTrial(object):
 
         if prev is not None and prev != s:  # not initial
             self.nodes[prev].fillColor = 'white'
-            self.maybe_drop_edges()
+            # self.maybe_drop_edges()
             if self.rewards[s]:
                 self.gfx.remove(self.reward_labels[s])
                 lab = self.reward_text[s]
@@ -198,9 +199,41 @@ class GraphTrial(object):
 
                 self.gfx.remove(lab)
 
-    def click(self, s):
-        if s in self.graph[self.current_state]:
+    def force_move(self, s):
+        if random.random() < self.force_rate:
+            self.log('force_move')
+            forced = random.choice(self.graph[self.current_state])
+            if forced == s:
+                self.set_state(s)
+            else:
+                arrow = self.arrows.pop((self.current_state, s))
+                for i in range(3):
+                    arrow.setColor('red')
+                    self.win.flip()
+                    wait(0.2)
+                    arrow.setColor('black')
+                    self.win.flip()
+                    wait(0.2)
+                # for p in self.gfx.animate(.3):
+                #     arrow.setOpacity(1-p)
+                #     self.win.flip()
+                self.gfx.remove(arrow)
+                self.win.flip()
+                self.set_state(forced)
+                # arrow.setColor(-.2); self.win.flip()
+                # wait(0.3)
+        else:
             self.set_state(s)
+
+    def click(self, s):
+        self.log('click', {"state": s})
+        if s in self.graph[self.current_state]:
+            if self.current_state != self.start and random.random() < self.force_rate:
+                self.force_move(s)
+            else:
+                self.set_state(s)
+            self.log('action', {"state": s, "result": self.current_state})
+            return True
 
     def is_done(self):
         return len(self.graph[self.current_state]) == 0
@@ -271,16 +304,14 @@ class GraphTrial(object):
     def check_click(self):
         clicked = self.get_click()
         if self.disable_click:
-            return
-        if clicked is not None and clicked in self.graph[self.current_state]:
-            self.set_state(clicked)
-            return True
+            return False
+        if clicked is not None:
+            self.click(clicked)
 
     def maybe_drop_edges(self):
         if not self.graph[self.current_state]:
             return
         if random.random() < self.force_rate:
-            print("forced!")
             forced = random.choice(self.graph[self.current_state])
             for j in self.graph[self.current_state]:
                 if j != forced:
