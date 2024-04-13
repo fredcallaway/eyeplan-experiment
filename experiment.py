@@ -17,7 +17,7 @@ from eyetracking import EyeLink, MouseLink
 
 import subprocess
 from copy import deepcopy
-from config import VERSION
+from config import PARAMETERS, VERSION
 
 DATA_PATH = f'data/exp/{VERSION}'
 CONFIG_PATH = f'config/{VERSION}'
@@ -90,10 +90,12 @@ class Experiment(object):
 
         config_file = f'{CONFIG_PATH}/{config_number}.json'
         logging.info('Configuration file: ' + config_file)
+
+        self.parameters = deepcopy(PARAMETERS)
         with open(config_file) as f:
             conf = json.load(f)
             self.trials = conf['trials']
-            self.parameters = conf['parameters']
+            self.parameters.update(conf['parameters'])
         self.parameters.update(kws)
         logging.info('parameters %s', self.parameters)
 
@@ -155,7 +157,7 @@ class Experiment(object):
 
         consoleHandler = logging.StreamHandler()
         consoleHandler.setFormatter(logFormatter)
-        consoleHandler.setLevel('INFO')
+        consoleHandler.setLevel('DEBUG' if self.test_mode else 'INFO')
         rootLogger.addHandler(consoleHandler)
 
         logging.info(f'starting up {self.id} at {core.getTime()}')
@@ -487,7 +489,8 @@ class Experiment(object):
     @stage
     def debug_main(self):
         for (i, trial) in enumerate(self.trials['main']):
-            gt = GraphTrial(self.win, **trial, eyelink=self.eyelink, start_mode='immediate')
+            prm = {**self.parameters, **trial}
+            gt = GraphTrial(self.win, **prm, eyelink=self.eyelink, start_mode='immediate')
             gt.run()
 
     @stage
