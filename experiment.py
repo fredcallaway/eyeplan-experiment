@@ -131,7 +131,6 @@ class Experiment(object):
             'pos': (.25, 0),
             'scale': 0.5,
             'start_mode': 'immediate',
-            'space_start': False,
             **self.trials['practice'][self.practice_i],
             **kws,
             '_message': self._message
@@ -484,6 +483,12 @@ class Experiment(object):
         visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
         self.win.flip()
         event.waitKeys(keyList=['space'])
+
+    @stage
+    def debug_main(self):
+        for (i, trial) in enumerate(self.trials['main']):
+            gt = GraphTrial(self.win, **trial, eyelink=self.eyelink, start_mode='immediate')
+            gt.run()
 
     @stage
     def run_main(self, n=None):

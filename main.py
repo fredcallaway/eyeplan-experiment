@@ -11,7 +11,11 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
     kws['force_rate'] = .3
     kws['score_limit'] = 250
 
-    exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=test, **kws)
+    exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=bool(test), **kws)
+    if test == 'main':
+        exp.debug_main()
+        return
+
     if test:
         # exp.intro()
         exp.run_main()
