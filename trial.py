@@ -50,6 +50,7 @@ class GraphTrial(object):
 
         self.pos = pos
         self.scale = scale
+        self.node_radius = .03
         self.space_start = space_start
         self.max_score = max_score
         self.force_rate = force_rate
@@ -116,13 +117,13 @@ class GraphTrial(object):
         L = np.array(self.layout)
         L *= self.scale
         for i, pos in enumerate(L):
-            nodes.append(self.gfx.circle(pos, name=f'node{i}', r=.04))
+            nodes.append(self.gfx.circle(pos, name=f'node{i}', r=self.node_radius))
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
-        self.data["trial"]["radius"] = .04 * self.win.size[1] / 2  # retina pixels
+        self.data["trial"]["radius"] = self.node_radius * self.win.size[1] / 2  # retina pixels
 
         self.reward_labels = [self.gfx.diamond(n.pos, ori=10 * r) if r else None
                               for (n, r) in zip(self.nodes, self.rewards)]
-        self.reward_text = [self.gfx.text(reward_string(r), n.pos, height=.04, autoDraw=False)
+        self.reward_text = [self.gfx.text(reward_string(r), n.pos, height=self.node_radius, autoDraw=False)
                               for (n, r) in zip(self.nodes, self.rewards)]
 
         # self.update_node_labels()
@@ -189,7 +190,7 @@ class GraphTrial(object):
                     lab.color = 'white'
                     # lab.bold = True
                     for p in self.gfx.animate(6/60):
-                        lab.setHeight(0.04 + p * 0.02)
+                        lab.setHeight(self.node_radius + p * 0.02)
                         self.tick()
                     for p in self.gfx.animate(24/60):
                         lab.setHeight(0.06 - p * 0.05)
@@ -577,7 +578,7 @@ class CalibrationTrial(GraphTrial):
 
                 lab = self.reward_labels[self.target]
                 for p in self.gfx.animate(6/60):
-                    lab.setHeight(0.04 + p * 0.02)
+                    lab.setHeight(self.node_radius + p * 0.02)
                     self.tick()
                 for p in self.gfx.animate(12/60):
                     lab.setHeight(0.06 - p * 0.03)
