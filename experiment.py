@@ -166,8 +166,11 @@ class Experiment(object):
 
 
     def setup_window(self):
-        size = (1350,750) if self.full_screen else (900,500)
-        win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
+        # size = (1350,750) if self.full_screen else (900,500)
+        size = np.array([1920, 1080])
+        if not self.full_screen:
+            size = (size * 0.95).astype(int)
+        win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen, pos=(48,0))
         # framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
         # assert abs(framerate - 60) < 2
         win.flip()
