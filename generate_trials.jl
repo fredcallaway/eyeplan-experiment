@@ -131,7 +131,7 @@ function make_trials(; )
         # intro_hover = [sample_problem(;kws...)],
         # practice_hover = [sample_problem(;kws...) for i in 1:2],
         practice,
-        main = [sample_trial(rdist) for i in 1:100],
+        main = [sample_trial(rdist) for i in 1:300],
     )
 end
 
@@ -166,8 +166,13 @@ points_per_cent = 2
 dest = "config/$(version)"
 rm(dest, recursive=true, force=true)
 mkpath(dest)
+conditions = [
+    (;score_limit=125, force_rate=.8),
+    (;score_limit=800, force_rate=.1),
+]
+
 foreach(enumerate(subj_trials)) do (i, trials)
-    parameters = (;)
+    parameters = conditions[mod1(i, length(conditions))]
     write("$dest/$i.json", json((;parameters, trials)))
     println("$dest/$i.json")
 end
