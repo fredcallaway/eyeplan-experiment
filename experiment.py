@@ -71,13 +71,11 @@ def get_next_config_number():
 
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False, test_mode=False, score_limit=400, **kws):
+    def __init__(self, config_number, name=None, full_screen=False, test_mode=False, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number
-        print('>>>', self.config_number)
         self.full_screen = full_screen
-        self.score_limit = score_limit
         self.test_mode = test_mode
 
         timestamp = datetime.now().strftime('%y-%m-%d-%H%M')
@@ -98,6 +96,7 @@ class Experiment(object):
             self.parameters.update(conf['parameters'])
         self.parameters.update(kws)
         logging.info('parameters %s', self.parameters)
+        self.score_limit = self.parameters['score_limit']
 
         if 'gaze_tolerance' not in self.parameters:
             self.parameters['gaze_tolerance'] = 1.5
