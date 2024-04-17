@@ -16,57 +16,23 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
     if test == 'main':
         exp.debug_main()
         return
-
-    if test:
-        # exp.intro()
-        exp.run_main()
-
-        # exp.run_main()
-        # exp.intro_forced()
-
-        # exp.practice(2)
-        # exp.intro_forced()
-        # exp.practice_forced(3)
-        exp.setup_eyetracker(mouse)
-        exp.show_gaze_demo()
-        # exp.intro_gaze()
-        # exp.calibrate_gaze_tolerance()
-        # exp.intro_contingent()
-        # exp.intro_main()
-        exp.run_main()
-        # exp.save_data()
-        return
     else:
         try:
-            if fast:
-                exp.intro()
-                exp.practice_start()
-                exp.practice(1)
-                exp.setup_eyetracker(mouse)
-                exp.show_gaze_demo()
-                exp.intro_gaze()
-                exp.calibrate_gaze_tolerance()
-                exp.intro_contingent()
-                exp.intro_main()
-                exp.run_main()
-            else:
-                exp.intro()
-                exp.practice(2)
-                exp.intro_forced()
-                exp.practice_forced(3)
-                exp.setup_eyetracker(mouse)
-                exp.show_gaze_demo()
-                exp.intro_gaze()
-                # exp.calibrate_gaze_tolerance()
-                # exp.intro_contingent()
-                exp.intro_main()
-                exp.run_main()
-
-            exp.save_data()
+            exp.intro()
+            exp.practice(2)
+            exp.intro_forced()
+            exp.practice_forced(3)
+            exp.setup_eyetracker(mouse)
+            exp.show_gaze_demo()
+            exp.intro_gaze()
+            # exp.calibrate_gaze_tolerance()
+            # exp.intro_contingent()
+            exp.intro_main()
+            exp.run_main()
         except:
+            logging.exception('Uncaught exception in main')
             if test:
                 exit(1)
-            logging.exception('Uncaught exception in main')
             exp.win.clearAutoDraw()
             exp.win.showMessage("Drat! The experiment has encountered an error.\nPlease inform the experimenter.")
             exp.win.flip()

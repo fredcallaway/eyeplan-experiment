@@ -254,13 +254,13 @@ class Experiment(object):
             self.win.flip()
         sleep(0.5)
 
-
         self.message("You can move by clicking on a location that is connected to your current location. Try it now!",
                      tip_text='click one of the connected locations', space=False)
         gt.highlight_edges = True
         gt.highlight_current_edges()
         gt.run(one_step=True)
         gt.start = gt.current_state
+        print("HERE")
 
         self.message("You can only move down, never back up. The round ends when you get to a location with no outgoing connections.",
                      tip_text='finish the round to continue', space=False)
@@ -304,21 +304,21 @@ class Experiment(object):
         gt.show()
 
         self.message(
-            "One more thing. Some of the locations have unstable connections!", tip_text="click on a connected location", space=False)
+            "One more thing. Some of connections are unstable!", tip_text="click on a connected location", space=False)
 
         gt.force_rate = 1.
         gt.run(one_step=True)
         gt.start = gt.current_state
 
-        self.message("When you reach a location with unstable connections, they will dissapear, leaving you with only one way down.",
-                     tip_text='click on "one of" the connected locations', space=False)
+        self.message("When you reach a location with an unstable connection, it will dissapear, leaving you with only one way down.",
+                     tip_text='click on the remaining connected location', space=False)
         gt.force_rate = 0.
         gt.run(one_step=True)
         gt.start = gt.current_state
 
 
         force_rate = self.parameters['force_rate']
-        self.message(f"Overall, {100*force_rate:n}% of locations have unstable connections.",
+        self.message(f"Overall, {100*force_rate:n}% of locations have an unstable connection.",
                      tip_text='finish the round to continue', space=False)
         gt.run()
 
