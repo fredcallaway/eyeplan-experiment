@@ -29,6 +29,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
             # exp.intro_contingent()
             exp.intro_main()
             exp.run_main()
+            exp.save_data()
         except:
             logging.exception('Uncaught exception in main')
             if test:
