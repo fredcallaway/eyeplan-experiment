@@ -1,10 +1,53 @@
 using Graphs
 using Random
 
-model_dir = "../model"
+model_dir = "../model/"
 include("$model_dir/problem.jl")
 include("$model_dir/utils.jl")
 
+IMAGES = [
+    "images/Animal_Sea_Solid_Small.png",
+    "images/Animal_Sea_Pattern_Small.png",
+    "images/Animal_Land_Solid_Large.png",
+    "images/Animal_Land_Pattern_Small.png",
+    "images/Object_Sea_Solid_Large.png",
+    "images/Object_Sea_Pattern_Large.png",
+    "images/Object_Land_Solid_Small.png",
+    "images/Object_Land_Pattern_Small.png",
+]
+parse_features(img) = split(rsplit(img, "/")[end], "_")[1:3]
+FEATURES = map(IMAGES) do img
+    parse_features(IMAGES[1]) .== parse_features(img)
+end
+
+function describe_mask(mask)
+    lookup = [
+        Dict(true => "Animal", false => "Object"),
+        Dict(true => "Sea", false => "Land"),
+        Dict(true => "Solid", false => "Pattern"),
+    ]
+    items = map(1:3, mask) do i, m
+        ismissing(m) && return missing
+        lookup[i][m]
+    end |> skipmissing
+    join(items, " & ")
+end
+
+# function default_graph_requirement(sgraph)
+#     is_connected(sgraph) || return false
+#     # all(vertices(sgraph)) do v
+#     #     length(neighbors(sgraph, v)) ≥ 1
+#     # end
+# end
+
+# function sample_graph(n; d=3, requirement=default_graph_requirement)
+#     for i in 1:10000
+#         sgraph = expected_degree_graph(fill(d, n)) |> random_orientation_dag
+#         # sgraph = expected_degree_graph(fill(2, n))
+#         requirement(sgraph) && return neighbor_list(sgraph)
+#     end
+#     error("Can't sample a graph!")
+# end
 
 neighbor_list(sgraph) = neighbors.(Ref(sgraph), vertices(sgraph))
 
@@ -52,50 +95,16 @@ function sample_graph(n)
     # base = [[2, 3], [4, 5], [6, 7], [], [], [], []]
     base = random_tree(div(n, 2))
     perm = randperm(length(base))
+
+    i = findfirst(isequal(1), perm)
+    perm[1], perm[i] = 1, perm[1]
+
     graph = map(base[perm]) do x
         Int[findfirst(isequal(i), perm) for i in x]
     end
     start = findfirst(isequal(1), perm)
     graph, start
 end
-
-function default_problem_requirement(problem)
-    n_steps = problem.n_steps
-    if n_steps == -1
-        n_steps = length(states(problem))
-    end
-    two_paths = length(paths(problem; n_steps)) ≥ 2
-
-    no_skip2 = !any(enumerate(problem.graph)) do (n, kids)
-        mod1(n+2, 11) in kids || mod1(n-2, 11) in kids
-    end
-
-    no_skip1 = !any(enumerate(problem.graph)) do (n, kids)
-        mod1(n+1, 11) in kids || mod1(n-1, 11) in kids
-    end
-
-    two_paths && no_skip2 && no_skip1
-end
-
-function sample_problem_(;n, n_steps=-1, rdist=nothing, rewards=rand(rdist), graph=missing, start=missing)
-    if ismissing(graph)
-        graph, start = sample_graph(n)
-    end
-    @assert !ismissing(start)
-    rewards = copy(rewards)
-    rewards[start] = 0
-    Problem(graph, rewards, start, n_steps)
-end
-
-function sample_problem(requirement=default_problem_requirement; kws...)
-    for i in 1:10000
-        problem = sample_problem_(;kws...)
-        requirement(problem) && return problem
-    end
-    error("Can't sample a problem!")
-end
-
-discrete_uniform(v) = DiscreteNonParametric(v, ones(length(v)) / length(v))
 
 function linear_rewards(n)
     @assert iseven(n)
@@ -104,10 +113,14 @@ function linear_rewards(n)
 end
 
 function exponential_rewards(n; base=2)
-    @assert iseven(n)
+    # @assert iseven(n)
     n2 = div(n,2)
     v = base .^ (0:1:n2-1)
-    sort!([-v; v])
+    if iseven(n)
+        sort!([-v; v])
+    else
+        sort!([-v; 0; v])
+    end
 end
 
 struct Shuffler{T}
@@ -128,39 +141,74 @@ function Random.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:IIDSampler})
     rand(x, n)
 end
 
+function sample_trial(perm; n_feature=rand(1:3), value=rand(1:3), revealed=true, kws...)
+    graph, start = sample_graph(length(perm)+1)
+    for es in graph
+        es .-= 1
+    end
+    start -= 1
+    mask = Union{Missing,Bool}[missing, missing, missing]
+    chosen = sample(1:3, n_feature; replace=false)
+    mask[chosen] .= rand((true, false))
+    targets = map(FEATURES[perm]) do f
+        all(skipmissing(f .== mask))
+    end
+    rewards = [1; (value+1) .* targets] .- 1
+    (;start, graph, rewards, value, revealed,
+      targets = findall(targets) .- 1, description=describe_mask(mask), kws...)
+end
 
+function trial2problem(t)
+    graph = map(t.graph) do es
+        es .+ 1
+    end
+    Problem(graph, t.rewards, t.start+1, -1)
+end
 
-function make_trials(; )
-    n = 11
-    rewards = exponential_rewards(8)
-    rdist = IIDSampler(n, rewards)
-    kws = (;n, rdist)
-
-
-    practice = repeatedly(10) do
-        p = sample_problem(;kws...) do p
-            default_problem_requirement(p) || return false
-            # value(p) > 0 || return false
-            # opaths = optimal_paths(p)
-            # length(opaths) == 1 || return false
-
-            ps = paths(p)
-            pv = value.(p, ps)
-            is_optimal = pv .== maximum(pv)
-            sum(is_optimal) == 1 || return false
-            opt_i = findall(is_optimal)[1]
-            pv[opt_i] > 0 || return false
-            maximum(pv[.!is_optimal]) ≤ pv[opt_i] - 2 || return false
-            2 ≤ length(ps[opt_i]) ≤ 3 || return false
+function intro_trial(perm; reward, kws...)
+    t = sample_trial(perm)
+    while true
+        prob = trial2problem(t)
+        if minimum(length, paths(prob)) ≥ 2
+            break
+        else
+            t = sample_trial(perm)
         end
-        (;JSON.lower(p)..., max_score=value(p))
     end
+    rewards = zeros(Int, length(perm)+1)
+    if reward == :posneg
+        rewards .= -1
+        for s in t.graph[1]
+            rewards[s+1] = 2
+            # for s2 in t.graph[s+1]
+            #     rewards[s+1] = -1
+            # end
+        end
+    end
+    (;t..., rewards, revealed=true, kws...)
+end
 
-    main = repeatedly(300) do
-        p = sample_problem(;kws...)
-        (;JSON.lower(p)..., max_score=value(p))
-    end
-    (; practice, main )
+
+function make_trials(; perm)
+    # rdist = IIDSampler(n, rewards)
+    (;
+        # intro = [
+        #     intro_trial(perm; reward=:zero),
+        #     intro_trial(perm; reward=:posneg),
+        # ],
+        # intro_describe = [
+        #     sample_trial(perm; n_feature=1, value=2),
+        #     sample_trial(perm; n_feature=2, value=1),
+        #     sample_trial(perm; n_feature=3, value=3),
+        # ],
+        # practice_revealed = [sample_trial(perm) for i in 1:3],
+        # main = [sample_trial(perm) for i in 1:30],
+        # intro_hover = [sample_trial(perm)],
+        # main_revealed = [sample_trial(perm, hover_edges=true) for i in 1:200],
+        main = [sample_trial(perm, hover_edges=true, hide_states=true) for i in 1:200],
+        # calibration = intro,
+        # eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 7))]
+    )
 end
 
 # %% --------
@@ -171,7 +219,7 @@ function circle_layout(N)
         angle = π/2 + s * 2 * π / N
         x = (cos(angle) + 1) / 2 - 0.5
         y = (sin(angle) + 1) / 2 - 0.5
-        (x, y)
+        (-x, y)
     end
 end
 
@@ -191,22 +239,41 @@ end
 
 version = get_version()
 n_subj = 200  # better safe than sorry
-Random.seed!(hash(version))
-subj_trials = repeatedly(make_trials, n_subj)
-layout = circle_layout(11)
+Random.seed!(hash("v23"))  # TODO HAVE TO MAKE PERM THE SAME!!
+layout = circle_layout(9)
 
 # %% --------
-
-points_per_cent = 2
 
 dest = "config/$(version)"
 rm(dest, recursive=true, force=true)
 mkpath(dest)
-foreach(enumerate(subj_trials)) do (i, trials)
-    parameters = (;points_per_cent, layout, time_limit=15, summarize_every=10, gaze_contingent=true)
+for i in 1:30
+    n = length(IMAGES) + 1
+    perm = randperm(n-1)
+    trials = make_trials(;perm)
+    parameters = (;
+        images = IMAGES[perm],
+        points_per_cent = 1,
+        layout,
+    )
+
     write("$dest/$i.json", json((;parameters, trials)))
     println("$dest/$i.json")
 end
+
+# # %% --------
+
+
+# points_per_cent = 2
+
+# dest = "config/$(version)"
+# rm(dest, recursive=true, force=true)
+# mkpath(dest)
+# foreach(enumerate(subj_trials)) do (i, trials)
+#     parameters = (;points_per_cent, layout, time_limit=15, summarize_every=10, gaze_contingent=true)
+#     write("$dest/$i.json", json((;parameters, trials)))
+#     println("$dest/$i.json")
+# end
 
 # %% --------
 

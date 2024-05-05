@@ -192,6 +192,29 @@ class Experiment(object):
             event.waitKeys(keyList=['space'])
 
     @stage
+    def test(self):
+
+        img = visual.ImageStim(self.win,
+            image=self.parameters['images'][0],
+            pos=self.parameters['layout'][3]
+        )
+        img.size = (.1, .1)
+        import IPython, time; IPython.embed(); time.sleep(0.5)
+        img.draw()
+        self.win.flip()
+        import IPython, time; IPython.embed(); time.sleep(0.5)
+
+        # for i in range(1,9):
+        #     img = visual.ImageStim(self.win,
+        #         image=self.parameters['images'][i-1],
+        #         pos=self.parameters['layout'][i]
+        #     )
+        #     img.size *= 0.1
+        #     img.draw()
+        # self.win.flip()
+        # event.waitKeys(keyList=['space'])
+
+    @stage
     def intro(self):
         self.message('Welcome!', space=True)
         gt = self.get_practice_trial(highlight_edges=True, hide_rewards_while_acting=False, initial_stage='acting')
@@ -212,7 +235,6 @@ class Experiment(object):
             self.message(f"The points will be converted to a cash bonus: {self.bonus.describe_scheme()}!", space=True)
         else:
             pass
-            # self.message(f"", space=True)
 
         self.message("You can move by clicking on a location that has an arrow pointing from your current location. Try it now!",
                      tip_text='click one of the highlighted locations', space=False)

@@ -48,7 +48,7 @@ class MultiShape(object):
 def shape(f):
     def wrapper(self, *args, sub_shape=False, **kwargs):
         obj = f(self, *args, **kwargs)
-        obj.setAutoDraw(True)
+        obj.setAutoDraw(kwargs.get('autoDraw', True))
         if not sub_shape:
             self.objects.append(obj)
         return obj
@@ -67,6 +67,11 @@ class Graphics(object):
     def show(self):
         for o in self.objects:
             o.setAutoDraw(True)
+
+    @shape
+    def image(self, pos, image, size, **kws):
+        return visual.ImageStim(self.win, image=image, pos=pos, size=(size, size))
+
 
     @shape
     def circle(self, pos, r=.05, lineColor='black', lineWidth=10, **kws):
