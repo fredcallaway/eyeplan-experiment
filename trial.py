@@ -28,7 +28,7 @@ def distance(p1, p2):
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, images, description=None, targets=None,
+    def __init__(self, win, graph, rewards, start, layout, images, description=None, targets=None, value=None,
                  plan_time=None, act_time=None, start_mode=None,
                  highlight_edges=False, stop_on_x=False, hide_rewards_while_acting=True, initial_stage='planning',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
@@ -39,6 +39,9 @@ class GraphTrial(object):
         self.start = start
         self.layout = layout
         self.images = images
+        self.description = description
+        self.targets = targets
+        self.value = value
         self.plan_time = plan_time
         self.act_time = act_time
         if start_mode is None:
@@ -372,11 +375,16 @@ class GraphTrial(object):
                 self.do_timeout()
             self.tick()
 
-    # def show_description(self):
-    #     targets
-    #     description
-
-
+    def show_description(self):
+        # targets
+        msg = f'{self.value} points for items matching: {self.description}'
+        visual.TextStim(self.win, msg, pos=(0, .1), color='white', height=.035).draw()
+        xs = np.arange(len(self.targets)) * .1
+        xs -= xs.mean()
+        for x, t in zip(xs, self.targets):
+            self.gfx.image((x, 0), self.images[t], size=.08, autoDraw=False).draw()
+        self.win.flip()
+        event.waitKeys(keyList=['space'])
 
     def run(self, one_step=False, skip_planning=False):
         if self.start_mode == 'drift_check':
