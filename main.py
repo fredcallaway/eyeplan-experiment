@@ -11,8 +11,8 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
     if test:
         # exp.test()
         exp.run_one(0, start_mode='none')
-        exp.run_one(1, start_mode='none')
-        exp.run_one(2, start_mode='none')
+        exp.run_one(1, start_mode='none', hide_states=True)
+        exp.run_one(2, start_mode='none', hide_states=True)
         # exp.intro()
         # exp.practice_start()
         # exp.practice(2)

@@ -32,7 +32,7 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, images, description=None, targets=None, value=None,
-                 plan_time=None, act_time=None, start_mode=None,
+                 plan_time=None, act_time=None, start_mode=None, hide_states=False,
                  highlight_edges=False, stop_on_x=False, hide_rewards_while_acting=True, hide_edges_while_acting=True, initial_stage='planning',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
                  pos=(0, 0), space_start=True, max_score=None, **kws):
@@ -52,7 +52,8 @@ class GraphTrial(object):
         self.start_mode = start_mode
         self.highlight_edges = highlight_edges
         self.stop_on_x = stop_on_x
-        self.hide_rewards_while_acting = hide_rewards_while_acting
+        self.hide_states = hide_states
+        self.hide_rewards_while_acting = hide_states or hide_rewards_while_acting
         self.hide_edges_while_acting = hide_edges_while_acting
 
         self.eyelink = eyelink
@@ -129,7 +130,7 @@ class GraphTrial(object):
             pos = 0.7 * np.array([x, y])
             nodes.append(self.gfx.circle(pos, name=f'node{i}', r=.05))
             if i > 0:
-                self.node_images.append(self.gfx.image(pos, self.images[i-1], size=.08))
+                self.node_images.append(self.gfx.image(pos, self.images[i-1], size=.08, autoDraw=not self.hide_states))
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
 
 
@@ -189,9 +190,11 @@ class GraphTrial(object):
                 pos=self.nodes[s].pos + np.array([.06, .06]),
                 bold=True, height=.04, color=reward_color(self.rewards[s]))
             txt.setAutoDraw(True)
+            self.node_images[s].setAutoDraw(True)
             self.win.flip()
             txt.setAutoDraw(False)
             core.wait(.5)
+            self.node_images[s].setAutoDraw(False)
 
 
     def click(self, s):
