@@ -4,6 +4,7 @@ import logging
 import json
 from eyetracking import height2pix
 from util import jsonify
+import random
 
 wait = core.wait
 
@@ -13,6 +14,8 @@ COLOR_ACT = '#126DEF'
 COLOR_LOSS = '#9E0002'
 COLOR_WIN =  '#0F7003'
 
+KEY_SWITCH = 's'
+KEY_SELECT = 't'
 
 from graphics import Graphics, FRAME_RATE
 
@@ -271,13 +274,49 @@ class GraphTrial(object):
     def highlight_current_edges(self):
         for (i, j), arrow in self.arrows.items():
             if i == self.current_state:
+                arrow.setAutoDraw(False); arrow.setAutoDraw(True)  # on top
                 arrow.setColor('#FFC910')
-                arrow.objects[0].setDepth(1)  # make sure the line is on top
                 self.nodes[j].setLineColor('#FFC910')
             else:
                 arrow.setColor('black')
-                arrow.objects[0].setDepth(2)
                 self.nodes[j].setLineColor('black')
+
+    def get_key_move(self):
+        choices = []
+        arrows = []
+        for (i, j), arrow in self.arrows.items():
+            if i == self.current_state:
+                arrow.setAutoDraw(False); arrow.setAutoDraw(True)  # on top
+                arrows.append(arrow)
+                choices.append(j)
+            else:
+                if self.hide_edges_while_acting:
+                    arrow.setAutoDraw(False)
+                else:
+                    arrow.setColor('black')
+
+        idx = random.randint(0, len(choices) - 1)
+        arrows[idx].setColor('#FFC910')
+        self.win.flip()
+
+        while True:
+            pressed = event.waitKeys(keyList=[KEY_SELECT, KEY_SWITCH])
+            if KEY_SELECT in pressed:
+                if self.hide_edges_while_acting:
+                    for arrow in arrows:
+                        arrow.setAutoDraw(False)
+                self.set_state(choices[idx])
+                return True
+            else:
+                arrows[idx].setColor('black')
+                idx = (idx + 1) % len(choices)
+                arrows[idx].setColor('#FFC910')
+                self.win.flip()
+
+
+
+
+
 
     def tick(self):
         self.current_time = core.getTime()
@@ -307,7 +346,7 @@ class GraphTrial(object):
 
         # random choices
         while not self.done:
-            self.set_state(np.random.choice(self.graph[self.current_state]))
+            self.set_state(random.choice(self.graph[self.current_state]))
             core.wait(.5)
 
     def start_recording(self):
@@ -336,13 +375,12 @@ class GraphTrial(object):
                 self.done = True
                 break
 
-            # self.update_fixation()
-            keys = event.getKeys()
+            keys = event.waitKeys(keyList=[KEY_SWITCH, 'x', 'c', 'a'])
 
-            clicked = self.get_click()
-            if clicked == self.current_state:
+            if KEY_SWITCH in keys:
                 self.log('end planning')
                 break
+
             elif 'x' in keys or 'c' in keys:
                 logging.warning('press x')
                 self.log('press x')
@@ -383,13 +421,13 @@ class GraphTrial(object):
         self.end_time = None if self.act_time is None else self.start_time + self.act_time
 
         while not self.done:
-            moved = self.check_click()
-            if moved and one_step:
-                return
             if self.highlight_edges:
                 self.highlight_current_edges()
             if not self.done and self.end_time is not None and self.current_time > self.end_time:
                 self.do_timeout()
+            moved = self.get_key_move()
+            if moved and one_step:
+                return
             self.tick()
 
     def show_description(self):
