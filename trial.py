@@ -31,27 +31,34 @@ def distance(p1, p2):
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, images, description=None, targets=None, value=None,
-                 plan_time=None, act_time=None, start_mode=None, hide_states=False,
-                 highlight_edges=False, stop_on_x=False, hide_rewards_while_acting=True, hide_edges_while_acting=True, initial_stage='planning',
-                 eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
-                 pos=(0, 0), space_start=True, max_score=None, **kws):
+    def __init__(self, win, graph, rewards, start, layout, pos=(0, 0), start_mode=None, max_score=None, stop_on_x=False,
+                 plan_time=None, act_time=None,
+                 images=None, description=None, targets=None, value=None,
+                 initial_stage='planning', hide_states=False, hide_rewards_while_acting=True, hide_edges_while_acting=True,
+                 eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag=.5, show_gaze=False,
+                  **kws):
         self.win = win
         self.graph = graph
         self.rewards = list(rewards)
         self.start = start
         self.layout = layout
+        self.pos = pos
+        self.start_mode = start_mode or ('drift_check' if eyelink else 'space')
+        self.max_score = max_score
+        self.stop_on_x = stop_on_x
+
+        self.plan_time = plan_time
+        self.act_time = act_time
+        self.current_time = None
+        self.start_time = None
+        self.end_time = None
+
         self.images = images
         self.description = description
         self.targets = targets
         self.value = value
-        self.plan_time = plan_time
-        self.act_time = act_time
-        if start_mode is None:
-            start_mode = 'drift_check' if eyelink else 'space'
-        self.start_mode = start_mode
-        self.highlight_edges = highlight_edges
-        self.stop_on_x = stop_on_x
+
+        self.stage = initial_stage
         self.hide_states = hide_states
         self.hide_rewards_while_acting = hide_states or hide_rewards_while_acting
         self.hide_edges_while_acting = hide_edges_while_acting
@@ -62,16 +69,6 @@ class GraphTrial(object):
         self.fixation_lag = fixation_lag
         self.show_gaze = show_gaze
         self.last_gaze = None
-
-        self.pos = pos
-        self.space_start = space_start
-        self.max_score = max_score
-
-        # all for current stage
-        self.stage = initial_stage
-        self.current_time = None
-        self.start_time = None
-        self.end_time = None
 
         self.status = 'ok'
         self.disable_click = False
@@ -84,6 +81,14 @@ class GraphTrial(object):
                 "kind": self.__class__.__name__,
                 "graph": graph,
                 "rewards": rewards,
+                "description": description,
+                "targets": targets,
+                "value": value,
+                "initial_stage": initial_stage,
+                "hide_states": hide_states,
+                "hide_rewards_while_acting": hide_rewards_while_acting,
+                "hide_edges_while_acting": hide_edges_while_acting,
+
                 "start": start,
                 "plan_time": plan_time,
                 "act_time": act_time,
@@ -117,30 +122,25 @@ class GraphTrial(object):
         return f'{self.value} {points} for items matching: {self.description}'
 
     def show(self):
-        # self.win.clearAutoDraw()
         if hasattr(self, 'nodes'):
             self.gfx.show()
-            # if self.gaze_contingent:
-            #     self.update_fixation()
             return
 
         self.nodes = nodes = []
-        self.node_images = [None]
+        self.node_images = []
         for i, (x, y) in enumerate(self.layout):
             pos = 0.7 * np.array([x, y])
             nodes.append(self.gfx.circle(pos, name=f'node{i}', r=.05))
-            if i > 0:
+            if i > 0 and self.images is not None:
                 self.node_images.append(self.gfx.image(pos, self.images[i-1], size=.08, autoDraw=not self.hide_states))
+            else:
+                self.node_images.append(None)
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
-
-
-        # self.update_node_labels()
 
         self.arrows = {}
         for i, js in enumerate(self.graph):
             for j in js:
                 self.arrows[(i, j)] = self.gfx.arrow(nodes[i], nodes[j])
-
 
         if self.plan_time is not None or self.act_time is not None:
             self.timer_wrap = self.gfx.rect((0.5,-0.45), .02, 0.9, anchor='bottom', color=-.1)
@@ -190,7 +190,8 @@ class GraphTrial(object):
                 pos=self.nodes[s].pos + np.array([.06, .06]),
                 bold=True, height=.04, color=reward_color(self.rewards[s]))
             txt.setAutoDraw(True)
-            self.node_images[s].setAutoDraw(True)
+            if self.node_images[s]:
+                self.node_images[s].setAutoDraw(True)
             self.win.flip()
             txt.setAutoDraw(False)
             core.wait(.5)
@@ -401,8 +402,9 @@ class GraphTrial(object):
         self.win.flip()
 
     def hide_rewards(self):
-        for img in self.node_images[1:]:
-            img.setAutoDraw(False)
+        for img in self.node_images:
+            if img:
+                img.setAutoDraw(False)
         if self.desc is not None:
             self.desc.setAutoDraw(False)
 
@@ -424,8 +426,6 @@ class GraphTrial(object):
         self.end_time = None if self.act_time is None else self.start_time + self.act_time
 
         while not self.done:
-            if self.highlight_edges:
-                self.highlight_current_edges()
             if not self.done and self.end_time is not None and self.current_time > self.end_time:
                 self.do_timeout()
             moved = self.get_key_move()
