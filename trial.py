@@ -30,7 +30,7 @@ class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, images, description=None, targets=None, value=None,
                  plan_time=None, act_time=None, start_mode=None,
-                 highlight_edges=False, stop_on_x=False, hide_rewards_while_acting=True, initial_stage='planning',
+                 highlight_edges=False, stop_on_x=False, hide_rewards_while_acting=True, hide_edges_while_acting=True, initial_stage='planning',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
                  pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
@@ -50,6 +50,7 @@ class GraphTrial(object):
         self.highlight_edges = highlight_edges
         self.stop_on_x = stop_on_x
         self.hide_rewards_while_acting = hide_rewards_while_acting
+        self.hide_edges_while_acting = hide_edges_while_acting
 
         self.eyelink = eyelink
         self.gaze_contingent = gaze_contingent
@@ -95,7 +96,6 @@ class GraphTrial(object):
         self.mouse = event.Mouse()
         self.done = False
 
-
     def log(self, event, info={}):
         time = core.getTime()
         logging.debug(f'{self.__class__.__name__}.log {time:3.3f} {event} ' + ', '.join(f'{k} = {v}' for k, v in info.items()))
@@ -108,6 +108,9 @@ class GraphTrial(object):
         if self.eyelink:
             self.eyelink.message(jsonify(datum), log=False)
 
+    def description_text(self):
+        points = 'point' if self.value == 1 else 'points'
+        return f'{self.value} {points} for items matching: {self.description}'
 
     def show(self):
         # self.win.clearAutoDraw()
@@ -146,6 +149,11 @@ class GraphTrial(object):
 
         if self.show_gaze:
             self.gaze_dot = self.gfx.circle((0,0), .005, color='red', lineWidth=1, lineColor="red")
+
+        if self.description:
+            self.desc = self.gfx.text(self.description_text(), pos=(0, .45), color="white")
+        else:
+            self.desc = None
 
     def hide(self):
         self.gfx.clear()
@@ -352,7 +360,14 @@ class GraphTrial(object):
         self.win.flip()
 
     def hide_rewards(self):
-        return
+        for img in self.node_images[1:]:
+            img.setAutoDraw(False)
+        if self.desc is not None:
+            self.desc.setAutoDraw(False)
+
+    def hide_edges(self):
+        for a in self.arrows.values():
+            a.setAutoDraw(False)
         # for i in range(len(self.nodes)):
         #     self.set_node_label(i, '')
 
@@ -361,6 +376,8 @@ class GraphTrial(object):
         self.log('start acting')
         if self.hide_rewards_while_acting:
             self.hide_rewards()
+        if self.hide_edges_while_acting:
+            self.hide_edges()
         self.stage = 'acting'
         self.start_time = self.current_time = core.getTime()
         self.end_time = None if self.act_time is None else self.start_time + self.act_time
@@ -377,8 +394,7 @@ class GraphTrial(object):
 
     def show_description(self):
         # targets
-        msg = f'{self.value} points for items matching: {self.description}'
-        visual.TextStim(self.win, msg, pos=(0, .1), color='white', height=.035).draw()
+        visual.TextStim(self.win, self.description_text(), pos=(0, .1), color='white', height=.035).draw()
         xs = np.arange(len(self.targets)) * .1
         xs -= xs.mean()
         for x, t in zip(xs, self.targets):
