@@ -16,6 +16,7 @@ COLOR_WIN =  '#0F7003'
 
 KEY_SWITCH = 's'
 KEY_SELECT = 't'
+KEY_ABORT = 'x'
 
 from graphics import Graphics, FRAME_RATE
 
@@ -104,6 +105,7 @@ class GraphTrial(object):
         return f'{self.value} {points} for items matching: {self.description}'
 
     def show(self):
+        self.log('show graph')
         if hasattr(self, 'nodes'):
             self.gfx.show()
             return
@@ -139,14 +141,6 @@ class GraphTrial(object):
         self.gfx.shift(x, y)
         self.pos = np.array(self.pos) + [x, y]
 
-
-    def get_click(self):
-        if self.mouse.getPressed()[0]:
-            pos = self.mouse.getPos()
-            for (i, n) in enumerate(self.nodes):
-                if n.contains(pos):
-                    return i
-
     def set_state(self, s):
         self.log('visit', {'state': s})
         self.nodes[s].fillColor = COLOR_PLAN if self.stage == 'planning' else COLOR_ACT
@@ -170,14 +164,6 @@ class GraphTrial(object):
             core.wait(.5)
             self.node_images[s].setAutoDraw(False)
 
-
-    def click(self, s):
-        if s in self.graph[self.current_state]:
-            self.set_state(s)
-
-    def is_done(self):
-        return len(self.graph[self.current_state]) == 0
-
     def fade_out(self):
         self.mask.setAutoDraw(False); self.mask.setAutoDraw(True)  # ensure on top
         for p in self.gfx.animate(.3):
@@ -186,14 +172,6 @@ class GraphTrial(object):
         self.gfx.clear()
         self.win.flip()
         wait(.3)
-
-    def check_click(self):
-        if self.disable_click:
-            return
-        clicked = self.get_click()
-        if clicked is not None and clicked in self.graph[self.current_state]:
-            self.set_state(clicked)
-            return True
 
     def highlight_current_edges(self):
         for (i, j), arrow in self.arrows.items():
@@ -205,7 +183,7 @@ class GraphTrial(object):
                 arrow.setColor('black')
                 self.nodes[j].setLineColor('black')
 
-    def get_key_move(self):
+    def get_move(self):
         choices = []
         arrows = []
         for (i, j), arrow in self.arrows.items():
@@ -222,10 +200,12 @@ class GraphTrial(object):
         idx = random.randint(0, len(choices) - 1)
         arrows[idx].setColor('#FFC910')
         self.win.flip()
+        self.log('get move', {"selected": choices[idx]})
 
         while True:
-            pressed = event.waitKeys(keyList=[KEY_SELECT, KEY_SWITCH])
+            pressed = event.waitKeys(keyList=[a, KEY_SWITCH])
             if KEY_SELECT in pressed:
+                self.log('select', {"selected": choices[idx]})
                 if self.hide_edges_while_acting:
                     for arrow in arrows:
                         arrow.setAutoDraw(False)
@@ -235,6 +215,7 @@ class GraphTrial(object):
                 arrows[idx].setColor('black')
                 idx = (idx + 1) % len(choices)
                 arrows[idx].setColor('#FFC910')
+                self.log('switch', {"selected": choices[idx]})
                 self.win.flip()
 
     def start_recording(self):
@@ -254,28 +235,16 @@ class GraphTrial(object):
         self.stage = 'planning'
         self.nodes[self.current_state].fillColor = COLOR_PLAN
 
-        while not self.done:
-            keys = event.waitKeys(keyList=[KEY_SWITCH, 'x', 'c', 'a'])
+        keys = event.waitKeys(keyList=[KEY_SWITCH, KEY_ABORT])
 
-            if KEY_SWITCH in keys:
-                self.log('end planning')
-                break
+        if KEY_SWITCH in keys:
+            self.log('end planning')
+            break
 
-            elif 'x' in keys or 'c' in keys:
-                logging.warning('press x')
-                self.log('press x')
-                self.status = 'recalibrate'
-                if self.stop_on_x:
-                    self.done = True
-                    break
-            elif 'a' in keys:
-                logging.warning('press a')
-                self.log('press a')
-                self.status = 'abort'
-            self.win.flip()
-
-        self.fixated = None
-        self.win.flip()
+        elif KEY_ABORT in keys:
+            logging.warning('abort key pressed')
+            self.log('abort planning')
+            self.status = 'abort'
 
     def hide_rewards(self):
         for img in self.node_images:
@@ -300,13 +269,13 @@ class GraphTrial(object):
         self.stage = 'acting'
 
         while not self.done:
-            moved = self.get_key_move()
+            moved = self.get_move()
             if moved and one_step:
                 return
             self.win.flip()
 
     def show_description(self):
-        # targets
+        self.log('show description')
         visual.TextStim(self.win, self.description_text(), pos=(0, .1), color='white', height=.035).draw()
         xs = np.arange(len(self.targets)) * .1
         xs -= xs.mean()
@@ -328,7 +297,7 @@ class GraphTrial(object):
             self.win.flip()
             event.waitKeys(keyList=['space'])
 
-        self.log('initialize status', {'status': self.status})
+        self.log('initialize', {'status': self.status})
 
         if self.status in ('abort', 'recalibrate'):
             self.log('done', {"status": self.status})
@@ -337,7 +306,8 @@ class GraphTrial(object):
         if self.eyelink:
             self.start_recording()
 
-        self.show_description()
+        if self.description:
+            self.show_description()
 
         self.show()
 
