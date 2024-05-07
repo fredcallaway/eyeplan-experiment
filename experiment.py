@@ -9,7 +9,7 @@ from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
 
 from util import jsonify
-from trial import GraphTrial, CalibrationTrial, COLOR_ACT, COLOR_PLAN
+from trial import GraphTrial, COLOR_ACT, COLOR_PLAN
 from graphics import Graphics
 from bonus import Bonus
 from eyetracking import EyeLink, MouseLink
@@ -364,53 +364,6 @@ class Experiment(object):
             visual.Circle(self.win, radius=.01, pos=self.eyelink.gaze_position(), color='red').draw()
             self.win.flip()
         self.win.flip()
-
-    @stage
-    def calibrate_gaze_tolerance(self):
-        self.message("We're going to check how well the eyetracker is working.", space=True)
-        self.message(
-            "When the board comes up, just look at the O's as they appear. "
-            "They should disappear. If it's not working, press X.",
-            space=True)
-        self.hide_message()
-
-        t = deepcopy(self.trials['practice'][0])
-        t['graph'] = [[] for edges in t['graph']]
-
-        result = None
-        attempt = 0
-        while True:
-            prm = {**self.parameters, **t, 'time_limit': 10}
-            gt = CalibrationTrial(self.win, **prm, eyelink=self.eyelink)
-            attempt += 1
-            self.practice_data.append(gt.data)
-            result = gt.run()
-            if result == 'success':
-                break
-            else:
-                self.message("Let's make some quick adjustments...", tip_text='Press space to continue')
-                keys = event.waitKeys(keyList=['c', 'd', 'r', 'space'])
-                self.hide_message()
-                if 'd' in keys:
-                    break
-                if 'r' in keys:
-                    self.message("We're going to try recalibrating the eyetracker", space=True)
-                    self.hide_message()
-                    self.eyelink.calibrate()
-                    self.message("OK let's try again. Look at the O's as they appear.", space=True)
-                    self.hide_message()
-                else:
-                    self.parameters['gaze_tolerance'] *= 1.2
-                    logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
-                    if self.parameters['gaze_tolerance'] > 3:
-                        break
-
-        if result == 'success':
-            self.message("Great! It looks like the eyetracker is working well.", space=True)
-        else:
-            logging.warning('disabling gaze contingency')
-            self.disable_gaze_contingency = True
-            self.message("OK let's move on.", space=True)
 
     @stage
     def intro_gaze(self):
