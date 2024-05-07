@@ -32,7 +32,6 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, pos=(0, 0), start_mode=None, max_score=None, stop_on_x=False,
-                 plan_time=None, act_time=None,
                  images=None, description=None, targets=None, value=None,
                  initial_stage='planning', hide_states=False, hide_rewards_while_acting=True, hide_edges_while_acting=True,
                  eyelink=None, **kws):
@@ -45,12 +44,6 @@ class GraphTrial(object):
         self.start_mode = start_mode or ('drift_check' if eyelink else 'space')
         self.max_score = max_score
         self.stop_on_x = stop_on_x
-
-        self.plan_time = plan_time
-        self.act_time = act_time
-        self.current_time = None
-        self.start_time = None
-        self.end_time = None
 
         self.images = images
         self.description = description
@@ -84,8 +77,6 @@ class GraphTrial(object):
                 "hide_edges_while_acting": hide_edges_while_acting,
 
                 "start": start,
-                "plan_time": plan_time,
-                "act_time": act_time,
             },
             "events": [],
             "flips": [],
@@ -132,12 +123,6 @@ class GraphTrial(object):
         for i, js in enumerate(self.graph):
             for j in js:
                 self.arrows[(i, j)] = self.gfx.arrow(nodes[i], nodes[j])
-
-        if self.plan_time is not None or self.act_time is not None:
-            self.timer_wrap = self.gfx.rect((0.5,-0.45), .02, 0.9, anchor='bottom', color=-.1)
-            self.timer = self.gfx.rect((0.5,-0.45), .02, 0.9, anchor='bottom', color=-.2)
-        else:
-            self.timer = None
 
         self.mask = self.gfx.rect((.1,0), 1.1, 1, color='gray', opacity=0)
         self.gfx.shift(*self.pos)
@@ -252,37 +237,6 @@ class GraphTrial(object):
                 arrows[idx].setColor('#FFC910')
                 self.win.flip()
 
-    def tick(self):
-        self.current_time = core.getTime()
-        if self.end_time is not None: # TODO
-            time_left = self.end_time - self.current_time
-            if time_left > 0:
-                p = time_left / (self.end_time - self.start_time)
-                self.timer.setHeight(0.9 * p)
-                if self.stage == 'acting' and time_left < 3:
-                    p2 = time_left / 3
-                    original = -.2 * np.ones(3)
-                    red = np.array([1, -1, -1])
-                    self.timer.setColor(p2 * original + (1-p2) * red)
-        self.last_flip = t = self.win.flip()
-        self.data["mouse"].append(self.mouse.getPos())
-        self.data["flips"].append(t)
-        return t
-
-    def do_timeout(self):
-        self.log('timeout')
-        logging.info('timeout')
-        for i in range(3):
-            self.timer_wrap.setColor('red'); self.win.flip()
-            wait(0.3)
-            self.timer_wrap.setColor(-.2); self.win.flip()
-            wait(0.3)
-
-        # random choices
-        while not self.done:
-            self.set_state(random.choice(self.graph[self.current_state]))
-            core.wait(.5)
-
     def start_recording(self):
         self.log('start recording')
         self.eyelink.start_recording()
@@ -299,15 +253,8 @@ class GraphTrial(object):
         self.log('start planning')
         self.stage = 'planning'
         self.nodes[self.current_state].fillColor = COLOR_PLAN
-        self.start_time = self.current_time = core.getTime()
-        self.end_time = None if self.plan_time is None else self.start_time + self.plan_time
 
         while not self.done:
-            if self.end_time is not None and self.current_time > self.end_time:
-                self.log('timeout planning')
-                self.done = True
-                break
-
             keys = event.waitKeys(keyList=[KEY_SWITCH, 'x', 'c', 'a'])
 
             if KEY_SWITCH in keys:
@@ -325,7 +272,7 @@ class GraphTrial(object):
                 logging.warning('press a')
                 self.log('press a')
                 self.status = 'abort'
-            self.tick()
+            self.win.flip()
 
         self.fixated = None
         self.win.flip()
@@ -351,16 +298,12 @@ class GraphTrial(object):
         if self.hide_edges_while_acting:
             self.hide_edges()
         self.stage = 'acting'
-        self.start_time = self.current_time = core.getTime()
-        self.end_time = None if self.act_time is None else self.start_time + self.act_time
 
         while not self.done:
-            if not self.done and self.end_time is not None and self.current_time > self.end_time:
-                self.do_timeout()
             moved = self.get_key_move()
             if moved and one_step:
                 return
-            self.tick()
+            self.win.flip()
 
     def show_description(self):
         # targets
@@ -401,8 +344,7 @@ class GraphTrial(object):
         if self.current_state is None:
             self.set_state(self.start)
 
-        self.start_time = self.tick()
-        self.log('start', {'flip_time': self.start_time})
+        self.log('start', {'flip_time': self.win.flip()})
 
         if not (one_step or skip_planning):
             self.run_planning()
