@@ -13,7 +13,7 @@ IMAGES = [
     "images/Object_Sea_Solid_Large.png",
     "images/Object_Sea_Pattern_Large.png",
     "images/Object_Land_Solid_Small.png",
-    "images/Object_Land_Pattern_Small.png",
+    "images/Object_Land_Pattern_Large.png",
 ]
 parse_features(img) = split(rsplit(img, "/")[end], "_")[1:3]
 FEATURES = map(IMAGES) do img
@@ -205,7 +205,7 @@ function make_trials(; perm)
         # main = [sample_trial(perm) for i in 1:30],
         # intro_hover = [sample_trial(perm)],
         # main_revealed = [sample_trial(perm, hover_edges=true) for i in 1:200],
-        main = [sample_trial(perm, hover_edges=true, hide_states=true) for i in 1:200],
+        main = [sample_trial(perm) for i in 1:200],
         # calibration = intro,
         # eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 7))]
     )
