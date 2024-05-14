@@ -9,7 +9,8 @@ from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
 
 from util import jsonify
-from trial import GraphTrial, COLOR_ACT, COLOR_PLAN
+from config import KEY_CONTINUE
+from trial import GraphTrial, AbortKeyPressed
 from graphics import Graphics
 from bonus import Bonus
 from eyetracking import EyeLink, MouseLink
@@ -25,7 +26,6 @@ LOG_PATH = 'log'
 PSYCHO_LOG_PATH = 'psycho-log'
 for p in (DATA_PATH, CONFIG_PATH, LOG_PATH, PSYCHO_LOG_PATH):
     os.makedirs(p, exist_ok=True)
-
 
 def stage(f):
     def wrapper(self, *args, **kwargs):
@@ -45,7 +45,7 @@ def stage(f):
                 event.waitKeys(keyList=['c'])
                 self.win.showMessage(None)
                 logging.warning(f'Retrying {stage}')
-                f(self, *args, **kwargs)
+                wrapper(self, *args, **kwargs)
         finally:
             self.win.clearAutoDraw()
             self.win.flip()
@@ -69,13 +69,14 @@ def get_next_config_number():
 
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False, score_limit=400, **kws):
+    def __init__(self, config_number, name=None, full_screen=False, score_limit=None, time_limit=30, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number
         print('>>>', self.config_number)
         self.full_screen = full_screen
         self.score_limit = score_limit
+        self.time_limit = time_limit
 
         timestamp = datetime.now().strftime('%y-%m-%d-%H%M')
         self.id = f'{timestamp}_P{config_number}'
@@ -98,7 +99,7 @@ class Experiment(object):
             self.parameters['gaze_tolerance'] = 1.5
 
         self.win = self.setup_window()
-        self.bonus = Bonus(0, 50)
+        self.bonus = Bonus(1, 0)
         self.total_score = 0
         # self.bonus = Bonus(self.parameters['points_per_cent'], 50)
         self.eyelink = None
@@ -120,11 +121,11 @@ class Experiment(object):
             self.practice_i += 1
         prm = {
             **self.parameters,
-            'gaze_contingent': False,
-            'time_limit': None,
-            'pos': (.3, 0),
-            'start_mode': 'immediate',
-            'space_start': False,
+            # 'gaze_contingent': False,
+            # 'time_limit': None,
+            # 'pos': (.3, 0),
+            # 'start_mode': 'immediate',
+            # 'space_start': False,
             **self.trials['practice'][self.practice_i],
             **kws
         }
@@ -189,153 +190,11 @@ class Experiment(object):
         self._tip.setText(tip_text if tip_text else 'press space to continue' if space else '')
         self.win.flip()
         if space:
-            event.waitKeys(keyList=['space'])
-
-    @stage
-    def test(self):
-
-        img = visual.ImageStim(self.win,
-            image=self.parameters['images'][0],
-            pos=self.parameters['layout'][3]
-        )
-        img.size = (.1, .1)
-        import IPython, time; IPython.embed(); time.sleep(0.5)
-        img.draw()
-        self.win.flip()
-        import IPython, time; IPython.embed(); time.sleep(0.5)
-
-        # for i in range(1,9):
-        #     img = visual.ImageStim(self.win,
-        #         image=self.parameters['images'][i-1],
-        #         pos=self.parameters['layout'][i]
-        #     )
-        #     img.size *= 0.1
-        #     img.draw()
-        # self.win.flip()
-        # event.waitKeys(keyList=['space'])
-
-    @stage
-    def intro(self):
-        self.message('Welcome back!', space=True)
-        gt = self.get_practice_trial(highlight_edges=True, hide_rewards_while_acting=False, initial_stage='acting')
-
-        gt.show()
-        for l in gt.reward_labels:
-            l.setOpacity(0)
-        self.message("In this experiment, you will play a game on the board shown to the right.", space=True)
-
-        gt.set_state(gt.start)
-        self.message("Your current location on the board is highlighted in blue.", space=True)
-
-        for l in gt.reward_labels:
-            l.setOpacity(1)
-        self.message("The goal of the game is to collect as many points as you can.", space=True)
-
-        if self.bonus:
-            self.message(f"The points will be converted to a cash bonus: {self.bonus.describe_scheme()}!", space=True)
-        else:
-            pass
-
-        self.message("You can move by clicking on a location that has an arrow pointing from your current location. Try it now!",
-                     tip_text='click one of the highlighted locations', space=False)
-        gt.run(one_step=True)
-        gt.start = gt.current_state
-
-        self.message("The round ends when you get to a location with no outgoing connections.",
-                     tip_text='click one of the highlighted locations', space=False)
-        gt.run(skip_planning=True)
-
-    @stage
-    def practice_start(self):
-        gt = self.get_practice_trial()
-        gt.show()
-        gt.set_state(gt.start)
-
-        self.message("At the beginning of each round, your initial location will be red.", space=True)
-
-        self.message("Before you can move, you have to click the red circle.", space=False,
-                     tip_text='click the red circle to continue')
-        gt.nodes[gt.start].setLineColor('#FFC910')
-        gt.run_planning()
-        gt.nodes[gt.start].setLineColor('black')
-
-        gt.nodes[gt.start].fillColor = COLOR_ACT
-        self.message("It will turn blue, indicating that you have entered the movement phase.", space=True)
-
-        gt.hide_rewards()
-        self.message("But be warned! The points will also disappear!", space=True)
-
-        gt.update_node_labels()
-        gt.nodes[gt.start].fillColor = COLOR_PLAN
-        self.message("So, you should only enter the movement phase after deciding on a full path.", space=True)
-        self.message("Give it a shot!", tip_text='click the red circle', space=False)
-
-        gt.start_time = gt.tick()
-        gt.run_planning()
-        self.message("Now you can select which locations to visit.",
-                     tip_text='complete the round to continue', space=False)
-        gt.run(skip_planning=True)
-
-
-
-    @stage
-    def practice_change(self):
-        gt = self.get_practice_trial()
-
-        self.message("Both the connections and points change on every round of the game.",
-                     tip_text='complete the round to continue', space=False)
-        gt.run()
-
-    @stage
-    def practice_timelimit(self):
-        gt = self.get_practice_trial(time_limit=3)
-        gt.disable_click = True
-
-        self.message("To make things more exciting, each round has a time limit.", space=True)
-        gt.show()
-        gt.timer.setLineColor('#FFC910')
-        gt.timer.setLineWidth(5)
-        gt.win.flip()
-
-        self.message("The time left is indicated by a bar on the right.", space=True)
-        gt.timer.setLineWidth(0)
-        self.message("Let's see what happens when it runs out...", space=False,
-            tip_text='wait for it')
-        gt.run()
-        self.message("If you run out of time, we'll make random decisions for you. Probably something to avoid.", space=True)
-
-    @stage
-    def practice(self, n):
-        intervened = False
-        for i in range(n):
-            self.message("Let's try a few more practice rounds.",
-                         space=False, tip_text=f'complete {n - i} practice rounds to continue')
-
-            gt = self.get_practice_trial()
-            for i in range(3):
-                gt.run()
-                if intervened or gt.score == gt.max_score:
-                    break
-                else:
-                    self.message(
-                        f"You got {int(gt.score)} points on that round, but you could have gotten {int(gt.max_score)}.\n"
-                        f"Let's try again. Try to make as many points as possible!"
-                    )
-                gt = self.get_practice_trial(repeat=True)
-            else:  # never succeeded
-                logging.warning(f"failed practice trial {i}")
-                if not intervened:
-                    intervened = True
-                    self.message("Please check in with the experimenter",
-                        tip_text="Wait for the experimenter (space)", space=True)
-                    self.get_practice_trial(repeat=True).run()
-
-
-        self.message("Great job!", space=True)
+            event.waitKeys(keyList=[KEY_CONTINUE])
 
     @stage
     def setup_eyetracker(self, mouse=False):
-        self.message("Now we're going to calibrate the eyetracker. Please tell the experimenter.",
+        self.message("We're going to calibrate the eyetracker. Please tell the experimenter.",
             tip_text="Wait for the experimenter (space)", space=True)
         self.hide_message()
         if mouse:
@@ -346,21 +205,12 @@ class Experiment(object):
         self.eyelink.calibrate()
 
     @stage
-    def recalibrate(self):
-        self.message("We're going to recalibrate the eyetracker. Please tell the experimenter.",
-            tip_text="Wait for the experimenter (space)", space=True)
-        self.hide_message()
-        self.eyelink.calibrate()
-        self.calibrate_gaze_tolerance()
-
-
-    @stage
     def show_gaze_demo(self):
         self.message("Check it out! This is where the eyetracker thinks you're looking.",
                      tip_text='press space to continue')
 
         self.eyelink.start_recording()
-        while 'space' not in event.getKeys():
+        while KEY_CONTINUE not in event.getKeys():
             visual.Circle(self.win, radius=.01, pos=self.eyelink.gaze_position(), color='red').draw()
             self.win.flip()
         self.win.flip()
@@ -375,49 +225,19 @@ class Experiment(object):
         self.message("Yup just like that. Make sure you hold your gaze steady on the circle before pressing space.", space=True)
 
     @stage
-    def intro_contingent(self):
-        if self.disable_gaze_contingency:
-            return
-        self.message("There's just one more thing...", space=True)
-        self.message("For the rest of the experiment, the points will only be visible when you're looking at them.", space=True)
-        tip = "select a path to continue\npress X if it's not working"
-        self.message("Try it out!", tip_text=tip, space=False)
-
-        status = None
-
-        while True:
-            gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0), stop_on_x=True)
-            gt.start_mode = 'immediate'
+    def practice(self):
+        self.message("Before we begin the main phase, we'll do a few practice rounds with all the images visible.", space=True)
+        self.message("")
+        for i in range(5):
+            gt = self.get_practice_trial()
             gt.run()
-            if gt.status == 'ok':
-                break
-            self.recalibrate()
-            self.message("Let's try again!", space=False, tip_text=tip)
-
-        self.message("Great! If you ever find that the points don't appear when you look at them, "
-            "please let the experimenter know so we can fix it!", space=True)
-
 
     @stage
     def intro_main(self):
-        if self.score_limit:
-            self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
-            self.message("But first, you might be asking \"What's in it for me?\" ...Well, we thought of that!", space=True)
-            self.message("Unlike other experiments you might have done, we don't have a fixed number of rounds.", space=True)
-            self.message(f"Instead, you will do as as many rounds as it takes to earn {self.score_limit} points.", space=True)
-            self.message("To finish the study as quickly as possible, you'll have to balance making fast choices and selecting the best possible path.", space=True)
-            self.message("Good luck!", space=True)
-
-        else:
-            self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
-            self.message("Remember: at the beginning of each round, look at the circle and press space.", space=True)
-            if self.bonus:
-                self.message(f"There will be {self.n_trial} rounds. "
-                             f"Remember, you'll earn {self.bonus.describe_scheme()} you make in the game. "
-                             "We'll start you off with 50 points for all your hard work so far.", space=True )
-                self.message("Good luck!", space=True)
-            else:
-                self.message(f"There will be {self.n_trial} rounds. Good luck!", space=True)
+        self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
+        self.message(f"Remember, you will earn {self.bonus.describe_scheme()} you make the game.", space=True)
+        self.message("Good luck!", space=True)
+        # self.message("At the beginning of each round, look at the circle and press space.", space=True)
 
     @stage
     def run_one(self, i, **kws):
@@ -435,47 +255,54 @@ class Experiment(object):
     def center_message(self, msg, space=True):
         visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
         self.win.flip()
-        event.waitKeys(keyList=['space'])
+        if space:
+            event.waitKeys(keyList=[KEY_CONTINUE])
 
     @stage
     def run_main(self, n=None):
-        # summarize_every = self.parameters.get('summarize_every', 5)
+        seconds_left = self.time_limit * 60
+
+        last_summary_time = seconds_left
+
+        summarize_every = self.parameters.get('summarize_every', 60 * 3)
+        summarize_every = 10
 
         trials = self.trials['main']
         if n is not None:
             trials = trials[:n]
 
-        block_earned = 0
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}")
             try:
-                # if self.score_limit:
-                #     if self.total_score >= self.score_limit:
-                #         self.center_message(f"Congratulations! You hit {self.score_limit} points!")
-                #         return
-                #     else:
-                #         self.center_message(f"Your current score is {self.total_score}.\n"
-                #                             f"You're {self.score_limit - self.total_score} points away from finishing.")
+
+                if (last_summary_time - seconds_left) > summarize_every:
+                    last_summary_time = seconds_left
+                    msg = f"{self.bonus.report_bonus()}\nYou have about {round(seconds_left / 60)} minutes left.\nPress any key to continue."
+                    logging.info('summary message: %s', msg)
+                    self.center_message(msg, space=False)
+                    event.waitKeys()
+
 
                 prm = {**self.parameters, **trial}
                 if self.disable_gaze_contingency:
                     prm['gaze_contingent'] = False
                     prm['start_mode'] = 'fixation'
 
-
-                gt = GraphTrial(self.win, **prm, hide_states=False, eyelink=self.eyelink)
+                gt = GraphTrial(self.win, **prm, hide_states=True, eyelink=self.eyelink)
                 gt.run()
+                seconds_left -= (gt.done_time - gt.show_time)
+                logging.info("seconds left: %s", seconds_left)
+
                 psychopy.logging.flush()
                 self.trial_data.append(gt.data)
 
-                if gt.status != 'recalibrate':
-                    logging.info('gt.status is %s', gt.status)
-                    self.bonus.add_points(gt.score)
-                    self.total_score += int(gt.score)
+                logging.info('gt.status is %s', gt.status)
+                self.bonus.add_points(gt.score)
+                self.total_score += int(gt.score)
 
                 if gt.status == 'recalibrate':
-                    self.recalibrate()
-                    
+                    self.eyelink.calibrate()
+
                 elif gt.status == 'abort':
                     self.win.clearAutoDraw()
                     self.win.showMessage(
@@ -488,17 +315,19 @@ class Experiment(object):
                     if 'a' in keys:
                         break
 
-            except:
-                logging.exception(f"Caught exception in run_main")
+            except Exception as e:
+                if isinstance(e, AbortKeyPressed):
+                    logging.warning("Abort key pressed")
+                    msg = 'Abort key pressed!'
+                else:
+                    logging.exception(f"Caught exception in run_main")
+                    msg = 'The experiment ran into a problem! Please tell the experimenter.'
+
                 self.win.clearAutoDraw()
-                self.win.showMessage(
-                    'The experiment ran into a problem! Please tell the experimenter.\n'
-                    'Press C to continue or A to abort and save data'
-                    )
+                self.win.showMessage(msg + '\n' + 'Press C to continue or Q to terminate the experiment and save data')
                 self.win.flip()
-                keys = event.waitKeys(keyList=['c', 'a'])
+                keys = event.waitKeys(keyList=['c', 'q'])
                 self.win.showMessage(None)
-                print('keys are', keys)
                 if 'c' in keys:
                     continue
                 else:
@@ -532,6 +361,9 @@ class Experiment(object):
 
     def emergency_save_data(self):
         logging.warning('emergency save data')
+        if self.eyelink:
+            self.eyelink.save_data()
+        logging.warning('eyelink data saved?')
         fp = f'{DATA_PATH}/{self.id}.txt'
         with open(fp, 'w') as f:
             f.write(str(self.all_data))

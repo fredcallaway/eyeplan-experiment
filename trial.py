@@ -8,19 +8,7 @@ import random
 
 wait = core.wait
 
-# COLOR_PLAN = '#F2384A'
-COLOR_PLAN = '#126DEF'
-COLOR_ACT = '#126DEF'
-
-COLOR_LOSS = '#9E0002'
-COLOR_WIN =  '#0F7003'
-
-COLOR_HIGHLIGHT = '#FFC910'
-
-KEY_CONTINUE = 'r'
-KEY_SWITCH = 's'
-KEY_SELECT = 't'
-KEY_ABORT = 'x'
+from config import COLOR_PLAN, COLOR_ACT, COLOR_LOSS, COLOR_WIN, COLOR_HIGHLIGHT, KEY_CONTINUE, KEY_SWITCH, KEY_SELECT, KEY_ABORT
 
 from graphics import Graphics, FRAME_RATE
 
@@ -34,9 +22,15 @@ def distance(p1, p2):
     (x1, y1), (x2, y2) = (p1, p2)
     return np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
+
+
+
+class AbortKeyPressed(Exception): pass
+
+
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, pos=(0, 0), start_mode=None, max_score=None, stop_on_x=False,
+    def __init__(self, win, graph, rewards, start, layout, pos=(0, 0), start_mode=None, max_score=None,
                  images=None, reward_info=None,
                  initial_stage='planning', hide_states=False, hide_rewards_while_acting=True, hide_edges_while_acting=True,
                  eyelink=None, **kws):
@@ -48,7 +42,6 @@ class GraphTrial(object):
         self.pos = pos
         self.start_mode = start_mode or ('drift_check' if eyelink else 'space')
         self.max_score = max_score
-        self.stop_on_x = stop_on_x
 
         self.images = images
         self.reward_info = reward_info
@@ -61,6 +54,7 @@ class GraphTrial(object):
         self.eyelink = eyelink
 
         self.status = 'ok'
+        self.show_time = self.done_time = None
         self.disable_click = False
         self.score = 0
         self.current_state = None
@@ -88,6 +82,15 @@ class GraphTrial(object):
         self.mouse = event.Mouse()
         self.done = False
 
+    def wait_keys(self, keys):
+        keys = event.waitKeys(keyList=[*keys, KEY_ABORT])
+        if KEY_ABORT in keys:
+            self.status = 'abort'
+            raise AbortKeyPressed()
+        else:
+            return keys
+
+
     def log(self, event, info={}):
         time = core.getTime()
         logging.debug(f'{self.__class__.__name__}.log {time:3.3f} {event} ' + ', '.join(f'{k} = {v}' for k, v in info.items()))
@@ -108,6 +111,7 @@ class GraphTrial(object):
         return "   ".join(fmt(x) for x in self.reward_info)
 
     def show(self):
+        self.show_time = core.getTime()
         self.log('show graph')
         if hasattr(self, 'nodes'):
             self.gfx.show()
@@ -207,7 +211,7 @@ class GraphTrial(object):
         self.log('get move', {"selected": choices[idx]})
 
         while True:
-            pressed = event.waitKeys(keyList=[KEY_SELECT, KEY_SWITCH])
+            pressed = self.wait_keys([KEY_SELECT, KEY_SWITCH, KEY_ABORT])
             if KEY_SELECT in pressed:
                 self.log('select', {"selected": choices[idx]})
                 if self.hide_edges_while_acting:
@@ -239,7 +243,7 @@ class GraphTrial(object):
         self.stage = 'planning'
         self.nodes[self.current_state].fillColor = COLOR_PLAN
 
-        keys = event.waitKeys(keyList=[KEY_SWITCH, KEY_ABORT])
+        keys = self.wait_keys([KEY_SWITCH, KEY_ABORT])
 
         if KEY_SWITCH in keys:
             self.log('end planning')
@@ -291,7 +295,7 @@ class GraphTrial(object):
                     self.gfx.image((x, y-.1), self.images[t], size=.08, autoDraw=False).draw()
 
         self.win.flip()
-        event.waitKeys(keyList=[KEY_CONTINUE])
+        self.wait_keys([KEY_CONTINUE])
 
     def run(self, one_step=False, skip_planning=False):
         if self.start_mode == 'drift_check':
@@ -304,7 +308,7 @@ class GraphTrial(object):
             self.log('begin space')
             visual.TextStim(self.win, f'press {KEY_CONTINUE.upper()} to start', pos=self.pos, color='white', height=.035).draw()
             self.win.flip()
-            event.waitKeys(keyList=['space', KEY_CONTINUE])
+            self.wait_keys(['space', KEY_CONTINUE])
 
         self.log('initialize', {'status': self.status})
 
@@ -327,13 +331,17 @@ class GraphTrial(object):
 
         if not (one_step or skip_planning):
             self.run_planning()
+        if self.status == 'abort':
+            return 'abort'
 
-        if not self.done:
-            self.run_acting(one_step)
-            if one_step:
-                return
+        self.run_acting(one_step)
+        if self.status == 'abort':
+            return 'abort'
+        if one_step:
+            return
 
         self.log('done')
+        self.done_time = core.getTime()
         logging.info("end trial " + jsonify(self.data["events"]))
         if self.eyelink:
             self.eyelink.stop_recording()
