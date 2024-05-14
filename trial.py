@@ -8,12 +8,16 @@ import random
 
 wait = core.wait
 
-COLOR_PLAN = '#F2384A'
+# COLOR_PLAN = '#F2384A'
+COLOR_PLAN = '#126DEF'
 COLOR_ACT = '#126DEF'
 
 COLOR_LOSS = '#9E0002'
 COLOR_WIN =  '#0F7003'
 
+COLOR_HIGHLIGHT = '#FFC910'
+
+KEY_CONTINUE = 'r'
 KEY_SWITCH = 's'
 KEY_SELECT = 't'
 KEY_ABORT = 'x'
@@ -177,8 +181,8 @@ class GraphTrial(object):
         for (i, j), arrow in self.arrows.items():
             if i == self.current_state:
                 arrow.setAutoDraw(False); arrow.setAutoDraw(True)  # on top
-                arrow.setColor('#FFC910')
-                self.nodes[j].setLineColor('#FFC910')
+                arrow.setColor(COLOR_HIGHLIGHT)
+                self.nodes[j].setLineColor(COLOR_HIGHLIGHT)
             else:
                 arrow.setColor('black')
                 self.nodes[j].setLineColor('black')
@@ -198,12 +202,12 @@ class GraphTrial(object):
                     arrow.setColor('black')
 
         idx = random.randint(0, len(choices) - 1)
-        arrows[idx].setColor('#FFC910')
+        arrows[idx].setColor(COLOR_HIGHLIGHT)
         self.win.flip()
         self.log('get move', {"selected": choices[idx]})
 
         while True:
-            pressed = event.waitKeys(keyList=[a, KEY_SWITCH])
+            pressed = event.waitKeys(keyList=[KEY_SELECT, KEY_SWITCH])
             if KEY_SELECT in pressed:
                 self.log('select', {"selected": choices[idx]})
                 if self.hide_edges_while_acting:
@@ -214,7 +218,7 @@ class GraphTrial(object):
             else:
                 arrows[idx].setColor('black')
                 idx = (idx + 1) % len(choices)
-                arrows[idx].setColor('#FFC910')
+                arrows[idx].setColor(COLOR_HIGHLIGHT)
                 self.log('switch', {"selected": choices[idx]})
                 self.win.flip()
 
@@ -239,7 +243,6 @@ class GraphTrial(object):
 
         if KEY_SWITCH in keys:
             self.log('end planning')
-            break
 
         elif KEY_ABORT in keys:
             logging.warning('abort key pressed')
