@@ -216,7 +216,7 @@ class Experiment(object):
 
     @stage
     def intro(self):
-        self.message('Welcome!', space=True)
+        self.message('Welcome back!', space=True)
         gt = self.get_practice_trial(highlight_edges=True, hide_rewards_while_acting=False, initial_stage='acting')
 
         gt.show()
@@ -439,7 +439,6 @@ class Experiment(object):
 
     @stage
     def run_main(self, n=None):
-        summarize_every = 10000
         # summarize_every = self.parameters.get('summarize_every', 5)
 
         trials = self.trials['main']
@@ -447,7 +446,6 @@ class Experiment(object):
             trials = trials[:n]
 
         block_earned = 0
-        block_possible = 0
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}")
             try:
@@ -472,8 +470,6 @@ class Experiment(object):
 
                 if gt.status != 'recalibrate':
                     logging.info('gt.status is %s', gt.status)
-                    block_earned += gt.score
-                    block_possible += gt.max_score
                     self.bonus.add_points(gt.score)
                     self.total_score += int(gt.score)
 
@@ -491,18 +487,6 @@ class Experiment(object):
                     self.win.showMessage(None)
                     if 'a' in keys:
                         break
-
-                if i % summarize_every == (summarize_every - 1):
-                    msg = f"In the last {summarize_every} rounds, you earned {int(block_earned)} points out of {int(block_possible)} possible points."
-                    block_earned = block_possible = 0
-                    if self.bonus:
-                        msg += f"\n{self.bonus.report_bonus()}"
-                    n_left = len(trials) - i - 1
-                    if n_left:
-                        msg += f'\n\nThere are {n_left} rounds left. Feel free to take a quick break. Then press space to continue.'
-                    else:
-                        msg += "\n\nYou've completed all the rounds! Press space to continue."
-                    self.center_message(msg)
 
             except:
                 logging.exception(f"Caught exception in run_main")
