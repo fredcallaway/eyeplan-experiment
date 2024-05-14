@@ -69,8 +69,8 @@ class Graphics(object):
             o.setAutoDraw(True)
 
     @shape
-    def image(self, pos, image, size, **kws):
-        return visual.ImageStim(self.win, image=image, pos=pos, size=(size, size))
+    def image(self, pos, image, size, path='images', **kws):
+        return visual.ImageStim(self.win, image=path + '/' + image, pos=pos, size=(size, size))
 
 
     @shape
