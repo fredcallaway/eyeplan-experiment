@@ -59,7 +59,7 @@ def get_next_config_number():
         if m:
             used.add(int(m.group(1)))
 
-    possible = range(1, 1 + len(os.listdir(CONFIG_PATH)))
+    possible = range(0, 1 + len(os.listdir(CONFIG_PATH)))
     try:
         n = next(i for i in possible if i not in used)
         return n
@@ -449,13 +449,13 @@ class Experiment(object):
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}")
             try:
-                if self.score_limit:
-                    if self.total_score >= self.score_limit:
-                        self.center_message(f"Congratulations! You hit {self.score_limit} points!")
-                        return
-                    else:
-                        self.center_message(f"Your current score is {self.total_score}.\n"
-                                            f"You're {self.score_limit - self.total_score} points away from finishing.")
+                # if self.score_limit:
+                #     if self.total_score >= self.score_limit:
+                #         self.center_message(f"Congratulations! You hit {self.score_limit} points!")
+                #         return
+                #     else:
+                #         self.center_message(f"Your current score is {self.total_score}.\n"
+                #                             f"You're {self.score_limit - self.total_score} points away from finishing.")
 
                 prm = {**self.parameters, **trial}
                 if self.disable_gaze_contingency:
@@ -463,7 +463,7 @@ class Experiment(object):
                     prm['start_mode'] = 'fixation'
 
 
-                gt = GraphTrial(self.win, **prm, eyelink=self.eyelink)
+                gt = GraphTrial(self.win, **prm, hide_states=False, eyelink=self.eyelink)
                 gt.run()
                 psychopy.logging.flush()
                 self.trial_data.append(gt.data)

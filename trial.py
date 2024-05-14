@@ -37,7 +37,7 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, pos=(0, 0), start_mode=None, max_score=None, stop_on_x=False,
-                 images=None, description=None, targets=None, value=None,
+                 images=None, reward_info=None,
                  initial_stage='planning', hide_states=False, hide_rewards_while_acting=True, hide_edges_while_acting=True,
                  eyelink=None, **kws):
         self.win = win
@@ -51,9 +51,7 @@ class GraphTrial(object):
         self.stop_on_x = stop_on_x
 
         self.images = images
-        self.description = description
-        self.targets = targets
-        self.value = value
+        self.reward_info = reward_info
 
         self.stage = initial_stage
         self.hide_states = hide_states
@@ -73,9 +71,7 @@ class GraphTrial(object):
                 "kind": self.__class__.__name__,
                 "graph": graph,
                 "rewards": rewards,
-                "description": description,
-                "targets": targets,
-                "value": value,
+                "reward_info": reward_info,
                 "initial_stage": initial_stage,
                 "hide_states": hide_states,
                 "hide_rewards_while_acting": hide_rewards_while_acting,
@@ -105,8 +101,11 @@ class GraphTrial(object):
             self.eyelink.message(jsonify(datum), log=False)
 
     def description_text(self):
-        points = 'point' if self.value == 1 else 'points'
-        return f'{self.value} {points} for items matching: {self.description}'
+        def fmt(x):
+            val, desc, targets = x["val"], x["desc"], x["targets"]
+            return f'{val:+d} for {desc}'
+
+        return "   ".join(fmt(x) for x in self.reward_info)
 
     def show(self):
         self.log('show graph')
@@ -119,10 +118,7 @@ class GraphTrial(object):
         for i, (x, y) in enumerate(self.layout):
             pos = 0.7 * np.array([x, y])
             nodes.append(self.gfx.circle(pos, name=f'node{i}', r=.05))
-            if i > 0 and self.images is not None:
-                self.node_images.append(self.gfx.image(pos, self.images[i-1], size=.08, autoDraw=not self.hide_states))
-            else:
-                self.node_images.append(None)
+            self.node_images.append(self.gfx.image(pos, self.images[i], size=.08, autoDraw=not self.hide_states))
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
 
         self.arrows = {}
@@ -133,7 +129,7 @@ class GraphTrial(object):
         self.mask = self.gfx.rect((.1,0), 1.1, 1, color='gray', opacity=0)
         self.gfx.shift(*self.pos)
 
-        if self.description:
+        if self.reward_info:
             self.desc = self.gfx.text(self.description_text(), pos=(0, .45), color="white")
         else:
             self.desc = None
@@ -155,7 +151,11 @@ class GraphTrial(object):
         if len(self.graph[self.current_state]) == 0:
             self.done = True
 
-        if prev is not None and prev != s:  # not initial
+
+        if prev is None:  # initial
+            self.node_images[s].setAutoDraw(False)
+
+        else:  # not initial
             self.nodes[prev].fillColor = 'white'
             txt = visual.TextStim(self.win, reward_string(self.rewards[s]),
                 pos=self.nodes[s].pos + np.array([.06, .06]),
@@ -279,13 +279,19 @@ class GraphTrial(object):
 
     def show_description(self):
         self.log('show description')
-        visual.TextStim(self.win, self.description_text(), pos=(0, .1), color='white', height=.035).draw()
-        xs = np.arange(len(self.targets)) * .1
-        xs -= xs.mean()
-        for x, t in zip(xs, self.targets):
-            self.gfx.image((x, 0), self.images[t], size=.08, autoDraw=False).draw()
+        descs = self.description_text().split("   ")
+        ys = (.05, -.05) if self.hide_states else (.25, -.05)
+        for i, y in enumerate(ys):
+            visual.TextStim(self.win, descs[i], pos=(0, y), color='white', height=.035).draw()
+            if not self.hide_states:
+                targets = self.reward_info[i]["targets"]
+                xs = np.arange(len(targets)) * .1
+                xs -= xs.mean()
+                for x, t in zip(xs, targets):
+                    self.gfx.image((x, y-.1), self.images[t], size=.08, autoDraw=False).draw()
+
         self.win.flip()
-        event.waitKeys(keyList=['space'])
+        event.waitKeys(keyList=[KEY_CONTINUE])
 
     def run(self, one_step=False, skip_planning=False):
         if self.start_mode == 'drift_check':
@@ -296,9 +302,9 @@ class GraphTrial(object):
             self.status = self.eyelink.fake_drift_check(self.pos)
         elif self.start_mode == 'space':
             self.log('begin space')
-            visual.TextStim(self.win, 'press space to start', pos=self.pos, color='white', height=.035).draw()
+            visual.TextStim(self.win, f'press {KEY_CONTINUE.upper()} to start', pos=self.pos, color='white', height=.035).draw()
             self.win.flip()
-            event.waitKeys(keyList=['space'])
+            event.waitKeys(keyList=['space', KEY_CONTINUE])
 
         self.log('initialize', {'status': self.status})
 
@@ -309,7 +315,7 @@ class GraphTrial(object):
         if self.eyelink:
             self.start_recording()
 
-        if self.description:
+        if self.reward_info:
             self.show_description()
 
         self.show()
