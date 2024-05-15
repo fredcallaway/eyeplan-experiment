@@ -69,6 +69,9 @@ def get_next_config_number():
         return np.random.choice(list(possible))
 
 
+def text_box(win, msg, pos, autoDraw=True, wrapWidth=.6, height=.035, alignText='left', **kwargs):
+    return visual.TextStim(win, msg, pos=pos, color='white', autoDraw=autoDraw, wrapWidth=wrapWidth, height=height, alignText=alignText, anchorHoriz='left', **kwargs)
+
 class Experiment(object):
     def __init__(self, config_number, name=None, full_screen=False, score_limit=None, time_limit=30, test_mode=False, **kws):
         if config_number is None:
@@ -106,8 +109,8 @@ class Experiment(object):
         self.eyelink = None
         self.disable_gaze_contingency = False
 
-        self._message = visual.TextBox2(self.win, '', pos=(-.83, 0), color='white', autoDraw=True, size=(0.65, None), letterHeight=.035, anchor='left')
-        self._tip = visual.TextBox2(self.win, '', pos=(-.83, -0.2), color='white', autoDraw=True, size=(0.65, None), letterHeight=.025, anchor='left')
+        self._message = text_box(self.win, '', pos=(-.83, 0), autoDraw=True, height=.035)
+        self._tip = text_box(self.win, '', pos=(-.83, -0.15), autoDraw=True, height=.025)
 
         # self._practice_trials = iter(self.trials['practice'])
         self.practice_i = -1
@@ -258,7 +261,7 @@ class Experiment(object):
         self.trial_data.append(gt.data)
 
     def center_message(self, msg, space=True):
-        visual.TextBox2(self.win, msg, color='white', letterHeight=.035).draw()
+        visual.TextStim(self.win, msg, color='white', wrapWidth=.3, alignText='center', height=.035).draw()
         self.win.flip()
         if space:
             event.waitKeys(keyList=[KEY_CONTINUE])

@@ -8,6 +8,8 @@ import logging
 import numpy as np
 import hashlib
 
+from config import KEY_CONTINUE
+
 from EyeLinkCoreGraphicsPsychoPy import EyeLinkCoreGraphicsPsychoPy
 from psychopy import visual, core, event, monitors, gui
 
@@ -140,8 +142,8 @@ class EyeLink(object):
         self.genv.update_cal_target()
         self.genv.draw_cal_target(x, y)
         self.win.units = 'height'
-        keys = event.waitKeys(keyList=['space', 'escape'])
-        if 'space' in keys:
+        keys = event.waitKeys(keyList=['space', 'escape', KEY_CONTINUE])
+        if 'escape' not in keys:
             return 'ok'
 
         self.win.showMessage('Experimenter, choose:\n(C)ontinue  (A)bort  (R)ecalibrate  (D)isable drift check')
