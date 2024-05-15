@@ -23,6 +23,12 @@ def distance(p1, p2):
     return np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
 
+TRIGGERS = {
+    'show description': 0,
+    'show graph': 1,
+    'start acting': 2,
+    'done': 3,
+}
 
 
 class AbortKeyPressed(Exception): pass
@@ -33,7 +39,7 @@ class GraphTrial(object):
     def __init__(self, win, graph, rewards, start, layout, pos=(0, 0), start_mode=None, max_score=None,
                  images=None, reward_info=None,
                  initial_stage='planning', hide_states=False, hide_rewards_while_acting=True, hide_edges_while_acting=True,
-                 eyelink=None, **kws):
+                 eyelink=None, triggers=None, **kws):
         self.win = win
         self.graph = graph
         self.rewards = list(rewards)
@@ -52,6 +58,7 @@ class GraphTrial(object):
         self.hide_edges_while_acting = hide_edges_while_acting
 
         self.eyelink = eyelink
+        self.triggers = triggers
 
         self.status = 'ok'
         self.show_time = self.done_time = None
@@ -100,6 +107,8 @@ class GraphTrial(object):
             **info
         }
         self.data["events"].append(datum)
+        if self.triggers and event in TRIGGERS:
+            self.triggers.send(TRIGGERS[event])
         if self.eyelink:
             self.eyelink.message(jsonify(datum), log=False)
 

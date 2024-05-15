@@ -19,6 +19,7 @@ import subprocess
 from copy import deepcopy
 from config import VERSION
 
+from triggers import Triggers
 
 DATA_PATH = f'data/exp/{VERSION}'
 CONFIG_PATH = f'config/{VERSION}'
@@ -69,7 +70,7 @@ def get_next_config_number():
 
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False, score_limit=None, time_limit=30, **kws):
+    def __init__(self, config_number, name=None, full_screen=False, score_limit=None, time_limit=30, test_mode=False, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number
@@ -112,6 +113,8 @@ class Experiment(object):
         self.practice_i = -1
         self.trial_data = []
         self.practice_data = []
+
+        self.parameters['triggers'] = self.triggers = Triggers(**({'port': 'dummy'} if test_mode else {}))
 
     def _reset_practice(self):
         self._practice_trials = iter(self.trials['practice'])
@@ -235,6 +238,8 @@ class Experiment(object):
     @stage
     def intro_main(self):
         self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
+        self.message(f"You will have {self.time_limit} minutes to make as many points as you can.", space=True)
+        self.message("Just like before, the clock only runs when the board is on the screen.", space=True)
         self.message(f"Remember, you will earn {self.bonus.describe_scheme()} you make the game.", space=True)
         self.message("Good luck!", space=True)
         # self.message("At the beginning of each round, look at the circle and press space.", space=True)
@@ -272,7 +277,7 @@ class Experiment(object):
             trials = trials[:n]
 
         for (i, trial) in enumerate(trials):
-            logging.info(f"Trial {i+1} of {len(trials)}")
+            logging.info(f"Trial {i+1} of {len(trials)}  {round(seconds_left / 60)} minutes left")
             try:
 
                 if (last_summary_time - seconds_left) > summarize_every:
@@ -303,18 +308,6 @@ class Experiment(object):
                 if gt.status == 'recalibrate':
                     self.eyelink.calibrate()
 
-                elif gt.status == 'abort':
-                    self.win.clearAutoDraw()
-                    self.win.showMessage(
-                       'Abort key was pressed!\n'
-                       'Press A again to stop the experiment early.'
-                       )
-                    self.win.flip()
-                    keys = event.waitKeys()
-                    self.win.showMessage(None)
-                    if 'a' in keys:
-                        break
-
             except Exception as e:
                 if isinstance(e, AbortKeyPressed):
                     logging.warning("Abort key pressed")
@@ -324,14 +317,16 @@ class Experiment(object):
                     msg = 'The experiment ran into a problem! Please tell the experimenter.'
 
                 self.win.clearAutoDraw()
-                self.win.showMessage(msg + '\n' + 'Press C to continue or Q to terminate the experiment and save data')
+                self.win.showMessage(msg + '\n' + 'Press C to continue, R to recalibrate, or Q to terminate the experiment and save data')
                 self.win.flip()
-                keys = event.waitKeys(keyList=['c', 'q'])
+                keys = event.waitKeys(keyList=['c', 'r', 'q'])
                 self.win.showMessage(None)
                 if 'c' in keys:
                     continue
+                elif 'r' in keys:
+                    self.eyelink.calibrate()
                 else:
-                    return
+                    raise
 
     @property
     def all_data(self):

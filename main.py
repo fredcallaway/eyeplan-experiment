@@ -7,7 +7,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         name = 'test'
     if fast:
         kws['score_limit'] = 10
-    exp = Experiment(config_number, name, full_screen=(not test) or full, **kws)
+    exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=bool(test), **kws)
     if test == "main":
         exp.run_main()
     elif test == "practice":
