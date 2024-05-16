@@ -139,7 +139,7 @@ class GraphTrial(object):
             for j in js:
                 self.arrows[(i, j)] = self.gfx.arrow(nodes[i], nodes[j])
 
-        self.mask = self.gfx.rect((.1,0), 1.1, 1, backgroundColor='gray', opacity=0)
+        self.mask = self.gfx.rect((.1,0), 1.1, 1, fillColor='gray', opacity=0)
         self.gfx.shift(*self.pos)
 
         if self.reward_info:
