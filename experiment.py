@@ -209,6 +209,7 @@ class Experiment(object):
 
     @stage
     def welcome(self):
+        self.triggers.send(4)
         self.message(
             "Welcome back! Before we start, we need to tell you about the buttons. "
             f"{LABEL_CONTINUE} is the blue one, ideally pressed with your index finger. "
