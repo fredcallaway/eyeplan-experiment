@@ -122,7 +122,7 @@ class GraphTrial(object):
     def show(self):
         self.show_time = core.getTime()
         self.log('show graph')
-        self.gfx.rect((-.6, .45), .1, .1, fillColor='white')
+        self.gfx.rect((-.65, .45), .1, .1, fillColor='white')
         if hasattr(self, 'nodes'):
             self.gfx.show()
             return
