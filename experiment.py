@@ -107,7 +107,7 @@ class Experiment(object):
             self.parameters['gaze_tolerance'] = 1.5
 
         self.win = self.setup_window()
-        self.win_heldDraw = []  # see hackfix
+        self.win._heldDraw = []  # see hackfix
         self.bonus = Bonus(1, 0)
         self.total_score = 0
         # self.bonus = Bonus(self.parameters['points_per_cent'], 50)
