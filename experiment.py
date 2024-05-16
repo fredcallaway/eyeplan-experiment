@@ -298,7 +298,7 @@ class Experiment(object):
     def run_main(self, n=None):
         seconds_left = self.time_limit * 60
         last_summary_time = seconds_left
-        summarize_every = self.parameters.get('summarize_every', 60 * 3)
+        summarize_every = self.parameters.get('summarize_every', 60 * 5)
 
         trials = self.trials['main']
         if n is not None:
@@ -310,10 +310,13 @@ class Experiment(object):
 
                 if (last_summary_time - seconds_left) > summarize_every:
                     last_summary_time = seconds_left
-                    msg = f"{self.bonus.report_bonus()}\nYou have about {round(seconds_left / 60)} minutes left.\nPress any key to continue."
+                    msg = f"{self.bonus.report_bonus()}\nYou have about {round(seconds_left / 60)} minutes left.\n" +\
+                        "Take a short break. Then let the experimenter know when you're ready to continue."
+
                     logging.info('summary message: %s', msg)
                     self.center_message(msg, space=False)
-                    event.waitKeys()
+                    event.waitKeys(['space', 'c'])
+                    self.eyelink.calibrate()
 
 
                 prm = {**self.parameters, **trial}
