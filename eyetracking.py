@@ -54,7 +54,7 @@ def configure_data(tracker):
 
 def pix2height(win, pos):
     assert win.units == 'height'
-    w, h = win.size / 2  # eyetracker uses non-retina pixels
+    w, h = win.size
     x, y = pos
 
     y *= -1  # invert y axis
@@ -66,7 +66,7 @@ def pix2height(win, pos):
 
 def height2pix(win, pos):
     assert win.units == 'height'
-    w, h = win.size / 2  # eyetracker uses non-retina pixels
+    w, h = win.size
     x, y = pos
 
 
@@ -179,13 +179,13 @@ class EyeLink(object):
     def setup_calibration(self, full_screen=False):
         # Open a window, be sure to specify monitor parameters
         self.message(f'Set up calibration')
-        scn_width, scn_height = np.round(self.win.size / 2)  # / 2 for retina
+        scn_width, scn_height = np.round(self.win.size)
         # pygame.mouse.set_visible(True)  # show mouse cursor
 
         # Pass the display pixel coordinates (left, top, right, bottom) to the tracker
         # see the EyeLink Installation Guide, "Customizing Screen Settings"
 
-        scale = 0.85
+        scale = 0.9
         h_trim = int(((1 - scale) * scn_height) / 2)
         w_trim = int((scn_width - scale * scn_height) / 2)
 

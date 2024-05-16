@@ -190,10 +190,10 @@ class EyeLinkCoreGraphicsPsychoPy(pylink.EyeLinkCustomDisplay):
         """ Fix macOS retina display issue """
 
         # Resolution fix for Mac retina displays
-        if 'Darwin' in platform.system():
-            self._w = int(self._w/ 2.0)
-            self._h = int(self._h / 2.0)
-            self._calibInst.pos =  (20 - self._w/2, self._h/2 - 20)
+        # if 'Darwin' in platform.system():
+        #     self._w = int(self._w/ 2.0)
+        #     self._h = int(self._h / 2.0)
+        #     self._calibInst.pos =  (20 - self._w/2, self._h/2 - 20)
 
     def getForegroundColor(self):
         """ Get the foreground color """
