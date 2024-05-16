@@ -79,7 +79,7 @@ class Graphics(object):
 
     @shape
     def line(self, start, end, lineColor='black', lineWidth=10, **kws):
-        return visual.line.Line(self.win, start=start, end=end, lineColor=lineColor, lineWidth=lineWidth, **kws)
+        return visual.Line(self.win, start=start, end=end, lineColor=lineColor, lineWidth=lineWidth, **kws)
 
     @shape
     def text(self, text, pos=(0,0), height=.03, color='black', **kws):
