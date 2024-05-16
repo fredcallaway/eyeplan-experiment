@@ -143,10 +143,11 @@ class GraphTrial(object):
         self.mask = self.gfx.rect((.1,0), 1.1, 1, fillColor='gray', opacity=0)
         self.gfx.shift(*self.pos)
 
-        if self.reward_info:
-            self.desc = self.gfx.text(self.description_text(), pos=(0.45, .45), color="white", anchorHoriz='right')
-        else:
-            self.desc = None
+        # self.desc = None
+        # if self.reward_info:
+            # self.desc = self.gfx.text(self.description_text(), pos=(0.45, .45), color="white", anchorHoriz='right')
+        # else:
+            # self.desc = None
 
     def hide(self):
         self.gfx.clear()
