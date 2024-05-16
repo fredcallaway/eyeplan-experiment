@@ -77,7 +77,7 @@ def text_box(win, msg, pos, autoDraw=True, wrapWidth=.8, height=.035, alignText=
     import IPython, time; IPython.embed(); time.sleep(0.5)
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False, score_limit=None, time_limit=30, test_mode=False, **kws):
+    def __init__(self, config_number, name=None, full_screen=False, score_limit=None, block_duration=5, n_practice=10, time_limit=30, test_mode=False, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number
@@ -85,6 +85,8 @@ class Experiment(object):
         self.full_screen = full_screen
         self.score_limit = score_limit
         self.time_limit = time_limit
+        self.block_duration = block_duration
+        self.n_practice = 10
 
         timestamp = datetime.now().strftime('%y-%m-%d-%H%M')
         self.id = f'{timestamp}_P{config_number}'
@@ -255,7 +257,7 @@ class Experiment(object):
     def practice(self):
         self.message("Before we begin the main phase, we'll do a few practice rounds with all the images visible.", space=True)
         self.hide_message()
-        trials = [self.get_practice_trial() for i in range(10)]
+        trials = [self.get_practice_trial() for i in range(self.n_practice)]
         i = 0
         while i < len(trials):
             try:
@@ -298,7 +300,6 @@ class Experiment(object):
     def run_main(self, n=None):
         seconds_left = self.time_limit * 60
         last_summary_time = seconds_left
-        summarize_every = self.parameters.get('summarize_every', 60 * 5)
 
         trials = self.trials['main']
         if n is not None:
@@ -308,7 +309,7 @@ class Experiment(object):
             logging.info(f"Trial {i+1} of {len(trials)}  {round(seconds_left / 60)} minutes left")
             try:
 
-                if (last_summary_time - seconds_left) > summarize_every:
+                if (last_summary_time - seconds_left) > self.block_duration*60:
                     last_summary_time = seconds_left
                     msg = f"{self.bonus.report_bonus()}\nYou have about {round(seconds_left / 60)} minutes left.\n" +\
                         "Take a short break. Then let the experimenter know when you're ready to continue."

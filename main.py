@@ -6,7 +6,9 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
     if test and name is None:
         name = 'test'
     if fast:
-        kws['score_limit'] = 10
+        kws['time_limit'] = 3
+        kws['block_duration'] = 2
+        kws['n_practice'] = 2
     exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=bool(test), **kws)
     if test == "main":
         exp.run_main()
