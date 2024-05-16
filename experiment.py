@@ -20,7 +20,7 @@ from copy import deepcopy
 from config import VERSION
 
 from triggers import Triggers
-from hackfix import add_missing_methods
+import hackfix
 
 DATA_PATH = f'data/exp/{VERSION}'
 CONFIG_PATH = f'config/{VERSION}'
@@ -171,7 +171,6 @@ class Experiment(object):
     def setup_window(self):
         size = (1350,750) if self.full_screen else (900,500)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
-        add_missing_methods(win)
         # framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
         # assert abs(framerate - 60) < 2
         win.flip()

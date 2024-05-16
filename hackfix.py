@@ -1,4 +1,4 @@
-from psychopy import core, visual, gui, data, event
+from psychopy import visual
 
 def clearAutoDraw(self):
     """
@@ -39,8 +39,8 @@ def showMessage(self, msg):
         return
     visual.TextStim(self, msg, color='white', alignText='center', height=.05).draw()
 
-def add_missing_methods(win):
-    win.clearAutoDraw = clearAutoDraw
-    win.stashAutoDraw = stashAutoDraw
-    win.retrieveAutoDraw = retrieveAutoDraw
-    win.showMessage = showMessage
+
+visual.Window.clearAutoDraw = clearAutoDraw
+visual.Window.stashAutoDraw = stashAutoDraw
+visual.Window.retrieveAutoDraw = retrieveAutoDraw
+visual.Window.showMessage = showMessage
