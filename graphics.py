@@ -74,11 +74,11 @@ class Graphics(object):
 
 
     @shape
-    def circle(self, pos, r=.05, lineColor='black', fillColor='white', lineWidth=2, **kws):
+    def circle(self, pos, r=.05, lineColor='black', fillColor='white', lineWidth=4, **kws):
         return visual.Circle(self.win, radius=r, pos=pos, fillColor=fillColor, lineColor=lineColor, lineWidth=lineWidth, **kws)
 
     @shape
-    def line(self, start, end, lineColor='black', lineWidth=2, **kws):
+    def line(self, start, end, lineColor='black', lineWidth=4, **kws):
         return visual.Line(self.win, start=start, end=end, lineColor=lineColor, lineWidth=lineWidth, **kws)
 
     @shape
@@ -88,7 +88,7 @@ class Graphics(object):
     @shape
     def arrow(self, c0, c1):
         line = self.line(c0.pos, c1.pos, depth=2, sub_shape=True)
-        vertices = .04 * np.array([[-1, -2], [1, -2], [0, 0]])
+        vertices = .015 * np.array([[-1, -2], [1, -2], [0, 0]])
         point = visual.ShapeStim(self.win, vertices=vertices, fillColor='black', lineColor='black',
                          pos=move_towards(c1.pos, c0.pos, c1.radius),
                          ori=90-angle(c0.pos, c1.pos))
