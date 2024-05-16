@@ -175,6 +175,7 @@ class Experiment(object):
     def setup_window(self):
         size = (1350,750) if self.full_screen else (700,500)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
+        logging.info(f'Created window with size {self.win.size}')
         # framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
         # assert abs(framerate - 60) < 2
         win.flip()
