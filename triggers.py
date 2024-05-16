@@ -15,13 +15,15 @@ class Triggers(object):
 
         # 'Port (only serial port needs port name pre-define)'
         if port is None or port == 'dummy':
+            logging.info('Using dummy triggers')
             self.port = 'dummy'
             return
         try:
             self.ser.port = port  # set the port
             self.ser.open()
+            logging.info('Triggers connected to port %s', port)
         except:
-            logging.exception('Failed to open port: %s', self.ser.port)
+            logging.exception('Failed to open port: %s', port)
             raise
 
     def send(self, code, duration = 0.01):
