@@ -9,7 +9,7 @@ from psychopy.tools.filetools import fromFile, toFile
 import numpy as np
 
 from util import jsonify
-from config import KEY_CONTINUE
+from config import KEY_CONTINUE, KEY_SWITCH, LABEL_CONTINUE, LABEL_SWITCH
 from trial import GraphTrial, AbortKeyPressed
 from graphics import Graphics
 from bonus import Bonus
@@ -70,7 +70,7 @@ def get_next_config_number():
         return np.random.choice(list(possible))
 
 
-def text_box(win, msg, pos, autoDraw=True, wrapWidth=.6, height=.035, alignText='left', **kwargs):
+def text_box(win, msg, pos, autoDraw=True, wrapWidth=.8, height=.035, alignText='left', **kwargs):
     stim = visual.TextStim(win, msg, pos=pos, color='white', wrapWidth=wrapWidth, height=height, alignText=alignText, anchorHoriz='left', **kwargs)
     stim.autoDraw = autoDraw
     return stim
@@ -107,15 +107,15 @@ class Experiment(object):
             self.parameters['gaze_tolerance'] = 1.5
 
         self.win = self.setup_window()
+        self.eyelink = MouseLink(self.win, self.id)  # use mouse by default
         self.win._heldDraw = []  # see hackfix
         self.bonus = Bonus(1, 0)
         self.total_score = 0
         # self.bonus = Bonus(self.parameters['points_per_cent'], 50)
-        self.eyelink = None
         self.disable_gaze_contingency = False
 
-        self._message = text_box(self.win, '', pos=(0, 0.3), autoDraw=True, height=.035)
-        self._tip = text_box(self.win, '', pos=(0, .15), autoDraw=True, height=.025)
+        self._message = text_box(self.win, '', pos=(-0.4, 0.1), autoDraw=True, height=.035)
+        self._tip = text_box(self.win, '', pos=(-0.4, -0.05), autoDraw=True, height=.025)
 
         # self._practice_trials = iter(self.trials['practice'])
         self.practice_i = -1
@@ -170,7 +170,7 @@ class Experiment(object):
 
 
     def setup_window(self):
-        size = (1350,750) if self.full_screen else (900,500)
+        size = (1350,750) if self.full_screen else (700,500)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
         # framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
         # assert abs(framerate - 60) < 2
@@ -198,18 +198,33 @@ class Experiment(object):
         logging.debug('message: %s (%s)', msg, tip_text)
         self.show_message()
         self._message.setText(msg)
-        self._tip.setText(tip_text if tip_text else 'press space to continue' if space else '')
+        self._tip.setText(tip_text if tip_text else f'press {LABEL_CONTINUE} to continue' if space else '')
         self.win.flip()
         if space:
             event.waitKeys(keyList=[KEY_CONTINUE])
 
     @stage
+    def welcome(self):
+        self.message(
+            "Welcome back! Before we start, we need to tell you about the buttons. "
+            f"{LABEL_CONTINUE} is the blue one, ideally pressed with your index finger. "
+            f"It's like T from the online version.",
+            space=True
+        )
+        self.message(
+            f"{LABEL_SWITCH} is the yellow one, ideally pressed with your middle finger. "
+            f"It's like S from the online version.",
+            tip_text = f'press {LABEL_SWITCH} to continue', space=False)
+        event.waitKeys(keyList=[KEY_SWITCH])
+
+
+    @stage
     def setup_eyetracker(self, mouse=False):
         self.message("We're going to calibrate the eyetracker. Please tell the experimenter.",
-            tip_text="Wait for the experimenter (space)", space=True)
+            tip_text=f"Wait for the experimenter ({LABEL_CONTINUE})", space=True)
         self.hide_message()
         if mouse:
-            self.eyelink = MouseLink(self.win, self.id)
+            pass
         else:
             self.eyelink = EyeLink(self.win, self.id)
         self.eyelink.setup_calibration()
@@ -218,7 +233,7 @@ class Experiment(object):
     @stage
     def show_gaze_demo(self):
         self.message("Check it out! This is where the eyetracker thinks you're looking.",
-                     tip_text='press space to continue')
+                     tip_text=f'press {LABEL_CONTINUE} to continue')
 
         self.eyelink.start_recording()
         while KEY_CONTINUE not in event.getKeys():
@@ -229,8 +244,8 @@ class Experiment(object):
     @stage
     def intro_gaze(self):
         self.message("At the beginning of each round, a circle will appear. "
-                     "Look straight at it and press space to start the round.",
-                     tip_text="look at the circle and press space", space=False)
+                     f"Look straight at it and press {LABEL_CONTINUE} to start the round.",
+                     tip_text=f"look at the circle and press {LABEL_CONTINUE}", space=False)
 
         self.eyelink.drift_check()
         self.message("Yup just like that. Make sure you hold your gaze steady on the circle before pressing space.", space=True)
@@ -238,12 +253,13 @@ class Experiment(object):
     @stage
     def practice(self):
         self.message("Before we begin the main phase, we'll do a few practice rounds with all the images visible.", space=True)
-        self.message("")
+        self.hide_message()
         trials = [self.get_practice_trial() for i in range(10)]
         i = 0
         while i < len(trials):
-            trials[i].run()
-            i += 1
+            try:
+                trials[i].run()
+                i += 1
             except AbortKeyPressed:
                 pass
 

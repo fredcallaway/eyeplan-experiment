@@ -11,3 +11,7 @@ KEY_SWITCH = '2'
 KEY_SELECT = '1'
 KEY_ABORT = 'a'
 
+LABEL_CONTINUE = 'Button 1'
+LABEL_SWITCH = 'Button 2'
+
+

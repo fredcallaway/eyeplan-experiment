@@ -143,7 +143,7 @@ class GraphTrial(object):
         self.gfx.shift(*self.pos)
 
         if self.reward_info:
-            self.desc = self.gfx.text(self.description_text(), pos=(0, .45), color="white")
+            self.desc = self.gfx.text(self.description_text(), pos=(0.45, .45), color="white", anchorHoriz='right')
         else:
             self.desc = None
 
@@ -307,17 +307,17 @@ class GraphTrial(object):
         self.wait_keys([KEY_CONTINUE])
 
     def run(self, one_step=False, skip_planning=False):
-        if self.start_mode == 'drift_check':
-            self.log('begin drift_check')
-            self.status = self.eyelink.drift_check(self.pos)
-        elif self.start_mode == 'fixation':
-            self.log('begin fixation')
-            self.status = self.eyelink.fake_drift_check(self.pos)
-        elif self.start_mode == 'space':
-            self.log('begin space')
-            visual.TextStim(self.win, f'press {KEY_CONTINUE.upper()} to start', pos=self.pos, color='white', height=.035).draw()
-            self.win.flip()
-            self.wait_keys(['space', KEY_CONTINUE])
+            # if self.start_mode == 'drift_check':
+            #     self.log('begin drift_check')
+            #     self.status = self.eyelink.drift_check(self.pos)
+            # elif self.start_mode == 'fixation':
+            #     self.log('begin fixation')
+            #     self.status = self.eyelink.fake_drift_check(self.pos)
+            # elif self.start_mode == 'space':
+            #     self.log('begin space')
+            #     visual.TextStim(self.win, f'press {KEY_CONTINUE.upper()} to start', pos=self.pos, color='white', height=.035).draw()
+            #     self.win.flip()
+            #     self.wait_keys(['space', KEY_CONTINUE])
 
         self.log('initialize', {'status': self.status})
 
@@ -331,6 +331,7 @@ class GraphTrial(object):
         if self.reward_info:
             self.show_description()
 
+        self.eyelink.fake_drift_check(self.pos)
         self.show()
 
         if self.current_state is None:

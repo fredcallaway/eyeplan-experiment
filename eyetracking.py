@@ -208,6 +208,7 @@ class EyeLink(object):
 
     def calibrate(self):
         self.win.mouseVisible = False
+        self.win.clearAutoDraw()
         self.genv.setup_cal_display()
         self.win.flip()
         logging.info('doTrackerSetup')
