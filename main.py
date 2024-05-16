@@ -11,6 +11,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         kws['n_practice'] = 2
     exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=bool(test), **kws)
     if test == "main":
+        exp.setup_eyetracker(mouse)
         exp.run_main()
     elif test == "practice":
         exp.practice()

@@ -89,7 +89,7 @@ class EyeLink(object):
         self.dummy_mode = dummy_mode
         self.uniqueid = uniqueid
         self.edf_file = ensure_edf_filename(uniqueid)
-        self.disable_drift_checks = False
+        self.disable_drift_checks = True
 
         if pylink.getEYELINK():
             logging.info('Using existing tracker')
