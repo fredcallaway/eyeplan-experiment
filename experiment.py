@@ -296,7 +296,7 @@ class Experiment(object):
         self.trial_data.append(gt.data)
 
     def center_message(self, msg, space=True):
-        visual.TextStim(self.win, msg, color='white', wrapWidth=.3, alignText='center', height=.035).draw()
+        visual.TextStim(self.win, msg, color='white', wrapWidth=.8, alignText='center', height=.035).draw()
         self.win.flip()
         if space:
             event.waitKeys(keyList=[KEY_CONTINUE])
@@ -313,7 +313,7 @@ class Experiment(object):
         for (i, trial) in enumerate(trials):
             logging.info(f"Trial {i+1} of {len(trials)}  {round(seconds_left / 60)} minutes left")
             try:
-
+                print('FOOBAR   ', last_summary_time - seconds_left, self.block_duration*60)
                 if (last_summary_time - seconds_left) > self.block_duration*60:
                     last_summary_time = seconds_left
                     msg = f"{self.bonus.report_bonus()}\nYou have about {round(seconds_left / 60)} minutes left.\n" +\
@@ -321,7 +321,7 @@ class Experiment(object):
 
                     logging.info('summary message: %s', msg)
                     self.center_message(msg, space=False)
-                    event.waitKeys(['space', 'c'])
+                    event.waitKeys(keyList=['space', 'c'])
                     self.eyelink.calibrate()
 
 
