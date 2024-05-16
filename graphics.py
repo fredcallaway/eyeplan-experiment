@@ -89,7 +89,7 @@ class Graphics(object):
     def arrow(self, c0, c1):
         line = self.line(c0.pos, c1.pos, depth=2, sub_shape=True)
         vertices = .04 * np.array([[-1, -2], [1, -2], [0, 0]])
-        point = visual.ShapeStim(self.win, vertices=vertices, fillColor='black', lineColor='black'
+        point = visual.ShapeStim(self.win, vertices=vertices, fillColor='black', lineColor='black',
                          pos=move_towards(c1.pos, c0.pos, c1.radius),
                          ori=90-angle(c0.pos, c1.pos))
         return MultiShape(line, point)
