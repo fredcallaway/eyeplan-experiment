@@ -113,8 +113,8 @@ class Experiment(object):
         self.eyelink = None
         self.disable_gaze_contingency = False
 
-        self._message = text_box(self.win, '', pos=(-.83, 0), autoDraw=True, height=.035)
-        self._tip = text_box(self.win, '', pos=(-.83, -0.15), autoDraw=True, height=.025)
+        self._message = text_box(self.win, '', pos=(0, 0.3), autoDraw=True, height=.035)
+        self._tip = text_box(self.win, '', pos=(0, .15), autoDraw=True, height=.025)
 
         # self._practice_trials = iter(self.trials['practice'])
         self.practice_i = -1
