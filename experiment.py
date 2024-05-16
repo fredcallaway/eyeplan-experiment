@@ -20,6 +20,7 @@ from copy import deepcopy
 from config import VERSION
 
 from triggers import Triggers
+from hackfix import add_missing_methods
 
 DATA_PATH = f'data/exp/{VERSION}'
 CONFIG_PATH = f'config/{VERSION}'
@@ -70,7 +71,10 @@ def get_next_config_number():
 
 
 def text_box(win, msg, pos, autoDraw=True, wrapWidth=.6, height=.035, alignText='left', **kwargs):
-    return visual.TextStim(win, msg, pos=pos, color='white', autoDraw=autoDraw, wrapWidth=wrapWidth, height=height, alignText=alignText, anchorHoriz='left', **kwargs)
+    stim = visual.TextStim(win, msg, pos=pos, color='white', wrapWidth=wrapWidth, height=height, alignText=alignText, anchorHoriz='left', **kwargs)
+    stim.autoDraw = autoDraw
+    return stim
+    import IPython, time; IPython.embed(); time.sleep(0.5)
 
 class Experiment(object):
     def __init__(self, config_number, name=None, full_screen=False, score_limit=None, time_limit=30, test_mode=False, **kws):
@@ -167,6 +171,7 @@ class Experiment(object):
     def setup_window(self):
         size = (1350,750) if self.full_screen else (900,500)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
+        add_missing_methods(win)
         # framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
         # assert abs(framerate - 60) < 2
         win.flip()
