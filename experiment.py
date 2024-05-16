@@ -86,7 +86,7 @@ class Experiment(object):
         self.score_limit = score_limit
         self.time_limit = time_limit
         self.block_duration = block_duration
-        self.n_practice = 10
+        self.n_practice = n_practice
 
         timestamp = datetime.now().strftime('%y-%m-%d-%H%M')
         self.id = f'{timestamp}_P{config_number}'
@@ -263,10 +263,13 @@ class Experiment(object):
         i = 0
         while i < len(trials):
             try:
-                trials[i].run()
+                t = trials[i]
+                t.run()
                 i += 1
             except AbortKeyPressed:
-                pass
+                t.gfx.clear()
+                self.win.clearAutoDraw()
+                self.win.flip()
 
 
 

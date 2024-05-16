@@ -7,7 +7,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         name = 'test'
     if fast:
         kws['time_limit'] = 3
-        kws['block_duration'] = 2
+        kws['block_duration'] = .1
         kws['n_practice'] = 2
     exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=bool(test), **kws)
     if test == "main":
