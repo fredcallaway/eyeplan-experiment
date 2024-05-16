@@ -239,9 +239,15 @@ class Experiment(object):
     def practice(self):
         self.message("Before we begin the main phase, we'll do a few practice rounds with all the images visible.", space=True)
         self.message("")
-        for i in range(5):
-            gt = self.get_practice_trial()
-            gt.run()
+        trials = [self.get_practice_trial() for i in range(10)]
+        i = 0
+        while i < len(trials):
+            trials[i].run()
+            i += 1
+            except AbortKeyPressed:
+                pass
+
+
 
     @stage
     def intro_main(self):
@@ -274,11 +280,8 @@ class Experiment(object):
     @stage
     def run_main(self, n=None):
         seconds_left = self.time_limit * 60
-
         last_summary_time = seconds_left
-
         summarize_every = self.parameters.get('summarize_every', 60 * 3)
-        summarize_every = 10
 
         trials = self.trials['main']
         if n is not None:
