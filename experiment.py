@@ -131,6 +131,7 @@ class Experiment(object):
         if not repeat:
             self.practice_i += 1
         prm = {
+            'eyelink': self.eyelink,
             **self.parameters,
             # 'gaze_contingent': False,
             # 'time_limit': None,
