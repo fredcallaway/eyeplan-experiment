@@ -47,7 +47,7 @@ def configure_data(tracker):
     tracker.sendCommand("file_sample_data = %s" % file_sample_flags)
     tracker.sendCommand("link_event_filter = %s" % link_event_flags)
     tracker.sendCommand("link_sample_data = %s" % link_sample_flags)
-    tracker.sendCommand("button_function 5 'accept_target_fixation'");
+    tracker.sendCommand("button_function 1 'accept_target_fixation'");
 
     tracker.sendCommand("calibration_type = HV9")
     tracker.sendCommand("enable_automatic_calibration = NO")
