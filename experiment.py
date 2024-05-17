@@ -42,12 +42,15 @@ def stage(f):
                 logging.warning('Continuing to save data...')
             else:
                 self.win.clearAutoDraw()
-                self.win.showMessage('The experiment ran into a problem! Please tell the experimenter.\nThen press C to continue.')
+                self.win.showMessage('The experiment ran into a problem! Press C to continue or Q to quit and save data')
                 self.win.flip()
-                event.waitKeys(keyList=['c'])
+                keys = event.waitKeys(keyList=['c', 'q'])
                 self.win.showMessage(None)
-                logging.warning(f'Retrying {stage}')
-                wrapper(self, *args, **kwargs)
+                if 'c' in keys:
+                    logging.warning(f'Retrying {stage}')
+                    wrapper(self, *args, **kwargs)
+                else:
+                    raise
         finally:
             self.win.clearAutoDraw()
             self.win.flip()
