@@ -2,7 +2,7 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-def main(config_number=None, name=None, test=False, fast=False, full=False, mouse=False, hotfix=False, **kws):
+def main(config_number=None, name=None, test=False, fast=False, full=False, mouse=False, hotfix=False, skip_instruct=False, **kws):
     if test and name is None:
         name = 'test'
     if fast:
@@ -23,12 +23,13 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         exp.run_main()
     else:
         try:
-            exp.welcome()
-            exp.setup_eyetracker(mouse)
-            exp.show_gaze_demo()
-            exp.intro_gaze()
-            exp.practice()
-            exp.intro_main()
+            if not skip_instruct:
+                exp.welcome()
+                exp.setup_eyetracker(mouse)
+                exp.show_gaze_demo()
+                exp.intro_gaze()
+                exp.practice()
+                exp.intro_main()
             exp.run_main()
             exp.save_data()
         except:
