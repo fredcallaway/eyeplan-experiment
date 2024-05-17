@@ -264,8 +264,7 @@ class Experiment(object):
         while i < self.n_practice:
             try:
                 logging.info('practice %s', i)
-                t = trials[i]
-                t.run()
+                gt.run()
                 i += 1
                 gt = self.get_practice_trial()
             except AbortKeyPressed:
@@ -283,7 +282,7 @@ class Experiment(object):
                     self.eyelink.calibrate()
                 else:
                     raise
-                t.gfx.clear()
+                gt.gfx.clear()
                 self.win.clearAutoDraw()
                 self.win.flip()
 
