@@ -80,14 +80,14 @@ def text_box(win, msg, pos, autoDraw=True, wrapWidth=.8, height=.035, alignText=
     import IPython, time; IPython.embed(); time.sleep(0.5)
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False, score_limit=None, block_duration=5, n_practice=10, time_limit=30, test_mode=False, **kws):
+    def __init__(self, config_number, name=None, full_screen=False, score_limit=None, n_block=3, block_duration=10, n_practice=10, test_mode=False, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number
         print('>>>', self.config_number)
         self.full_screen = full_screen
         self.score_limit = score_limit
-        self.time_limit = time_limit
+        self.n_block = n_block
         self.block_duration = block_duration
         self.n_practice = n_practice
 
@@ -123,14 +123,11 @@ class Experiment(object):
         self._tip = text_box(self.win, '', pos=(-0.4, -0.05), autoDraw=True, height=.025)
 
         # self._practice_trials = iter(self.trials['practice'])
+        self.main_trials = iter(self.trials['main'])
         self.practice_i = -1
         self.trial_data = []
         self.practice_data = []
-
         self.parameters['triggers'] = self.triggers = Triggers(**({'port': 'dummy'} if test_mode else {}))
-
-    def _reset_practice(self):
-        self._practice_trials = iter(self.trials['practice'])
 
     def get_practice_trial(self, repeat=False,**kws):
         if not repeat:
@@ -216,12 +213,12 @@ class Experiment(object):
         self.message(
             "Welcome back! Before we start, we need to tell you about the buttons. "
             f"{LABEL_CONTINUE} is the blue one, ideally pressed with your index finger. "
-            f"It's like T from the online version.",
+            f"It's like J from the online version.",
             space=True
         )
         self.message(
             f"{LABEL_SWITCH} is the yellow one, ideally pressed with your middle finger. "
-            f"It's like S from the online version.",
+            f"It's like K from the online version.",
             tip_text = f'press {LABEL_SWITCH} to continue', space=False)
         event.waitKeys(keyList=[KEY_SWITCH])
 
@@ -294,8 +291,7 @@ class Experiment(object):
     @stage
     def intro_main(self):
         self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
-        self.message(f"You will have {self.time_limit} minutes to make as many points as you can.", space=True)
-        self.message("Just like before, the clock only runs when the board is on the screen.", space=True)
+        self.message(f"There will be {self.n_block} blocks of {self.block_duration} minutes each.", space=True)
         self.message(f"Remember, you will earn {self.bonus.describe_scheme()} you make the game.", space=True)
         self.message("Good luck!", space=True)
         # self.message("At the beginning of each round, look at the circle and press space.", space=True)
@@ -319,69 +315,57 @@ class Experiment(object):
         if space:
             event.waitKeys(keyList=[KEY_CONTINUE])
 
+    def run_trial(self):
+        trial = next(self.main_trials)
+        prm = {**self.parameters, **trial}
+        gt = GraphTrial(self.win, **prm, hide_states=True, eyelink=self.eyelink)
+        gt.run()
+        psychopy.logging.flush()
+        self.trial_data.append(gt.data)
+
+        logging.info('gt.status is %s', gt.status)
+        self.bonus.add_points(gt.score)
+        self.total_score += int(gt.score)
+
+        if gt.status == 'recalibrate':
+            self.eyelink.calibrate()
+
     @stage
-    def run_main(self, n=None):
-        seconds_left = self.time_limit * 60
-        last_summary_time = seconds_left
+    def main(self):
+        for i in range(self.n_block):
+            end_time = core.getTime() + 60 * self.block_duration
+            while core.getTime() < end_time:
+                try:
+                    self.run_trial()
 
-        trials = self.trials['main']
-        if n is not None:
-            trials = trials[:n]
+                except Exception as e:
 
-        for (i, trial) in enumerate(trials):
-            logging.info(f"Trial {i+1} of {len(trials)}  {round(seconds_left / 60)} minutes left")
-            try:
-                print('FOOBAR   ', last_summary_time - seconds_left, self.block_duration*60)
-                if (last_summary_time - seconds_left) > self.block_duration*60:
-                    last_summary_time = seconds_left
-                    msg = f"{self.bonus.report_bonus()}\nYou have about {round(seconds_left / 60)} minutes left.\n" +\
-                        "Take a short break. Then let the experimenter know when you're ready to continue."
+                    if isinstance(e, AbortKeyPressed):
+                        logging.warning("Abort key pressed")
+                        msg = 'Abort key pressed!'
+                    else:
+                        logging.exception(f"Caught exception in main")
+                        msg = 'The experiment ran into a problem! Please tell the experimenter.'
 
-                    logging.info('summary message: %s', msg)
-                    self.center_message(msg, space=False)
-                    event.waitKeys(keyList=['space', 'c'])
-                    self.eyelink.calibrate()
+                    self.win.clearAutoDraw()
+                    self.win.showMessage(msg + '\n' + 'Press C to continue, R to recalibrate, or Q to terminate the experiment and save data')
+                    self.win.flip()
+                    keys = event.waitKeys(keyList=['c', 'r', 'q'])
+                    self.win.showMessage(None)
+                    if 'c' in keys:
+                        continue
+                    elif 'r' in keys:
+                        self.eyelink.calibrate()
+                    else:
+                        raise
 
+            # end while
+            # block summary
+            self.center_message(f"You've completed block {i + 1} of {self.n_block}.\n{self.bonus.report_bonus()}.\n\n"
+                "Take a short break. Then let the experimenter know when you're ready to continue.", space=False)
+            event.waitKeys(keyList=['space', 'c'])
+            self.eyelink.calibrate()
 
-                prm = {**self.parameters, **trial}
-                if self.disable_gaze_contingency:
-                    prm['gaze_contingent'] = False
-                    prm['start_mode'] = 'fixation'
-
-                gt = GraphTrial(self.win, **prm, hide_states=True, eyelink=self.eyelink)
-                gt.run()
-                seconds_left -= (gt.done_time - gt.show_time)
-                logging.info("seconds left: %s", seconds_left)
-
-                psychopy.logging.flush()
-                self.trial_data.append(gt.data)
-
-                logging.info('gt.status is %s', gt.status)
-                self.bonus.add_points(gt.score)
-                self.total_score += int(gt.score)
-
-                if gt.status == 'recalibrate':
-                    self.eyelink.calibrate()
-
-            except Exception as e:
-                if isinstance(e, AbortKeyPressed):
-                    logging.warning("Abort key pressed")
-                    msg = 'Abort key pressed!'
-                else:
-                    logging.exception(f"Caught exception in run_main")
-                    msg = 'The experiment ran into a problem! Please tell the experimenter.'
-
-                self.win.clearAutoDraw()
-                self.win.showMessage(msg + '\n' + 'Press C to continue, R to recalibrate, or Q to terminate the experiment and save data')
-                self.win.flip()
-                keys = event.waitKeys(keyList=['c', 'r', 'q'])
-                self.win.showMessage(None)
-                if 'c' in keys:
-                    continue
-                elif 'r' in keys:
-                    self.eyelink.calibrate()
-                else:
-                    raise
 
     @property
     def all_data(self):
@@ -406,8 +390,8 @@ class Experiment(object):
 
         if self.eyelink:
             self.eyelink.save_data()
-        self.message("Data saved! Please let the experimenter that you've completed the study.", space=True,
-                    tip_text='press space to exit')
+        self.message("Data saved! Please let the experimenter that you've completed the study.", space=False)
+        event.waitKeys(keyList=['space', 'c'])
 
     def emergency_save_data(self):
         logging.warning('emergency save data')

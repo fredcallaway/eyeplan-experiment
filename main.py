@@ -6,21 +6,21 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
     if test and name is None:
         name = 'test'
     if fast:
-        kws['time_limit'] = 1
-        kws['block_duration'] = .5
         kws['n_practice'] = 2
+        kws['n_block'] = 2
+        kws['block_duration'] = 15/60
     exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=bool(test), **kws)
     if test == "save":
         exp.save_data()
         exit()
     if test == "main":
         exp.setup_eyetracker(mouse)
-        exp.run_main()
+        exp.main()
         exit()
     elif test == "practice":
         exp.practice()
         exp.intro_main()
-        exp.run_main()
+        exp.main()
     else:
         try:
             if not skip_instruct:
@@ -30,7 +30,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
                 exp.intro_gaze()
                 exp.practice()
                 exp.intro_main()
-            exp.run_main()
+            exp.main()
             exp.save_data()
         except:
             if test:
