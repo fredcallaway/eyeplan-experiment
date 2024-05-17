@@ -10,8 +10,12 @@ class NumpyEncoder(json.JSONEncoder):
             return int(obj)
         elif isinstance(obj, np.float64):
             return float(obj)
+        try:
+            return json.JSONEncoder.default(self, obj)
+        except Exception as e:
+            logging.exception("Error converting to json: %s", obj)
+            return str(obj)
 
-        return json.JSONEncoder.default(self, obj)
 
 def jsonify(obj):
     try:
