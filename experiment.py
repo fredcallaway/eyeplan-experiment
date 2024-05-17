@@ -208,7 +208,7 @@ class Experiment(object):
         self._tip.setText(tip_text if tip_text else f'press {LABEL_CONTINUE} to continue' if space else '')
         self.win.flip()
         if space:
-            event.waitKeys(keyList=[KEY_CONTINUE])
+            event.waitKeys(keyList=['space', KEY_CONTINUE])
 
     @stage
     def welcome(self):
