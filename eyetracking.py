@@ -295,6 +295,11 @@ class MouseLink(EyeLink):
 
     def calibrate(self):
         logging.info('MouseLink calibrate')
+        self.win.showMessage('This would be a calibration if not in mouse mode\npress space to continue')
+        self.win.flip()
+        keys = event.waitKeys(keyList=['space', 'c'])
+        self.win.showMessage(None)
+        self.win.flip()
         return
 
     def save_data(self):
