@@ -268,7 +268,19 @@ class Experiment(object):
                 t.run()
                 i += 1
             except AbortKeyPressed:
+                self.win.clearAutoDraw()
+                self.win.showMessage(msg + '\n' + 'Press C to continue, R to recalibrate, or Q to terminate the experiment and save data')
+                self.win.flip()
                 logging.warning('ABORT in practice, i=%s', i)
+                keys = event.waitKeys(keyList=['c', 'r', 'q'])
+                self.win.showMessage(None)
+                self.win.flip()
+                if 'c' in keys:
+                    continue
+                elif 'r' in keys:
+                    self.eyelink.calibrate()
+                else:
+                    raise
                 t.gfx.clear()
                 self.win.clearAutoDraw()
                 self.win.flip()
