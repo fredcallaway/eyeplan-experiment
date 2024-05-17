@@ -269,7 +269,7 @@ class Experiment(object):
                 i += 1
             except AbortKeyPressed:
                 self.win.clearAutoDraw()
-                self.win.showMessage(msg + '\n' + 'Press C to continue, R to recalibrate, or Q to terminate the experiment and save data')
+                self.win.showMessage('Abort key pressed!\nPress C to continue, R to recalibrate, or Q to terminate the experiment and save data')
                 self.win.flip()
                 logging.warning('ABORT in practice, i=%s', i)
                 keys = event.waitKeys(keyList=['c', 'r', 'q'])
