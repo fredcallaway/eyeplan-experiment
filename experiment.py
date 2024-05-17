@@ -259,15 +259,17 @@ class Experiment(object):
     def practice(self):
         self.message("Before we begin the main phase, we'll do a few practice rounds with all the images visible.", space=True)
         self.hide_message()
-        trials = [self.get_practice_trial() for i in range(self.n_practice)]
         i = 0
-        while i < len(trials):
+        gt = self.get_practice_trial()
+        while i < self.n_practice:
             try:
                 logging.info('practice %s', i)
                 t = trials[i]
                 t.run()
                 i += 1
+                gt = self.get_practice_trial()
             except AbortKeyPressed:
+                gt = self.get_practice_trial(repeat=True)
                 self.win.clearAutoDraw()
                 self.win.showMessage('Abort key pressed!\nPress C to continue, R to recalibrate, or Q to terminate the experiment and save data')
                 self.win.flip()
