@@ -263,10 +263,12 @@ class Experiment(object):
         i = 0
         while i < len(trials):
             try:
+                logging.info('practice %s', i)
                 t = trials[i]
                 t.run()
                 i += 1
             except AbortKeyPressed:
+                logging.warning('ABORT in practice, i=%s', i)
                 t.gfx.clear()
                 self.win.clearAutoDraw()
                 self.win.flip()
