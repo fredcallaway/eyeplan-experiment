@@ -290,6 +290,8 @@ class Experiment(object):
     def intro_main(self):
         self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
         self.message(f"There will be {self.n_block} blocks of {self.block_duration} minutes each.", space=True)
+        self.message(f"Like before, the clock doesn't run in between rounds "
+            "(when the cross is visible).", space=True)
         self.message(f"Remember, you will earn {self.bonus.describe_scheme()} you make the game.", space=True)
         self.message("Good luck!", space=True)
         # self.message("At the beginning of each round, look at the circle and press space.", space=True)
@@ -325,19 +327,22 @@ class Experiment(object):
         self.bonus.add_points(gt.score)
         self.total_score += int(gt.score)
 
-        if gt.status == 'recalibrate':
-            self.eyelink.calibrate()
+        return core.getTime() - gt.start_time
+        # if gt.status == 'recalibrate':
+            # self.eyelink.calibrate()
 
     @stage
     def main(self):
         for i in range(self.n_block):
-            end_time = core.getTime() + 60 * self.block_duration
-            while core.getTime() < end_time:
+            elapsed = 0
+
+
+            while elapsed < 60 * self.block_duration:
                 try:
-                    self.run_trial()
+                    elapsed += self.run_trial()
+                    logging.info('elapsed is %s', elapsed)
 
                 except Exception as e:
-
                     if isinstance(e, AbortKeyPressed):
                         logging.warning("Abort key pressed")
                         msg = 'Abort key pressed!'

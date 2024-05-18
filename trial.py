@@ -61,7 +61,7 @@ class GraphTrial(object):
         self.triggers = triggers
 
         self.status = 'ok'
-        self.show_time = self.done_time = None
+        self.start_time = self.done_time = None
         self.disable_click = False
         self.score = 0
         self.current_state = None
@@ -337,7 +337,7 @@ class GraphTrial(object):
 
         self.log('cross 1')
         self.fixation_cross()
-
+        self.start_time = core.getTime()
         if self.reward_info:
             self.show_description()
 
