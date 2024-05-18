@@ -34,10 +34,10 @@ def retrieveAutoDraw(self):
     self._heldDraw = []
 
 
-def showMessage(self, msg):
+def showMessage(self, msg, color='white'):
     if msg is None:
         return
-    visual.TextStim(self, msg, color='white', alignText='center', height=.05).draw()
+    visual.TextStim(self, msg, color=color, alignText='center', height=.05).draw()
 
 
 visual.Window.clearAutoDraw = clearAutoDraw

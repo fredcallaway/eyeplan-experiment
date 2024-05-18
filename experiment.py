@@ -173,7 +173,7 @@ class Experiment(object):
 
 
     def setup_window(self):
-        size = (1350,750) if self.full_screen else (700,500)
+        size = (1350,750) if self.full_screen else (650,500)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
         logging.info(f'Created window with size {win.size}')
         # framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
@@ -211,26 +211,24 @@ class Experiment(object):
     def welcome(self):
         self.triggers.send(4)
         self.message(
-            "Welcome back! Before we start, we need to tell you about the buttons. "
-            f"{LABEL_CONTINUE} is the blue one, ideally pressed with your index finger. "
-            f"It's like J from the online version.",
-            space=True
+            "Before we start, let's review the buttons. "
+            f"{LABEL_CONTINUE} is the blue one. It should be under your index finger. "
+            f"It's like J from the online version", space=True
         )
         self.message(
-            f"{LABEL_SWITCH} is the yellow one, ideally pressed with your middle finger. "
+            f"{LABEL_SWITCH} is the yellow one. It should be under your middle finger. "
             f"It's like K from the online version.",
-            tip_text = f'press {LABEL_SWITCH} to continue', space=False)
+            tip_text = f'press {LABEL_SWITCH} to continue')
         event.waitKeys(keyList=[KEY_SWITCH])
 
 
     @stage
     def setup_eyetracker(self, mouse=False):
-        self.message("We're going to calibrate the eyetracker. Please tell the experimenter.",
-            tip_text=f"Wait for the experimenter ({LABEL_CONTINUE})", space=True)
+        self.message("Now we're going to calibrate the eyetracker. When you see a black "
+                      "circle, look at it and hold your gaze steady",)
+        event.waitKeys(keyList=['space', 'c'])
         self.hide_message()
-        if mouse:
-            pass
-        else:
+        if not mouse:
             self.eyelink = EyeLink(self.win, self.id)
         self.eyelink.setup_calibration()
         self.eyelink.calibrate()
@@ -246,14 +244,14 @@ class Experiment(object):
             self.win.flip()
         self.win.flip()
 
-    @stage
-    def intro_gaze(self):
-        self.message("At the beginning of each round, a circle will appear. "
-                     f"Look straight at it and press {LABEL_CONTINUE} to start the round.",
-                     tip_text=f"look at the circle and press {LABEL_CONTINUE}", space=False)
+    # @stage
+    # def intro_gaze(self):
+    #     self.message("At the beginning of each round, a circle will appear. "
+    #                  f"Look straight at it and press {LABEL_CONTINUE} to start the round.",
+    #                  tip_text=f"look at the circle and press {LABEL_CONTINUE}", space=False)
 
-        self.eyelink.drift_check()
-        self.message("Yup just like that. Make sure you hold your gaze steady on the circle before pressing space.", space=True)
+    #     self.eyelink.drift_check()
+    #     self.message("Yup just like that. Make sure you hold your gaze steady on the circle before pressing space.", space=True)
 
     @stage
     def practice(self):

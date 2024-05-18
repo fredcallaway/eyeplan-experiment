@@ -180,7 +180,7 @@ class GraphTrial(object):
                 self.node_images[s].setAutoDraw(True)
             self.win.flip()
             txt.setAutoDraw(False)
-            core.wait(.5)
+            core.wait(1)
             self.node_images[s].setAutoDraw(False)
 
     def fade_out(self):
@@ -190,7 +190,7 @@ class GraphTrial(object):
             self.win.flip()
         self.gfx.clear()
         self.win.flip()
-        wait(.3)
+        # wait(.3)
 
     def highlight_current_edges(self):
         for (i, j), arrow in self.arrows.items():
@@ -308,6 +308,11 @@ class GraphTrial(object):
         self.win.flip()
         self.wait_keys([KEY_CONTINUE])
 
+    def fixation_cross(self):
+        self.win.showMessage("+", color="black")
+        self.win.flip()
+        self.wait_keys([KEY_CONTINUE])
+
     def run(self, one_step=False, skip_planning=False):
             # if self.start_mode == 'drift_check':
             #     self.log('begin drift_check')
@@ -330,10 +335,15 @@ class GraphTrial(object):
         if self.eyelink:
             self.start_recording()
 
+        self.log('cross 1')
+        self.fixation_cross()
+
         if self.reward_info:
             self.show_description()
 
-        self.eyelink.fake_drift_check(self.pos)
+        # self.log('cross 2')
+        # self.fixation_cross()
+        # self.eyelink.fake_drift_check(self.pos)
         self.show()
 
         if self.current_state is None:
@@ -357,6 +367,6 @@ class GraphTrial(object):
         logging.info("end trial " + jsonify(self.data["events"]))
         if self.eyelink:
             self.eyelink.stop_recording()
-        wait(.3)
+        wait(.2)
         self.fade_out()
         return self.status
