@@ -13,7 +13,7 @@ class NumpyEncoder(json.JSONEncoder):
         try:
             return json.JSONEncoder.default(self, obj)
         except Exception as e:
-            logging.exception("Error converting to json: %s", obj)
+            logging.warning("Couldn't convert %s to json; falling back on string ", obj)
             return str(obj)
 
 

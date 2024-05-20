@@ -1,9 +1,9 @@
 from experiment import Experiment
 from fire import Fire
 import logging
+import random
 
-
-def main(pid=None, name=None, test=False, fast=False, full=False, mouse=False, hotfix=False, skip_instruct=False, **kws):
+def main(pid=None, name=None, test=False, fast=False, full=False, mouse=False, hotfix=False, skip_instruct=False, resume_block=None, **kws):
     if test and name is None:
         name = 'test'
     if fast:
@@ -35,18 +35,29 @@ def main(pid=None, name=None, test=False, fast=False, full=False, mouse=False, h
         exp.main()
     else:
         try:
-            if not skip_instruct:
+            if not (skip_instruct or resume_block):
                 exp.welcome()
                 exp.setup_eyetracker(mouse)
                 exp.show_gaze_demo()
                 # exp.intro_gaze()
                 exp.practice()
                 exp.intro_main()
-            exp.main()
+
+            if resume_block:
+                exp.message(
+                    f"Resuming experiment at Block {resume_block}.\n"
+                    "Note that the reported bonuses will not reflect the money you've already earned "
+                    "(but we still have that information!)",
+                    space=True
+                )
+                random.shuffle(exp.trials['main'])
+                exp.main_trials = iter(exp.trials['main'])
+
+            exp.main(resume_block)
             exp.save_data()
         except:
             if test:
-                exit(1)
+                raise
             logging.exception('Uncaught exception in main')
             exp.win.clearAutoDraw()
             exp.win.showMessage("Drat! The experiment has encountered an error.\nPlease inform the experimenter.")

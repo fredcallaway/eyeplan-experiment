@@ -32,8 +32,8 @@ class Bonus(object):
         else:
             return 0
 
-    def report_bonus(self, points=False):
-        msg = f"Your current bonus is ${self.dollars():.2f}"
+    def report_bonus(self, kind='current', points=False,):
+        msg = f"Your {kind} bonus is ${self.dollars():.2f}"
         if points:
             msg += f" ({self.points} points)"
         return msg

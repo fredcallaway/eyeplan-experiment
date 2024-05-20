@@ -325,6 +325,7 @@ class Experiment(object):
 
         logging.info('gt.status is %s', gt.status)
         self.bonus.add_points(gt.score)
+        logging.info('current bonus: %s', self.bonus.dollars())
         self.total_score += int(gt.score)
 
         return core.getTime() - gt.start_time
@@ -332,10 +333,11 @@ class Experiment(object):
             # self.eyelink.calibrate()
 
     @stage
-    def main(self):
-        for i in range(self.n_block):
-            elapsed = 0
+    def main(self, resume_block=None):
+        start = 0 if resume_block is None else resume_block - 1
 
+        for i in range(start, self.n_block):
+            elapsed = 0
 
             while elapsed < 60 * self.block_duration:
                 try:
@@ -364,10 +366,11 @@ class Experiment(object):
 
             # end while
             # block summary
-            self.center_message(f"You've completed block {i + 1} of {self.n_block}.\n{self.bonus.report_bonus()}.\n\n"
-                "Take a short break. Then let the experimenter know when you're ready to continue.", space=False)
-            event.waitKeys(keyList=['space', 'c'])
-            self.eyelink.calibrate()
+            if i < self.n_block - 1:
+                self.center_message(f"You've completed block {i + 1} of {self.n_block}.\n{self.bonus.report_bonus()}.\n\n"
+                    "Take a short break. Then let the experimenter know when you're ready to continue.", space=False)
+                event.waitKeys(keyList=['space', 'c'])
+                self.eyelink.calibrate()
 
 
     @property
@@ -383,7 +386,8 @@ class Experiment(object):
 
     @stage
     def save_data(self):
-        self.message("You're done! Let's just save your data...", tip_text="give us a few seconds", space=False)
+        self.message(f"You're done! {self.bonus.report_bonus('final')}",
+                     tip_text="give us a few seconds to save the data", space=False)
         psychopy.logging.flush()
 
         fp = f'{DATA_PATH}/{self.id}.json'
@@ -393,8 +397,10 @@ class Experiment(object):
 
         if self.eyelink:
             self.eyelink.save_data()
-        self.message("Data saved! Please let the experimenter that you've completed the study.", space=False)
-        event.waitKeys(keyList=['space', 'c'])
+
+        self.message(f"You're done! {self.bonus.report_bonus('final')}",
+                     tip_text="data saved! press Button 1 to exit", space=True)
+        print("\n\nFINAL BONUS: ", self.bonus.dollars())
 
     def emergency_save_data(self):
         logging.warning('emergency save data')
