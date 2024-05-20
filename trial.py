@@ -8,15 +8,15 @@ import random
 
 wait = core.wait
 
-from config import COLOR_PLAN, COLOR_ACT, COLOR_LOSS, COLOR_WIN, COLOR_HIGHLIGHT, KEY_CONTINUE, KEY_SWITCH, KEY_SELECT, KEY_ABORT
+from config import COLOR_PLAN, COLOR_ACT, COLOR_LOSS, COLOR_WIN, COLOR_NEUTRAL, COLOR_HIGHLIGHT, KEY_CONTINUE, KEY_SWITCH, KEY_SELECT, KEY_ABORT
 
 from graphics import Graphics, FRAME_RATE
 
 def reward_color(r):
-    return COLOR_WIN if r > 0 else COLOR_LOSS
+    return COLOR_WIN if r > 0 else COLOR_NEUTRAL if r == 0 else COLOR_LOSS
 
 def reward_string(r):
-    return f'{int(r):+}' if r else ''
+    return f'{int(r):+}'
 
 def distance(p1, p2):
     (x1, y1), (x2, y2) = (p1, p2)
@@ -36,8 +36,9 @@ class AbortKeyPressed(Exception): pass
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, pos=(0, 0), start_mode=None, max_score=None,
+    def __init__(self, win, graph, rewards, start, layout, pos=(0, -0.05), start_mode=None, max_score=None,
                  images=None, reward_info=None,
+                 delayed_feedback=True, feedback_duration=3, action_time=2,
                  initial_stage='planning', hide_states=False, hide_rewards_while_acting=True, hide_edges_while_acting=True,
                  eyelink=None, triggers=None, **kws):
         self.win = win
@@ -51,6 +52,10 @@ class GraphTrial(object):
 
         self.images = images
         self.reward_info = reward_info
+
+        self.delayed_feedback = delayed_feedback
+        self.feedback_duration = feedback_duration
+        self.action_time = action_time
 
         self.stage = initial_stage
         self.hide_states = hide_states
@@ -67,6 +72,7 @@ class GraphTrial(object):
         self.current_state = None
         self.fixated = None
         self.fix_verified = None
+        self.path = []
         self.data = {
             "trial": {
                 "kind": self.__class__.__name__,
@@ -89,9 +95,9 @@ class GraphTrial(object):
         self.mouse = event.Mouse()
         self.done = False
 
-    def wait_keys(self, keys):
-        keys = event.waitKeys(keyList=[*keys, KEY_ABORT])
-        if KEY_ABORT in keys:
+    def wait_keys(self, keys, time_limit=float('inf')):
+        keys = event.waitKeys(maxWait=time_limit, keyList=[*keys, KEY_ABORT])
+        if keys and KEY_ABORT in keys:
             self.status = 'abort'
             raise AbortKeyPressed()
         else:
@@ -112,12 +118,12 @@ class GraphTrial(object):
         if self.eyelink:
             self.eyelink.message(jsonify(datum), log=False)
 
-    def description_text(self):
+    def reward_descriptions(self):
         def fmt(x):
             val, desc, targets = x["val"], x["desc"], x["targets"]
             return f'{val:+d} for {desc}'
 
-        return "   ".join(fmt(x) for x in self.reward_info)
+        return [fmt(x) for x in self.reward_info]
 
     def show(self):
         self.show_time = core.getTime()
@@ -143,11 +149,16 @@ class GraphTrial(object):
         self.mask = self.gfx.rect((.1,0), 1.1, 1, fillColor='gray', opacity=0)
         self.gfx.shift(*self.pos)
 
-        self.desc = None
-        # if self.reward_info:
-            # self.desc = self.gfx.text(self.description_text(), pos=(0.45, .45), color="white", anchorHoriz='right')
-        # else:
-            # self.desc = None
+        self.reward_labels = []
+        if self.reward_info:
+            print("YO")
+            descs = self.reward_descriptions()
+            xs = (.4, -.4)
+
+            for desc, x, color in zip(descs, (.45, -.45), (COLOR_WIN, COLOR_LOSS)):
+                self.reward_labels.append(self.gfx.text(desc.replace('for', '\n'), (x, .4), color=color, height=.035))
+
+
 
     def hide(self):
         self.gfx.clear()
@@ -166,22 +177,34 @@ class GraphTrial(object):
         if len(self.graph[self.current_state]) == 0:
             self.done = True
 
-
         if prev is None:  # initial
             self.node_images[s].setAutoDraw(False)
 
         else:  # not initial
+            self.path.append(s)
             self.nodes[prev].fillColor = 'white'
-            txt = visual.TextStim(self.win, reward_string(self.rewards[s]),
+            if not self.delayed_feedback:
+                txt = visual.TextStim(self.win, reward_string(self.rewards[s]),
+                    pos=self.nodes[s].pos + np.array([.06, .06]),
+                    bold=True, height=.04, color=reward_color(self.rewards[s]))
+                txt.setAutoDraw(True)
+                if self.node_images[s]:
+                    self.node_images[s].setAutoDraw(True)
+                self.win.flip()
+                txt.setAutoDraw(False)
+                core.wait(1)
+                self.node_images[s].setAutoDraw(False)
+
+    def show_feedback(self):
+        for s in self.path:
+            visual.TextStim(self.win, reward_string(self.rewards[s]),
                 pos=self.nodes[s].pos + np.array([.06, .06]),
-                bold=True, height=.04, color=reward_color(self.rewards[s]))
-            txt.setAutoDraw(True)
-            if self.node_images[s]:
-                self.node_images[s].setAutoDraw(True)
-            self.win.flip()
-            txt.setAutoDraw(False)
-            core.wait(1)
-            self.node_images[s].setAutoDraw(False)
+                bold=True, height=.04, color=reward_color(self.rewards[s])).draw()
+            self.node_images[s].setAutoDraw(True)
+
+        self.win.flip()
+        core.wait(self.feedback_duration)
+        self.win.flip()
 
     def fade_out(self):
         self.mask.setAutoDraw(False); self.mask.setAutoDraw(True)  # ensure on top
@@ -221,21 +244,31 @@ class GraphTrial(object):
         self.win.flip()
         self.log('get move', {"selected": choices[idx]})
 
+        deadline = core.getTime() + self.action_time
         while True:
-            pressed = self.wait_keys([KEY_SELECT, KEY_SWITCH, KEY_ABORT])
-            if KEY_SELECT in pressed:
+            time_left = deadline - core.getTime()
+            pressed = self.wait_keys([KEY_SELECT, KEY_SWITCH], time_limit=time_left)
+            if pressed is None:
+                self.log('timeout', {"selected": choices[idx]})
+                arrows[idx].setColor('red')
+                visual.TextStim(self.win, 'too slow!', pos=(0, 0), color='red', height=.035).draw()
+                self.win.flip()
+                core.wait(2)
+                return choices[idx]
+            elif KEY_SELECT in pressed:
                 self.log('select', {"selected": choices[idx]})
                 if self.hide_edges_while_acting:
                     for arrow in arrows:
                         arrow.setAutoDraw(False)
-                self.set_state(choices[idx])
-                return True
-            else:
+                return choices[idx]
+            elif KEY_SWITCH in pressed:
                 arrows[idx].setColor('black')
                 idx = (idx + 1) % len(choices)
                 arrows[idx].setColor(COLOR_HIGHLIGHT)
                 self.log('switch', {"selected": choices[idx]})
                 self.win.flip()
+            else:
+                assert False
 
     def start_recording(self):
         self.log('start recording')
@@ -268,8 +301,8 @@ class GraphTrial(object):
         for img in self.node_images:
             if img:
                 img.setAutoDraw(False)
-        if self.desc is not None:
-            self.desc.setAutoDraw(False)
+        for lab in self.reward_labels:
+            lab.setAutoDraw(False)
 
     def hide_edges(self):
         for a in self.arrows.values():
@@ -287,21 +320,24 @@ class GraphTrial(object):
         self.stage = 'acting'
 
         while not self.done:
-            moved = self.get_move()
-            if moved and one_step:
+            s = self.get_move()
+            self.set_state(s)
+            if one_step:
                 return
             self.win.flip()
 
     def show_description(self):
         self.log('show description')
-        descs = self.description_text().split("   ")
-        ys = (.05, -.05) if self.hide_states else (.25, -.05)
-        for i, y in enumerate(ys):
-            visual.TextStim(self.win, descs[i], pos=(0, y), color='white', height=.035).draw()
+        descs = self.reward_descriptions()
+        xs = (.25, -.25)
+        y = 0
+        for i, x in enumerate(xs):
+            visual.TextStim(self.win, descs[i], pos=(x, y), color='white', height=.035).draw()
             if not self.hide_states:
                 targets = self.reward_info[i]["targets"]
                 xs = np.arange(len(targets)) * .1
                 xs -= xs.mean()
+                xs += x
                 for x, t in zip(xs, targets):
                     self.gfx.image((x, y-.1), self.images[t], size=.08, autoDraw=False).draw()
 
@@ -362,11 +398,18 @@ class GraphTrial(object):
         if one_step:
             return
 
+        if self.delayed_feedback:
+            wait(.7)
+            self.nodes[self.current_state].fillColor = 'white'
+            self.show_feedback()
+        else:
+            wait(.2)
+
+        self.fade_out()
+
         self.log('done')
         self.done_time = core.getTime()
         logging.info("end trial " + jsonify(self.data["events"]))
         if self.eyelink:
             self.eyelink.stop_recording()
-        wait(.2)
-        self.fade_out()
         return self.status
