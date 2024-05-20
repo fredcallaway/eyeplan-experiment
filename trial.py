@@ -36,14 +36,14 @@ class AbortKeyPressed(Exception): pass
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, pos=(0, -0.05), start_mode=None, max_score=None,
-                 images=None, reward_info=None,
+    def __init__(self, win, graph, rewards, start, layout, pos=(0, 0), start_mode=None, max_score=None,
+                 images=None, reward_info=None, reward_multiplier=2,
                  delayed_feedback=True, feedback_duration=3, action_time=2,
                  initial_stage='planning', hide_states=False, hide_rewards_while_acting=True, hide_edges_while_acting=True,
                  eyelink=None, triggers=None, **kws):
         self.win = win
         self.graph = graph
-        self.rewards = list(rewards)
+        self.rewards = reward_multiplier * np.array(rewards)
         self.start = start
         self.layout = layout
         self.pos = pos
@@ -52,6 +52,7 @@ class GraphTrial(object):
 
         self.images = images
         self.reward_info = reward_info
+        self.reward_multiplier = reward_multiplier
 
         self.delayed_feedback = delayed_feedback
         self.feedback_duration = feedback_duration
@@ -121,6 +122,7 @@ class GraphTrial(object):
     def reward_descriptions(self):
         def fmt(x):
             val, desc, targets = x["val"], x["desc"], x["targets"]
+            val *= self.reward_multiplier
             return f'{val:+d} for {desc}'
 
         return [fmt(x) for x in self.reward_info]
@@ -156,7 +158,7 @@ class GraphTrial(object):
             xs = (.4, -.4)
 
             for desc, x, color in zip(descs, (.45, -.45), (COLOR_WIN, COLOR_LOSS)):
-                self.reward_labels.append(self.gfx.text(desc.replace('for', '\n'), (x, .4), color=color, height=.035))
+                self.reward_labels.append(self.gfx.text(desc.replace('for', '\n'), (x, .4), color=color, height=.05))
 
 
 
@@ -332,7 +334,7 @@ class GraphTrial(object):
         xs = (.25, -.25)
         y = 0
         for i, x in enumerate(xs):
-            visual.TextStim(self.win, descs[i], pos=(x, y), color='white', height=.035).draw()
+            visual.TextStim(self.win, descs[i], pos=(x, y), color='white', height=.05).draw()
             if not self.hide_states:
                 targets = self.reward_info[i]["targets"]
                 xs = np.arange(len(targets)) * .1
@@ -345,7 +347,7 @@ class GraphTrial(object):
         self.wait_keys([KEY_CONTINUE])
 
     def fixation_cross(self):
-        self.win.showMessage("+", color="black")
+        visual.TextStim(self.win, "+", pos=self.pos, color='black', height=.05).draw()
         self.win.flip()
         self.wait_keys([KEY_CONTINUE])
 
