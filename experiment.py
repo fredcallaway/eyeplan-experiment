@@ -225,7 +225,7 @@ class Experiment(object):
     @stage
     def setup_eyetracker(self, mouse=False):
         self.message("Now we're going to calibrate the eyetracker. When you see a black "
-                      "circle, look at it and hold your gaze steady",)
+                      "circle, look at it and hold your gaze steady", tip_text="wait for the experimenter")
         event.waitKeys(keyList=['space', 'c'])
         self.hide_message()
         if not mouse:
