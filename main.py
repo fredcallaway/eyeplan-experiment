@@ -2,14 +2,22 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-def main(config_number=None, name=None, test=False, fast=False, full=False, mouse=False, hotfix=False, skip_instruct=False, **kws):
+
+def main(pid=None, name=None, test=False, fast=False, full=False, mouse=False, hotfix=False, skip_instruct=False, **kws):
     if test and name is None:
         name = 'test'
     if fast:
         kws['n_practice'] = 2
         kws['n_block'] = 2
         kws['block_duration'] = 15/60
-    exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=bool(test), **kws)
+
+    if pid is None:
+        if test:
+            pid = 0
+        else:
+            pid = int(input("\n Please enter the participant ID number: "))
+
+    exp = Experiment(pid, name, full_screen=(not test) or full, test_mode=bool(test), **kws)
     if test == "save":
         exp.save_data()
         exit()
