@@ -25,7 +25,7 @@ SURVEY_PATH = f'data/survey'
 CONFIG_PATH = f'config/{VERSION}'
 LOG_PATH = 'log'
 PSYCHO_LOG_PATH = 'psycho-log'
-for p in (DATA_PATH, CONFIG_PATH, LOG_PATH, PSYCHO_LOG_PATH):
+for p in (DATA_PATH, CONFIG_PATH, LOG_PATH, PSYCHO_LOG_PATH, SURVEY_PATH):
     os.makedirs(p, exist_ok=True)
 
 
@@ -139,8 +139,8 @@ class Experiment(object):
             while True:
                 sleep(1)
                 if os.path.isfile(file):
-                    logging.info('survey found, moved to data/survey')
                     os.system(f'cp {file} {SURVEY_PATH}')
+                    logging.info('survey found, cp to', SURVEY_PATH)
                     break
         except KeyboardInterrupt:
             logging.warning('interrupted survey loop')
