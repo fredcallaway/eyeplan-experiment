@@ -167,8 +167,8 @@ dest = "config/$(version)"
 rm(dest, recursive=true, force=true)
 mkpath(dest)
 conditions = [
-    (;score_limit=125, force_rate=.8),
-    (;score_limit=800, force_rate=.1),
+    (;score_limit=160, force_rate=.8),
+    (;score_limit=480, force_rate=.2),
 ]
 
 foreach(enumerate(subj_trials)) do (i, trials)
