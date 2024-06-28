@@ -237,7 +237,7 @@ class Experiment(object):
 
         self.message("The further the diamond points to either side, the more points it is worth.", space=True)
         self.message("Hover over each diamond to see its point value",
-                     tip_text='hover over every diamond to cotntinue', space=False)
+                     tip_text='hover over every diamond to continue', space=False)
 
 
         seen = set()
@@ -502,13 +502,13 @@ class Experiment(object):
 
         block_possible = 0
         for (i, trial) in enumerate(trials):
-            logging.info(f"Trial {i+1} of {len(trials)}")
+            logging.info(f"Trial {i+1} of {len(trials)}. Score is {self.total_score}")
             try:
                 if self.score_limit:
                     if self.total_score >= self.score_limit:
                         self.center_message(f"Congratulations! You hit {self.score_limit} points!")
                         return
-                    else:
+                    elif i % 5 == 0:
                         self.center_message(f"Your current score is {self.total_score}.\n"
                                             f"You're {self.score_limit - self.total_score} points away from finishing.")
 
