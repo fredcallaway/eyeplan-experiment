@@ -227,7 +227,7 @@ class GraphTrial(object):
             self.set_state(s)
 
     def click(self, s):
-        self.log('click', {"state": s})
+        # self.log('click', {"state": s})
         if s in self.graph[self.current_state]:
             if self.force_mode == 'after' and self.current_state != self.start and random.random() < self.force_rate:
                 self.force_move(s)
