@@ -18,6 +18,7 @@ from eyetracking import EyeLink, MouseLink
 import subprocess
 from copy import deepcopy
 from config import PARAMETERS, VERSION
+import os
 
 DATA_PATH = f'data/exp/{VERSION}'
 CONFIG_PATH = f'config/{VERSION}'
@@ -101,6 +102,8 @@ class Experiment(object):
         if 'gaze_tolerance' not in self.parameters:
             self.parameters['gaze_tolerance'] = 1.5
 
+        self.do_survey()
+
         self.win = self.setup_window()
         self.bonus = Bonus(0, 50)
         self.total_score = 0
@@ -117,6 +120,29 @@ class Experiment(object):
         self.practice_i = -1
         self.trial_data = []
         self.practice_data = []
+
+    def do_survey(self):
+        # ?assignmentId=survey&workerId=fredtest
+        # http://0.0.0.0:22363/survey?id={self.id}
+        #
+        logging.info('running survey')
+
+        # location = "http://0.0.0.0:22363"
+        location = "https://graph-planning-634e23467632.herokuapp.com"
+        os.system(f'open {location}/survey?id={self.id}')
+
+        file = os.path.expanduser(f"~/Documents/{self.id}_survey.json")
+        logging.info(f'looking for {file}')
+
+        try:
+            while True:
+                sleep(1)
+                if os.path.isfile(file):
+                    logging.info('survey found, moved to data/survey')
+                    os.system(f'cp {file} data/survey/')
+                    break
+        except KeyboardInterrupt:
+            logging.warning('interrupted survey loop')
 
     def _reset_practice(self):
         self._practice_trials = iter(self.trials['practice'])
@@ -330,8 +356,6 @@ class Experiment(object):
 
             gt = self.get_practice_trial(force_rate = self.parameters['force_rate'])
             gt.run()
-
-
 
 
     @stage
