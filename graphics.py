@@ -103,7 +103,7 @@ class Graphics(object):
         return MultiShape(line, point)
 
     @shape
-    def diamond(self, pos, scale=.015, color='black', **kws):
+    def diamond(self, pos, scale=.012, color='black', **kws):
         vertices = scale * np.array([[-1, -.5], [0, -1.5], [1, -.5], [0, 1.5]])
         return visual.ShapeStim(self.win, vertices=vertices, fillColor=color, pos=pos, **kws)
 

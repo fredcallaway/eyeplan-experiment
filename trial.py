@@ -26,7 +26,7 @@ class GraphTrial(object):
     def __init__(self, win, graph, rewards, start, layout, plan_time=None, act_time=None, start_mode=None,
                  highlight_edges=True, stop_on_x=False, hide_rewards_while_acting=False, initial_stage='acting',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
-                 pos=(0, 0), scale=0.8, max_score=None, force_rate=0., force_mode='before', **kws):
+                 pos=(0, 0), scale=0.7, max_score=None, force_rate=0., force_mode='before', **kws):
         self.win = win
         self.graph = deepcopy(graph)
         self.rewards = list(rewards)
