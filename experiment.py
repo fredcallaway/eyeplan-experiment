@@ -20,6 +20,7 @@ from config import VERSION
 import os
 
 DATA_PATH = f'data/exp/{VERSION}'
+SURVEY_PATH = f'data/survey'
 CONFIG_PATH = f'config/{VERSION}'
 LOG_PATH = 'log'
 PSYCHO_LOG_PATH = 'psycho-log'
@@ -132,7 +133,7 @@ class Experiment(object):
                 sleep(1)
                 if os.path.isfile(file):
                     logging.info('survey found, moved to data/survey')
-                    os.system(f'cp {file} data/survey/')
+                    os.system(f'cp {file} {SURVEY_PATH}')
                     break
         except KeyboardInterrupt:
             logging.warning('interrupted survey loop')
