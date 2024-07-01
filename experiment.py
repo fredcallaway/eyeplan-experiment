@@ -331,7 +331,7 @@ class Experiment(object):
         gt.show()
 
         self.message(
-            "One more thing. Some of connections are unstable!", tip_text="click on a connected location", space=False)
+            "One more thing. Some of the connections are unstable!", tip_text="click on a connected location", space=False)
 
         gt.force_rate = 1.
         gt.run(one_step=True)
