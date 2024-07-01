@@ -33,7 +33,7 @@ def stage(f):
     def wrapper(self, *args, **kwargs):
         self.win.clearAutoDraw()
         logging.info('begin %s', f.__name__)
-        try:
+    try:YOur
             f(self, *args, **kwargs)
         except:
             if self.test_mode:
@@ -535,7 +535,8 @@ class Experiment(object):
                         return
                     elif i % 5 == 0:
                         self.center_message(f"Your current score is {self.total_score}.\n"
-                                            f"You're {self.score_limit - self.total_score} points away from finishing.")
+                                            f"You're {self.score_limit - self.total_score} points away from finishing.\n"
+                                            "press space to continue")
 
                 prm = {**self.parameters, **trial}
                 if self.disable_gaze_contingency:
