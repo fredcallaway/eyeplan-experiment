@@ -531,7 +531,8 @@ class Experiment(object):
             try:
                 if self.score_limit:
                     if self.total_score >= self.score_limit:
-                        self.center_message(f"Congratulations! You hit {self.score_limit} points!")
+                        self.center_message(f"Congratulations! You hit {self.score_limit} points!\n"
+                                            "press space to continue")
                         return
                     elif i % 5 == 0:
                         self.center_message(f"Your current score is {self.total_score}.\n"
