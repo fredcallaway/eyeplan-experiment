@@ -314,6 +314,7 @@ class GraphTrial(object):
             return
         if random.random() < self.force_rate:
             forced = random.choice(self.graph[self.current_state])
+            self.log('drop edge', {'current': self.current_state, 'forced': forced})
             for j in self.graph[self.current_state]:
                 if j != forced:
                     arrow = self.arrows.pop((self.current_state, j))
