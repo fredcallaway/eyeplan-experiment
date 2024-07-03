@@ -50,6 +50,7 @@ function sample_perm(k)
 end
 
 function scramble(g)
+    return g
     childs = outneighbors(g, 1)
     g1 = DiGraph(nv(g))
     for c in childs
@@ -95,7 +96,6 @@ end
 
 function sample_trial(rdist; k=5)
     g = directed_binary_tree(k)
-    neighbor_list(scramble(g))
     layout = build_layout(g)
     outcomes = tree_levels(g)[end]
     rewards = zeros(Int, nv(g))
@@ -167,8 +167,8 @@ dest = "config/$(version)"
 rm(dest, recursive=true, force=true)
 mkpath(dest)
 conditions = [
-    (;score_limit=160, force_rate=.8),
     (;score_limit=480, force_rate=.2),
+    (;score_limit=160, force_rate=.8),
 ]
 
 foreach(enumerate(subj_trials)) do (i, trials)
