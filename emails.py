@@ -74,6 +74,7 @@ def create_message(to, subject, message_text):
     message = MIMEMultipart('alternative')
     message['to'] = to
     message['subject'] = subject
+    message['Cc'] = 'fredcallaway@gmail.com,yx2227@nyu.edu'
 
     # Plain text version of the message
     part1 = MIMEText(message_text, 'plain')
