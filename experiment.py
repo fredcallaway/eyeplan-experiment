@@ -33,7 +33,7 @@ def stage(f):
     def wrapper(self, *args, **kwargs):
         self.win.clearAutoDraw()
         logging.info('begin %s', f.__name__)
-    try:YOur
+        try:
             f(self, *args, **kwargs)
         except:
             if self.test_mode:
