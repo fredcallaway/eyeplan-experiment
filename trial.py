@@ -27,6 +27,7 @@ class GraphTrial(object):
                  highlight_edges=True, stop_on_x=False, hide_rewards_while_acting=False, initial_stage='acting',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
                  pos=(0, 0), scale=0.7, max_score=None, force_rate=0., force_mode='before', **kws):
+
         self.win = win
         self.graph = deepcopy(graph)
         self.rewards = list(rewards)
@@ -189,14 +190,17 @@ class GraphTrial(object):
                 lab.autoDraw = True
                 if lab.text:
                     lab.color = 'white'
+                    self.win.flip()
                     # lab.bold = True
-                    for p in self.gfx.animate(6/60):
-                        lab.setHeight(self.node_radius + p * 0.02)
-                        self.tick()
-                    for p in self.gfx.animate(24/60):
-                        lab.setHeight(0.06 - p * 0.05)
-                        lab.setOpacity(1-p)
-                        self.tick()
+                    core.wait(1.5)
+                    # for p in self.gfx.animate(6/60):
+                    #     lab.setHeight(self.node_radius + p * 0.02)
+                    #     self.tick()
+                    # core.wait(.5)
+                    # for p in self.gfx.animate(24/60):
+                    #     lab.setHeight(0.06 - p * 0.05)
+                    #     lab.setOpacity(1-p)
+                    #     self.tick()
 
                 self.gfx.remove(lab)
 
