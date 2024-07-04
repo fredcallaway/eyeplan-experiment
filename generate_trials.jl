@@ -50,7 +50,6 @@ function sample_perm(k)
 end
 
 function scramble(g)
-    return g
     childs = outneighbors(g, 1)
     g1 = DiGraph(nv(g))
     for c in childs
@@ -81,25 +80,28 @@ function center_and_scale(x::Vector{<:Real})
     x ./= (hi - lo)
 end
 
-function center_and_scale(layout::Vector{<:Point})
+function center_and_scale(layout::Vector{<:Point}; stretch=2.)
     x, y = center_and_scale.(invert(layout))
-    x .*= 2
-    collect(zip(x, y))
+    x .*= stretch
+    collect(Point.(x, y))
 end
 
-function build_layout(g)
-    layout = buchheim(g)
-    layout[descendants(g, 2)] .-= Point(.5, 0)
-    layout[descendants(g, 3)] .+= Point(.5, 0)
-    center_and_scale(layout)
+function rotate(layout, clockwise=true)
+    R = clockwise ? [0 1; -1 0] : [0 -1; 1 0]
+    map(layout) do l
+        Point2(R * l)
+    end
 end
 
 function sample_trial(rdist; k=5)
     g = directed_binary_tree(k)
-    layout = build_layout(g)
+    layout = build_layout(k)
     outcomes = tree_levels(g)[end]
     rewards = zeros(Int, nv(g))
-    rewards[outcomes] .= rand(rdist, length(outcomes))
+    # rewards[outcomes] .= rand(rdist, length(outcomes))
+    n_per_side = length(outcomes) ÷ 2
+    rewards[outcomes[1:n_per_side]] = sort(rand(rdist, n_per_side); rev=true)
+    rewards[outcomes[n_per_side+1:end]] = sort(rand(rdist, n_per_side))
 
     graph = map(x -> x .- 1, neighbor_list(scramble(g)))
     (;graph, rewards, layout, start=0)
@@ -136,10 +138,51 @@ function make_trials(; )
 end
 
 
-# graph = map(x -> x .+ 1, t.graph)
-# prob = Problem(graph, t.rewards, t.start+1, -1)
+# %% --------
 
-# # %% --------
+function build_layout(k; shape=:tall)
+    g = directed_binary_tree(k)
+    layout = fill(Point(0., 0.), nv(g))
+
+    a, b, c, stretch = shape == :tall ? (1.6, 1.3, 3, 2.) : (1.4, 1.4, 5, 2.)
+    g1 = directed_binary_tree(k-1)
+    half_layout = buchheim(g1)
+    for (level, nodes) in enumerate(tree_levels(g1)[2:end])
+        for i in nodes
+            half_layout[i] = Point(a ^ level, b ^ level) * half_layout[i]
+        end
+    end
+
+    shift = Point(abs(half_layout[end][2] / c), 0)
+
+    layout[descendants(g, 2)] .= rotate(half_layout) .- shift
+    layout[descendants(g, 3)] .= rotate(half_layout, false) .+ shift
+    if shape == :tall
+        center_and_scale(rotate(layout); stretch)
+    else
+        center_and_scale(layout; stretch)
+    end
+    # layout
+end
+
+using GraphMakie
+include("$model_dir/figure.jl")
+figure() do
+    k = 5
+    g = directed_binary_tree(k)
+    layout = build_layout(k)
+
+    # middle_nodes = vcat(tree_levels(g, 2)[2:end-1]...)
+
+    # rand(Uniform(-0.75, -0.25)), rand(Uniform(-0.5, 0.5))
+    # for i in middle_nodes
+    #     layout[i] = Point(rand(Uniform(-0.75, -0.25)), rand(Uniform(-0.5, 0.5)))
+    # end
+
+    graphplot(scramble(g); layout, ilabels=vertices(g))
+end
+
+# %% --------
 
 
 function get_version()
@@ -157,9 +200,6 @@ n_subj = 30  # better safe than sorry
 Random.seed!(hash(version))
 subj_trials = repeatedly(make_trials, n_subj)
 
-subj_trials[1].main[5].graph
-
-# %% --------
 
 points_per_cent = 2
 
@@ -176,18 +216,3 @@ foreach(enumerate(subj_trials)) do (i, trials)
     write("$dest/$i.json", json((;parameters, trials)))
     println("$dest/$i.json")
 end
-
-# %% --------
-
-# bonus = map(subj_trials) do trials
-#     trials = mapreduce(vcat, [:main, :eyetracking]) do t
-#         get(trials, t, [])
-#     end
-#     points = 50 + sum(value.(trials))
-#     points / (points_per_cent * 100)
-# end
-
-# using UnicodePlots
-# if length(bonus) > 1
-#     display(histogram(bonus, nbins=10, vertical=true, height=10))
-# end
