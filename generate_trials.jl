@@ -80,7 +80,7 @@ function center_and_scale(x::Vector{<:Real})
     x ./= (hi - lo)
 end
 
-function center_and_scale(layout::Vector{<:Point}; stretch=2.)
+function center_and_scale(layout::Vector{<:Point}; stretch=1.7)
     x, y = center_and_scale.(invert(layout))
     x .*= stretch
     collect(Point.(x, y))
@@ -95,13 +95,17 @@ end
 
 function sample_trial(rdist; k=5)
     g = directed_binary_tree(k)
-    layout = build_layout(k)
+    layout = center_and_scale(build_layout(k))
     outcomes = tree_levels(g)[end]
     rewards = zeros(Int, nv(g))
     # rewards[outcomes] .= rand(rdist, length(outcomes))
-    n_per_side = length(outcomes) ÷ 2
-    rewards[outcomes[1:n_per_side]] = sort(rand(rdist, n_per_side); rev=true)
-    rewards[outcomes[n_per_side+1:end]] = sort(rand(rdist, n_per_side))
+    if k > 4
+        n_per_side = length(outcomes) ÷ 2
+        rewards[outcomes[1:n_per_side]] = sort(rand(rdist, n_per_side); rev=true)
+        rewards[outcomes[n_per_side+1:end]] = sort(rand(rdist, n_per_side))
+    else
+        rewards[outcomes] = sort(rand(rdist, length(outcomes)))
+    end
 
     graph = map(x -> x .- 1, neighbor_list(scramble(g)))
     (;graph, rewards, layout, start=0)
@@ -133,6 +137,7 @@ function make_trials(; )
         # intro_hover = [sample_problem(;kws...)],
         # practice_hover = [sample_problem(;kws...) for i in 1:2],
         practice,
+        practice_big = [sample_trial(rdist) for i in 1:20],
         main = [sample_trial(rdist) for i in 1:300],
     )
 end
@@ -142,28 +147,35 @@ end
 
 function build_layout(k; shape=:tall)
     g = directed_binary_tree(k)
-    layout = fill(Point(0., 0.), nv(g))
-
     a, b, c, stretch = shape == :tall ? (1.6, 1.3, 3, 2.) : (1.4, 1.4, 5, 2.)
-    g1 = directed_binary_tree(k-1)
-    half_layout = buchheim(g1)
-    for (level, nodes) in enumerate(tree_levels(g1)[2:end])
-        for i in nodes
-            half_layout[i] = Point(a ^ level, b ^ level) * half_layout[i]
+
+    if k > 4
+        half = build_layout(k-1; shape)
+        layout = fill(Point(0., 0.), nv(g))
+
+        shift = Point(abs(half[end][2] / c), 0)
+
+        layout[descendants(g, 2)] .= rotate(half) .- shift
+        layout[descendants(g, 3)] .= rotate(half, false) .+ shift
+        if shape == :tall
+            rotate(layout)
+        else
+            layout
         end
-    end
 
-    shift = Point(abs(half_layout[end][2] / c), 0)
-
-    layout[descendants(g, 2)] .= rotate(half_layout) .- shift
-    layout[descendants(g, 3)] .= rotate(half_layout, false) .+ shift
-    if shape == :tall
-        center_and_scale(rotate(layout); stretch)
     else
-        center_and_scale(layout; stretch)
+        layout = buchheim(g)
+
+        for (level, nodes) in enumerate(tree_levels(g)[2:end])
+            for i in nodes
+                layout[i] = Point(a ^ level, b ^ level) * layout[i]
+            end
+        end
+        layout
     end
-    # layout
 end
+
+
 
 using GraphMakie
 include("$model_dir/figure.jl")

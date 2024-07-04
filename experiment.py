@@ -28,6 +28,8 @@ PSYCHO_LOG_PATH = 'psycho-log'
 for p in (DATA_PATH, CONFIG_PATH, LOG_PATH, PSYCHO_LOG_PATH, SURVEY_PATH):
     os.makedirs(p, exist_ok=True)
 
+GREEN = '#1BD30C'
+RED = '#E3000A'
 
 def stage(f):
     def wrapper(self, *args, **kwargs):
@@ -103,7 +105,8 @@ class Experiment(object):
         if 'gaze_tolerance' not in self.parameters:
             self.parameters['gaze_tolerance'] = 1.5
 
-        self.do_survey()
+        if not test_mode:
+            self.do_survey()
 
         self.win = self.setup_window()
         self.bonus = Bonus(0, 50)
@@ -249,12 +252,12 @@ class Experiment(object):
 
         for (n, r) in zip(gt.nodes, gt.rewards):
             if r > 0:
-                n.setLineColor('#1BD30C')
+                n.setLineColor(GREEN)
         self.message("Specifically, you want the ones that point to the right. These earn you points.", space=True)
 
         for (n, r) in zip(gt.nodes, gt.rewards):
             if r < 0:
-                n.setLineColor('#E3000A')
+                n.setLineColor(RED)
             else:
                 n.setLineColor('black')
         self.message("The diamonds that point left are bad. They take away points!", space=True)
@@ -287,9 +290,8 @@ class Experiment(object):
         gt.highlight_current_edges()
         gt.run(one_step=True)
         gt.start = gt.current_state
-        print("HERE")
 
-        self.message("You can only move down, never back up. The round ends when you get to a location with no outgoing connections.",
+        self.message("Once you follow a connection it disappears, so you can't go backwards!",
                      tip_text='finish the round to continue', space=False)
         gt.run(skip_planning=True)
 
@@ -337,7 +339,7 @@ class Experiment(object):
         gt.run(one_step=True)
         gt.start = gt.current_state
 
-        self.message("When you reach a location with an unstable connection, it will dissapear, leaving you with only one way down.",
+        self.message("When you reach a location with an unstable connection, it will dissapear, leaving you with only one way forward.",
                      tip_text='click on the remaining connected location', space=False)
         gt.force_rate = 0.
         gt.run(one_step=True)
@@ -350,6 +352,29 @@ class Experiment(object):
         gt.run()
 
     @stage
+    def intro_change(self):
+        while True:
+            gt = self.get_practice_trial()
+            # make sure it's not the same as first practice
+            # WARNING hardcoded rewards!
+            if gt.rewards != [0, 0, 0, 0, 0, 0, 0, -8, -4, -2, -1, 1, 2, 4, 8]:
+                break
+
+        gt.show()
+
+        self.message("The diamonds vary from round to round...", space=True)
+        self.message("But they are always ordered by value, with the best ones on the right!", space=True)
+
+        offset = [0, .05]
+        gt.gfx.text("best", pos=gt.nodes[-1].pos - offset, height=.05, color=GREEN)
+        gt.gfx.text("worst", pos=gt.nodes[-8].pos - offset, height=.05, color=RED)
+        self.win.flip()
+
+        self.message("Try to get the best diamond you can!",
+                     tip_text='finish the round to continue', space=False)
+        gt.run()
+
+    @stage
     def practice_forced(self, n):
         for i in range(n):
             self.message("Let's try a few more practice rounds.",
@@ -357,6 +382,34 @@ class Experiment(object):
 
             gt = self.get_practice_trial(force_rate = self.parameters['force_rate'])
             gt.run()
+
+    @stage
+    def intro_double(self):
+
+        trials = []
+        for (i, trial) in enumerate(self.trials['practice_big']):
+            prm = {**self.parameters, **trial}
+            gt = GraphTrial(self.win, **prm, start_mode='immediate')
+            trials.append(gt)
+
+        self._message.pos = (-.83, 0)
+        self._tip.pos = (-.83, -.1),
+
+        self.message("OK. Just one more thing!", space=True)
+        trials[0].show()
+        self.message("For the rest of the experiment, you'll be playing on these bigger boards", space=True)
+
+        trials[0].set_state(gt.start)
+        self.message("You always start in the middle, and you can go either up or down.", space=True)
+
+        for i in range(3):
+            gt = trials[i]
+            self.message("Let's do one final set of practice rounds.", space=False, tip_text=f'complete {3 - i} practice rounds to continue')
+            gt.run()
+
+
+        self._message.pos = (-.83, 0.3)
+        self._tip.pos = (-.83, .2),
 
 
     @stage
@@ -437,6 +490,7 @@ class Experiment(object):
             logging.warning('disabling gaze contingency')
             self.disable_gaze_contingency = True
             self.message("OK let's move on.", space=True)
+
 
     @stage
     def intro_gaze(self):

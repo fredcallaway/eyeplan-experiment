@@ -23,9 +23,11 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
     else:
         try:
             exp.intro()
+            exp.intro_change()
             exp.practice(2)
             exp.intro_forced()
             exp.practice_forced(3)
+            exp.intro_double()
             exp.setup_eyetracker(mouse)
             exp.show_gaze_demo()
             exp.intro_gaze()
