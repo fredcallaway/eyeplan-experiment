@@ -183,6 +183,10 @@ class GraphTrial(object):
 
         if prev is not None and prev != s:  # not initial
             self.nodes[prev].fillColor = 'white'
+
+            arrow = self.arrows.pop((prev, s))
+            self.gfx.remove(arrow)
+
             self.maybe_drop_edges()
             if self.rewards[s]:
                 self.gfx.remove(self.reward_labels[s])
