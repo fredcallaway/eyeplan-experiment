@@ -75,7 +75,7 @@ def get_next_config_number():
 
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False, test_mode=False, **kws):
+    def __init__(self, config_number, name=None, full_screen=False, test_mode=False, skip_survey=False, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number
@@ -105,7 +105,7 @@ class Experiment(object):
         if 'gaze_tolerance' not in self.parameters:
             self.parameters['gaze_tolerance'] = 1.5
 
-        if not test_mode:
+        if not (skip_survey or test_mode):
             self.do_survey()
 
         self.win = self.setup_window()
@@ -361,14 +361,12 @@ class Experiment(object):
                 break
 
         gt.show()
-
         self.message("The diamonds vary from round to round...", space=True)
-        self.message("But they are always ordered by value, with the best ones on the right!", space=True)
 
         offset = [0, .05]
         gt.gfx.text("best", pos=gt.nodes[-1].pos - offset, height=.05, color=GREEN)
         gt.gfx.text("worst", pos=gt.nodes[-8].pos - offset, height=.05, color=RED)
-        self.win.flip()
+        self.message("But they are always ordered by value, with the best ones on the right!", space=True)
 
         self.message("Try to get the best diamond you can!",
                      tip_text='finish the round to continue', space=False)
