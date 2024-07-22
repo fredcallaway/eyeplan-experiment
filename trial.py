@@ -9,8 +9,9 @@ from copy import deepcopy
 
 wait = core.wait
 
-COLOR_PLAN = '#F2384A'
 COLOR_ACT = '#126DEF'
+# COLOR_PLAN = '#F2384A'
+COLOR_PLAN = COLOR_ACT
 
 from graphics import Graphics, FRAME_RATE
 
@@ -23,10 +24,12 @@ def distance(p1, p2):
 
 class GraphTrial(object):
     """Graph navigation interface"""
-    def __init__(self, win, graph, rewards, start, layout, plan_time=None, act_time=None, start_mode=None,
+    def __init__(self, win, graph, rewards, start, layout, plan_time=None, min_plan_time=5, act_time=None, start_mode=None,
                  highlight_edges=True, stop_on_x=False, hide_rewards_while_acting=False, initial_stage='acting',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
                  pos=(0, 0), scale=0.7, max_score=None, force_rate=0., force_mode='before', **kws):
+
+        print('initial_stage', initial_stage)
 
         self.win = win
         self.graph = deepcopy(graph)
@@ -34,6 +37,7 @@ class GraphTrial(object):
         self.start = start
         self.layout = layout
         self.plan_time = plan_time
+        self.min_plan_time = min_plan_time
         self.act_time = act_time
         if start_mode is None:
             start_mode = 'drift_check' if eyelink else 'space'
@@ -178,7 +182,7 @@ class GraphTrial(object):
         if len(self.graph[self.current_state]) == 0:
             self.done = True
 
-        if self.highlight_edges:
+        if self.highlight_edges and self.stage == 'acting':
             self.highlight_current_edges()
 
         if prev is not None and prev != s:  # not initial
@@ -398,6 +402,7 @@ class GraphTrial(object):
 
 
     def run_planning(self):
+        print("run planning")
         self.log('start planning')
         self.stage = 'planning'
         self.nodes[self.current_state].fillColor = COLOR_PLAN
@@ -414,10 +419,13 @@ class GraphTrial(object):
             self.update_fixation()
             keys = event.getKeys()
 
-            clicked = self.get_click()
-            if clicked == self.current_state:
-                self.log('end planning')
-                break
+            # clicked = self.get_click()
+            # if clicked == self.current_state:
+            #     self.log('end planning')
+            #     break
+            if self.min_plan_time:
+                if self.current_time - self.start_time > self.min_plan_time:
+                    break
             elif 'x' in keys or 'c' in keys:
                 logging.warning('press x')
                 self.log('press x')
@@ -431,6 +439,8 @@ class GraphTrial(object):
                 self.status = 'abort'
             self.tick()
 
+        if self.highlight_edges:
+            self.highlight_current_edges()
         self.fixated = None
         self.win.flip()
 
@@ -449,6 +459,7 @@ class GraphTrial(object):
 
         self.mouse.clickReset()
         while not self.done:
+            self.update_fixation()
             moved = self.check_click()
             if not self.done and self.end_time is not None and self.current_time > self.end_time:
                 self.do_timeout()
@@ -460,7 +471,7 @@ class GraphTrial(object):
 
     def run(self, one_step=False, skip_planning=False):
         if self.stage == 'acting':
-            skip_planning=True
+            skip_planning = True
         if self.start_mode == 'drift_check':
             self.log('begin drift_check')
             self.status = self.eyelink.drift_check(self.pos)

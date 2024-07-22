@@ -387,7 +387,7 @@ class Experiment(object):
         trials = []
         for (i, trial) in enumerate(self.trials['practice_big']):
             prm = {**self.parameters, **trial}
-            gt = GraphTrial(self.win, **prm, start_mode='immediate')
+            gt = GraphTrial(self.win, **prm, start_mode='immediate', initial_stage='planning')
             trials.append(gt)
 
         self._message.pos = (-.83, 0)
@@ -400,24 +400,27 @@ class Experiment(object):
         trials[0].set_state(gt.start)
         self.message("You always start in the middle, and you can go either up or down.", space=True)
 
+        self.message("At the beginning of each round there will be a five second delay before you can start moving.", space=True)
+        self.message("Use this time to pick which direction to go. This is the only decision point that never "
+                     "has unstable connections, so choose wisely!", space=True)
+        self.message("Don't forget: the more points you earn, the faster you'll finish the study!", space=True)
+
         for i in range(3):
             gt = trials[i]
             self.message("Let's do one final set of practice rounds.", space=False, tip_text=f'complete {3 - i} practice rounds to continue')
             gt.run()
 
-
         self._message.pos = (-.83, 0.3)
         self._tip.pos = (-.83, .2),
 
-
     @stage
     def setup_eyetracker(self, mouse=False):
-        self.message("Now we're going to calibrate the eyetracker. Please tell the experimenter.",
-            tip_text="Wait for the experimenter (space)", space=True)
-        self.hide_message()
         if mouse:
             self.eyelink = MouseLink(self.win, self.id)
         else:
+            self.message("Now we're going to calibrate the eyetracker. Please tell the experimenter.",
+                tip_text="Wait for the experimenter (space)", space=True)
+            self.hide_message()
             self.eyelink = EyeLink(self.win, self.id)
         self.eyelink.setup_calibration()
         self.eyelink.calibrate()
@@ -530,9 +533,8 @@ class Experiment(object):
             self.message("But first, you might be asking \"What's in it for me?\" ...Well, we thought of that!", space=True)
             self.message("Unlike other experiments you might have done, we don't have a fixed number of rounds.", space=True)
             self.message(f"Instead, you will do as as many rounds as it takes to earn {self.score_limit} points.", space=True)
-            self.message("To finish the study as quickly as possible, you'll have to balance making fast choices and selecting the best possible path.", space=True)
+            self.message("You'll finish the study fastest if you make smart choices without taking too long.", space=True)
             self.message("Good luck!", space=True)
-
         else:
             self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
             self.message("Remember: at the beginning of each round, look at the circle and press space.", space=True)
@@ -565,8 +567,10 @@ class Experiment(object):
     @stage
     def debug_main(self):
         for (i, trial) in enumerate(self.trials['main']):
+            print("DEBUG TRIAL")
             prm = {**self.parameters, **trial}
-            gt = GraphTrial(self.win, **prm, eyelink=self.eyelink, start_mode='immediate')
+            gt = GraphTrial(self.win, **prm, eyelink=self.eyelink, start_mode='immediate', initial_stage='planning')
+            gt.stage
             gt.run()
 
     @stage
@@ -597,7 +601,7 @@ class Experiment(object):
                     prm['start_mode'] = 'fixation'
 
 
-                gt = GraphTrial(self.win, **prm, eyelink=self.eyelink)
+                gt = GraphTrial(self.win, **prm, eyelink=self.eyelink, initial_stage='planning')
                 gt.run()
                 psychopy.logging.flush()
                 self.trial_data.append(gt.data)
