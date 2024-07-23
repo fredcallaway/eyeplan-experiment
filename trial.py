@@ -423,9 +423,9 @@ class GraphTrial(object):
             # if clicked == self.current_state:
             #     self.log('end planning')
             #     break
-            if self.min_plan_time:
-                if self.current_time - self.start_time > self.min_plan_time:
-                    break
+            if self.current_time - self.start_time > self.min_plan_time:
+                break
+
             elif 'x' in keys or 'c' in keys:
                 logging.warning('press x')
                 self.log('press x')

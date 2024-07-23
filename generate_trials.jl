@@ -93,6 +93,11 @@ function rotate(layout, clockwise=true)
     end
 end
 
+function discretize(d::Distribution, grid)
+    p = normalize(pdf.(d, grid))
+    DiscreteNonParametric(grid, p)
+end
+
 function sample_trial(rdist; k=5)
     g = directed_binary_tree(k)
     layout = center_and_scale(build_layout(k))
@@ -125,10 +130,15 @@ function exponential_rewards(n; base=2)
 end
 
 function make_trials(; )
-    rdist = exponential_rewards(8)
+    # rdist = exponential_rewards(8)
+
+    rdist = SkewNormal(0, 5, -3)
+    rdist -= mean(rdist)
+    rdist = discretize(rdist, [-9:-1; 1:9])
+
     practice = [sample_trial(rdist; k=4) for i in 1:20]
     mask = map(!isequal(0), practice[1].rewards)
-    practice[1].rewards[mask] .= rdist
+    practice[1].rewards[mask] .= [-8, -4, -2, -1, 1, 2, 4, 8]
 
     (;
         # intro = [sample_problem(;graph = neighbor_list(intro_graph(n)), start=1, kws..., rewards=zeros(n))],
@@ -219,8 +229,8 @@ dest = "config/$(version)"
 rm(dest, recursive=true, force=true)
 mkpath(dest)
 conditions = [
-    (;score_limit=480, force_rate=.2),
-    (;score_limit=160, force_rate=.8),
+    (;score_limit=360, force_rate=.2),
+    (;score_limit=130, force_rate=.8),
 ]
 
 foreach(enumerate(subj_trials)) do (i, trials)
