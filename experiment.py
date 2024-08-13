@@ -98,8 +98,6 @@ class Experiment(object):
         if 'gaze_tolerance' not in self.parameters:
             self.parameters['gaze_tolerance'] = 1.5
 
-        self.do_survey()
-
         self.win = self.setup_window()
         self.bonus = Bonus(0, 50)
         self.total_score = 0
@@ -115,28 +113,33 @@ class Experiment(object):
         self.trial_data = []
         self.practice_data = []
 
-    def do_survey(self):
+    def do_survey(self, launch=True, wait=True):
         # ?assignmentId=survey&workerId=fredtest
         # http://0.0.0.0:22363/survey?id={self.id}
-        #
-        logging.info('running survey')
 
-        # location = "http://0.0.0.0:22363"
-        location = "https://graph-planning-634e23467632.herokuapp.com"
-        os.system(f'open {location}/survey?id={self.id}')
+        if launch:
+            logging.info('running survey')
+            # location = "http://0.0.0.0:22363"
+            location = "https://graph-planning-634e23467632.herokuapp.com"
+            os.system(f'open {location}/survey?id={self.id}')
 
-        file = os.path.expanduser(f"~/Documents/{self.id}_survey.json")
-        logging.info(f'looking for {file}')
+        self.message('Running survey. Press A to abort', space=False)
 
-        try:
-            while True:
-                sleep(1)
-                if os.path.isfile(file):
-                    os.system(f'cp {file} {SURVEY_PATH}')
-                    logging.info('survey found, cp to', SURVEY_PATH)
-                    break
-        except KeyboardInterrupt:
-            logging.warning('interrupted survey loop')
+        if wait:
+            file = os.path.expanduser(f"~/Documents/{self.id}_survey.json")
+            logging.info(f'looking for {file}')
+            try:
+                while True:
+                    keys = event.getKeys()
+                    if 'a' in keys:
+                        break
+                    core.wait(1)
+                    if os.path.isfile(file):
+                        os.system(f'cp {file} {SURVEY_PATH}')
+                        logging.info('survey found, cp to %s', SURVEY_PATH)
+                        break
+            except KeyboardInterrupt:
+                logging.warning('interrupted survey loop')
 
     def _reset_practice(self):
         self._practice_trials = iter(self.trials['practice'])
@@ -184,7 +187,7 @@ class Experiment(object):
 
 
     def setup_window(self):
-        size = (1350,750) if self.full_screen else (900,500)
+        size = (1350,750)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen)
         # framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
         # assert abs(framerate - 60) < 2
@@ -583,8 +586,18 @@ class Experiment(object):
         }
 
     @stage
-    def save_data(self):
-        self.message("You're done! Let's just save your data...", tip_text="give us a few seconds", space=False)
+    def save_data(self, survey=False):
+        if survey:
+            self.message("You're done! Before you go, we have a quick survey. Press space to open it.", space=True)
+            self.message("Opening survey...", space=False)
+            self.win.fullscr = False
+            self.win.winHandle.set_fullscreen(False)
+            self.message("Saving data...", space=False)
+            self.do_survey(wait=False)
+        else:
+            self.message("You're done! Let's just save your data...", tip_text="give us a few seconds", space=False)
+
+        logging.info("Saving data...")
         psychopy.logging.flush()
 
         fp = f'{DATA_PATH}/{self.id}.json'
@@ -594,6 +607,14 @@ class Experiment(object):
 
         if self.eyelink:
             self.eyelink.save_data()
+
+        logging.info("Data saved!")
+
+        if survey:
+            self.do_survey(launch=False)
+            self.win.fullscr = True
+            self.win.winHandle.set_fullscreen(True)
+
         self.message("Data saved! Please let the experimenter that you've completed the study.", space=True,
                     tip_text='press space to exit')
 
