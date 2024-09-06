@@ -1,4 +1,18 @@
 
+## Setup
+
+```
+python3 -m venv env
+. env/bin/activate
+pip install -r requirements.txt
+```
+
+The experiment is only known to work with Python 3.10 running on macOS.
+
+## Running the experiment
+
+Make sure the virtual environment is active: `. env/bin/activate`
+
 Run the experiment with `python main.py --test`. Some useful flags are:
 - `--test` runs in test mode (always do this if you're not running a real participant)
 - `--scale 0.5` scales down the window by 50% (useful on a laptop)
