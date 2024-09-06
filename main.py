@@ -2,20 +2,13 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-def main(config_number=None, name=None, test=False, fast=False, full=False, mouse=False, hotfix=False, **kws):
+def main(name=None, test=False, full=False, mouse=False, **kws):
     if test and name is None:
         name = 'test'
-    if fast:
-        kws['score_limit'] = 10
 
-
-    # kws['force_rate'] = .3
-    # kws['score_limit'] = 250
-
-    exp = Experiment(config_number, name, full_screen=(not test) or full, test_mode=bool(test), **kws)
+    exp = Experiment(name=name, full_screen=(not test) or full, test_mode=bool(test), **kws)
     if test == 'main':
         exp.setup_eyetracker(mouse)
-        # exp.run_main()
         exp.debug_main()
         return
     elif test == 'forced':

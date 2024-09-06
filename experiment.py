@@ -32,6 +32,7 @@ GREEN = '#1BD30C'
 RED = '#E3000A'
 
 def stage(f):
+    """Decorator to define an independent block/stage of the experiment."""
     def wrapper(self, *args, **kwargs):
         self.win.clearAutoDraw()
         logging.info('begin %s', f.__name__)
@@ -75,11 +76,12 @@ def get_next_config_number():
 
 
 class Experiment(object):
-    def __init__(self, config_number, name=None, full_screen=False, test_mode=False, skip_survey=False, **kws):
+    def __init__(self, config_number=None, name=None, full_screen=False, scale=.95, test_mode=False, skip_survey=False, **kws):
         if config_number is None:
             config_number = get_next_config_number()
         self.config_number = config_number
         self.full_screen = full_screen
+        self.scale = scale  # NOTE: only affects windowed mode
         self.test_mode = test_mode
 
         timestamp = datetime.now().strftime('%y-%m-%d-%H%M')
@@ -105,7 +107,7 @@ class Experiment(object):
         if 'gaze_tolerance' not in self.parameters:
             self.parameters['gaze_tolerance'] = 1.5
 
-        if not (skip_survey or test_mode):
+        if not skip_survey:
             self.do_survey()
 
         self.win = self.setup_window()
@@ -126,9 +128,7 @@ class Experiment(object):
         self.practice_data = []
 
     def do_survey(self):
-        # ?assignmentId=survey&workerId=fredtest
-        # http://0.0.0.0:22363/survey?id={self.id}
-        #
+        """Opens the survey in a browser and waits for the results to be saved."""
         logging.info('running survey')
 
         # location = "http://0.0.0.0:22363"
@@ -199,7 +199,7 @@ class Experiment(object):
         # size = (1350,750) if self.full_screen else (900,500)
         size = np.array([1920, 1080])
         if not self.full_screen:
-            size = (size * 0.95).astype(int)
+            size = (size * self.scale).astype(int)
         win = visual.Window(size, allowGUI=True, units='height', fullscr=self.full_screen, pos=(48,0))
         # framerate = win.getActualFrameRate(threshold=1, nMaxFrames=1000)
         # assert abs(framerate - 60) < 2

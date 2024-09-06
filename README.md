@@ -1,3 +1,23 @@
+
+Run the experiment with `python main.py --test`. Some useful flags are:
+- `--test` runs in test mode (always do this if you're not running a real participant)
+- `--scale 0.5` scales down the window by 50% (useful on a laptop)
+- `--full` use full screen in test mode (always full screen in normal mode)
+- `--mouse` don't try to connect to an EyeLink device, uses the mouse as gaze position
+- `--skip-survey` does what you think
+- other flags get passed to Experiment
+
+## Code structure
+
+- main.py defines the CLI and the block-structure of the experiment
+- experiment.py handles configuration, setup, and data saving
+- `@stage` methods in experiment.py define content of the blocks
+- trial.py defines the actual task. The `run` method is the entry point.
+- graphics.py defines a more user-friendly graphics interface
+- eyetracking.py handles communication with an EyeLink eyetracker
+
+## Key commands while running the experiment
+
 - X during a trial triggers recalibration 
 - escape during a drift check triggers the eyelink setup screen
-- escape again brings up a screen allowing you to do several things: abort experiment, recalibrate, disable drift checks
+- escape again brings up a screen where you can abort the experiment, recalibrate, or disable drift checks
