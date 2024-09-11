@@ -96,7 +96,7 @@ class Experiment(object):
         logging.info('parameters %s', self.parameters)
 
         if 'gaze_tolerance' not in self.parameters:
-            self.parameters['gaze_tolerance'] = 1.5
+            self.parameters['gaze_tolerance'] = 1.
 
         self.win = self.setup_window()
         self.bonus = Bonus(0, 50)
