@@ -394,6 +394,8 @@ class Experiment(object):
             result = gt.run()
             if result == 'success':
                 break
+            elif result == 'abort':
+                raise RuntimeError('ABORT')
             else:
                 self.message("Let's make some quick adjustments...", tip_text='Press space to continue')
                 keys = event.waitKeys(keyList=['c', 'd', 'r', 'space'])

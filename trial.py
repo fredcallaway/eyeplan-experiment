@@ -484,7 +484,10 @@ class CalibrationTrial(GraphTrial):
 
     def run(self, timeout=15):
         assert self.eyelink
-        self.eyelink.drift_check(self.pos)
+        self.status = self.eyelink.drift_check(self.pos)
+        if self.status in ('abort', 'recalibrate'):
+            self.log('done', {"status": self.status})
+            return self.status
         self.start_recording()
         self.show()
         self.successes = np.zeros(len(self.nodes))
