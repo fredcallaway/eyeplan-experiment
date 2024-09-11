@@ -532,7 +532,7 @@ class Experiment(object):
             self.message("Alright! We're ready to begin the main phase of the experiment.", space=True)
             self.message("But first, you might be asking \"What's in it for me?\" ...Well, we thought of that!", space=True)
             self.message("Unlike other experiments you might have done, we don't have a fixed number of rounds.", space=True)
-            self.message(f"Instead, you will do as as many rounds as it takes to earn {self.score_limit} points.", space=True)
+            self.message(f"Instead, you will do as many rounds as it takes to earn {self.score_limit} points.", space=True)
             self.message("You'll finish the study fastest if you make smart choices without taking too long.", space=True)
             self.message("Good luck!", space=True)
         else:
