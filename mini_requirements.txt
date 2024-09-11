@@ -1,0 +1,280 @@
+appnope==0.1.4
+arabic-reshaper==3.0.0
+archspec @ file:///croot/archspec_1709217642129/work
+asttokens==2.4.1
+astunparse==1.6.3
+backcall==0.2.0
+beautifulsoup4==4.12.2
+blosc2==2.3.2
+boltons @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_f63n9uulmp/croot/boltons_1677628710094/work
+Bottleneck @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_2bxpizxa3c/croot/bottleneck_1707864819812/work
+Brotli @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_38mvgltu8c/croots/recipe/brotli-split_1659616064542/work
+certifi @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_0ecs_ou28u/croot/certifi_1725551740278/work/certifi
+cffi @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_ab19r4bji3/croot/cffi_1670423206034/work
+charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654/work
+conda @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_6fdicqiami/croot/conda_1722004613620/work
+conda-content-trust @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_5324skqvu9/croot/conda-content-trust_1693490622873/work
+conda-libmamba-solver @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_c2fmjn55mo/croot/conda-libmamba-solver_1700150913462/work/src
+conda-package-handling @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_fc4cx8vjhj/croot/conda-package-handling_1690999937094/work
+conda_package_streaming @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_aecpaup22q/croot/conda-package-streaming_1690987978274/work
+contourpy @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_97c8ctlp86/croots/recipe/contourpy_1663827422071/work
+cryptography @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_905z2r5rpq/croot/cryptography_1694211573866/work
+cycler @ file:///tmp/build/80754af9/cycler_1637851556182/work
+decorator==5.1.1
+distro @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_ddkyz0575y/croot/distro_1714488254309/work
+dukpy==0.3.0
+elementpath==4.1.5
+esprima==4.0.1
+et-xmlfile==1.1.0
+executing==2.0.1
+ffpyplayer==4.5.1
+fire==0.5.0
+fonttools==4.46.0
+freetype-py==2.4.0
+frozendict @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_8b0cest_id/croot/frozendict_1713194839836/work
+future==0.18.3
+gevent==23.9.1
+gitdb==4.0.11
+GitPython==3.1.40
+greenlet==3.0.1
+html2text==2020.1.16
+idna @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_771olrhiqw/croot/idna_1666125579282/work
+imageio==2.33.0
+imageio-ffmpeg==0.4.9
+importlib-resources==6.1.1
+ipython==8.12.3
+javascripthon==0.12
+jedi==0.19.1
+json-tricks==3.17.3
+jsonpatch @ file:///tmp/build/80754af9/jsonpatch_1615747632069/work
+jsonpointer==2.1
+kiwisolver @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_93o8te804v/croot/kiwisolver_1672387163224/work
+libmambapy @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_59l2npsw_8/croot/mamba-split_1698782625405/work/libmambapy
+markdown-it-py==3.0.0
+matplotlib @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_a23xd3m8b1/croot/matplotlib-suite_1693812470272/work
+matplotlib-inline==0.1.6
+mdurl==0.1.2
+menuinst @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_ad321a45td/croot/menuinst_1723567614652/work
+msgpack==1.0.7
+msgpack-numpy==0.4.8
+ndindex==1.7
+networkx==3.1
+numexpr @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_76yyu1p9jk/croot/numexpr_1683221830860/work
+numpy @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_f9f5xs2fx0/croot/numpy_and_numpy_base_1682520577456/work
+opencv-python==4.8.1.78
+openpyxl==3.1.2
+packaging @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_6dm6d4jd_t/croot/packaging_1693575176524/work
+pandas @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_b9nb2vqtpu/croot/pandas_1692289331806/work
+parso==0.8.3
+pexpect==4.9.0
+pickleshare==0.7.5
+Pillow==10.1.0
+platformdirs @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_a8u4fy8k9o/croot/platformdirs_1692205661656/work
+pluggy @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_croot-w6jyveby/pluggy_1648109277227/work
+prompt-toolkit==3.0.43
+psutil==5.9.6
+psychopy==2023.2.3
+psychtoolbox==3.0.19.0
+ptyprocess==0.7.0
+pure-eval==0.2.2
+py-cpuinfo==9.0.0
+pycosat @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_3eg8vdcs6z/croot/pycosat_1696536519213/work
+pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
+pygame==2.5.2
+pyglet==1.5.28
+Pygments==2.17.2
+pyobjc==10.0
+pyobjc-core==10.0
+pyobjc-framework-Accessibility==10.0
+pyobjc-framework-Accounts==10.0
+pyobjc-framework-AddressBook==10.0
+pyobjc-framework-AdServices==10.0
+pyobjc-framework-AdSupport==10.0
+pyobjc-framework-AppleScriptKit==10.0
+pyobjc-framework-AppleScriptObjC==10.0
+pyobjc-framework-ApplicationServices==10.0
+pyobjc-framework-AppTrackingTransparency==10.0
+pyobjc-framework-AudioVideoBridging==10.0
+pyobjc-framework-AuthenticationServices==10.0
+pyobjc-framework-AutomaticAssessmentConfiguration==10.0
+pyobjc-framework-Automator==10.0
+pyobjc-framework-AVFoundation==10.0
+pyobjc-framework-AVKit==10.0
+pyobjc-framework-AVRouting==10.0
+pyobjc-framework-BackgroundAssets==10.0
+pyobjc-framework-BusinessChat==10.0
+pyobjc-framework-CalendarStore==10.0
+pyobjc-framework-CallKit==10.0
+pyobjc-framework-CFNetwork==10.0
+pyobjc-framework-ClassKit==10.0
+pyobjc-framework-CloudKit==10.0
+pyobjc-framework-Cocoa==10.0
+pyobjc-framework-Collaboration==10.0
+pyobjc-framework-ColorSync==10.0
+pyobjc-framework-Contacts==10.0
+pyobjc-framework-ContactsUI==10.0
+pyobjc-framework-CoreAudio==10.0
+pyobjc-framework-CoreAudioKit==10.0
+pyobjc-framework-CoreBluetooth==10.0
+pyobjc-framework-CoreData==10.0
+pyobjc-framework-CoreHaptics==10.0
+pyobjc-framework-CoreLocation==10.0
+pyobjc-framework-CoreMedia==10.0
+pyobjc-framework-CoreMediaIO==10.0
+pyobjc-framework-CoreMIDI==10.0
+pyobjc-framework-CoreML==10.0
+pyobjc-framework-CoreMotion==10.0
+pyobjc-framework-CoreServices==10.0
+pyobjc-framework-CoreSpotlight==10.0
+pyobjc-framework-CoreText==10.0
+pyobjc-framework-CoreWLAN==10.0
+pyobjc-framework-CryptoTokenKit==10.0
+pyobjc-framework-DataDetection==10.0
+pyobjc-framework-DeviceCheck==10.0
+pyobjc-framework-DictionaryServices==10.0
+pyobjc-framework-DiscRecording==10.0
+pyobjc-framework-DiscRecordingUI==10.0
+pyobjc-framework-DiskArbitration==10.0
+pyobjc-framework-DVDPlayback==10.0
+pyobjc-framework-EventKit==10.0
+pyobjc-framework-ExceptionHandling==10.0
+pyobjc-framework-ExecutionPolicy==10.0
+pyobjc-framework-ExtensionKit==10.0
+pyobjc-framework-ExternalAccessory==10.0
+pyobjc-framework-FileProvider==10.0
+pyobjc-framework-FileProviderUI==10.0
+pyobjc-framework-FinderSync==10.0
+pyobjc-framework-FSEvents==10.0
+pyobjc-framework-GameCenter==10.0
+pyobjc-framework-GameController==10.0
+pyobjc-framework-GameKit==10.0
+pyobjc-framework-GameplayKit==10.0
+pyobjc-framework-HealthKit==10.0
+pyobjc-framework-ImageCaptureCore==10.0
+pyobjc-framework-InputMethodKit==10.0
+pyobjc-framework-InstallerPlugins==10.0
+pyobjc-framework-InstantMessage==10.0
+pyobjc-framework-Intents==10.0
+pyobjc-framework-IntentsUI==10.0
+pyobjc-framework-IOBluetooth==10.0
+pyobjc-framework-IOBluetoothUI==10.0
+pyobjc-framework-IOSurface==10.0
+pyobjc-framework-iTunesLibrary==10.0
+pyobjc-framework-KernelManagement==10.0
+pyobjc-framework-LatentSemanticMapping==10.0
+pyobjc-framework-LaunchServices==10.0
+pyobjc-framework-libdispatch==10.0
+pyobjc-framework-libxpc==10.0
+pyobjc-framework-LinkPresentation==10.0
+pyobjc-framework-LocalAuthentication==10.0
+pyobjc-framework-LocalAuthenticationEmbeddedUI==10.0
+pyobjc-framework-MailKit==10.0
+pyobjc-framework-MapKit==10.0
+pyobjc-framework-MediaAccessibility==10.0
+pyobjc-framework-MediaLibrary==10.0
+pyobjc-framework-MediaPlayer==10.0
+pyobjc-framework-MediaToolbox==10.0
+pyobjc-framework-Metal==10.0
+pyobjc-framework-MetalFX==10.0
+pyobjc-framework-MetalKit==10.0
+pyobjc-framework-MetalPerformanceShaders==10.0
+pyobjc-framework-MetalPerformanceShadersGraph==10.0
+pyobjc-framework-MetricKit==10.0
+pyobjc-framework-MLCompute==10.0
+pyobjc-framework-ModelIO==10.0
+pyobjc-framework-MultipeerConnectivity==10.0
+pyobjc-framework-NaturalLanguage==10.0
+pyobjc-framework-NetFS==10.0
+pyobjc-framework-Network==10.0
+pyobjc-framework-NetworkExtension==10.0
+pyobjc-framework-NotificationCenter==10.0
+pyobjc-framework-OpenDirectory==10.0
+pyobjc-framework-OSAKit==10.0
+pyobjc-framework-OSLog==10.0
+pyobjc-framework-PassKit==10.0
+pyobjc-framework-PencilKit==10.0
+pyobjc-framework-PHASE==10.0
+pyobjc-framework-Photos==10.0
+pyobjc-framework-PhotosUI==10.0
+pyobjc-framework-PreferencePanes==10.0
+pyobjc-framework-PushKit==10.0
+pyobjc-framework-Quartz==10.0
+pyobjc-framework-QuickLookThumbnailing==10.0
+pyobjc-framework-ReplayKit==10.0
+pyobjc-framework-SafariServices==10.0
+pyobjc-framework-SafetyKit==10.0
+pyobjc-framework-SceneKit==10.0
+pyobjc-framework-ScreenCaptureKit==10.0
+pyobjc-framework-ScreenSaver==10.0
+pyobjc-framework-ScreenTime==10.0
+pyobjc-framework-ScriptingBridge==10.0
+pyobjc-framework-SearchKit==10.0
+pyobjc-framework-Security==10.0
+pyobjc-framework-SecurityFoundation==10.0
+pyobjc-framework-SecurityInterface==10.0
+pyobjc-framework-ServiceManagement==10.0
+pyobjc-framework-SharedWithYou==10.0
+pyobjc-framework-SharedWithYouCore==10.0
+pyobjc-framework-ShazamKit==10.0
+pyobjc-framework-Social==10.0
+pyobjc-framework-SoundAnalysis==10.0
+pyobjc-framework-Speech==10.0
+pyobjc-framework-SpriteKit==10.0
+pyobjc-framework-StoreKit==10.0
+pyobjc-framework-SyncServices==10.0
+pyobjc-framework-SystemConfiguration==10.0
+pyobjc-framework-SystemExtensions==10.0
+pyobjc-framework-ThreadNetwork==10.0
+pyobjc-framework-UniformTypeIdentifiers==10.0
+pyobjc-framework-UserNotifications==10.0
+pyobjc-framework-UserNotificationsUI==10.0
+pyobjc-framework-VideoSubscriberAccount==10.0
+pyobjc-framework-VideoToolbox==10.0
+pyobjc-framework-Virtualization==10.0
+pyobjc-framework-Vision==10.0
+pyobjc-framework-WebKit==10.0
+pyOpenSSL @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_b8whqav6qm/croot/pyopenssl_1690223428943/work
+pyparsing @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_3b_3vxnd07/croots/recipe/pyparsing_1661452540919/work
+pypi-search==2.0
+PyQt5==5.15.10
+PyQt5-Qt5==5.15.11
+PyQt5-sip==12.13.0
+pyserial==3.5
+PySocks @ file:///Users/ktietz/Code/oss/ci_pkgs/pysocks_1626781349491/work
+python-bidi==0.4.2
+python-dateutil==2.8.2
+python-gitlab==4.2.0
+python-vlc==3.0.20123
+pytz==2023.3.post1
+PyYAML==6.0.1
+pyzmq==25.1.2
+questplus==2023.1
+requests @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_54zi68h2nb/croot/requests_1690400233316/work
+requests-toolbelt==1.0.0
+ruamel.yaml @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_aeh5mqcw49/croot/ruamel.yaml_1666304555976/work
+ruamel.yaml.clib @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_f64xdg2rww/croot/ruamel.yaml.clib_1666302244208/work
+scipy==1.10.1
+six @ file:///tmp/build/80754af9/six_1644875935023/work
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+sr-research-pylink==2.1.762.0
+stack-data==0.6.3
+termcolor==2.4.0
+tornado @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_a4w03z48br/croot/tornado_1718740114858/work
+tqdm @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_ac7zic_tin/croot/tqdm_1679561870178/work
+traitlets==5.14.2
+typing_extensions==4.10.0
+tzdata @ file:///croot/python-tzdata_1690578112552/work
+ujson==5.8.0
+unicodedata2 @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_a3epjto7gs/croot/unicodedata2_1713212955584/work
+urllib3 @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_068obtb882/croot/urllib3_1698257558009/work
+wcwidth==0.2.13
+websockets==12.0
+wxPython==4.2.1
+xarray==2023.1.0
+xmlschema==2.5.0
+zipp @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_31jm3q76eq/croot/zipp_1704206913245/work
+zope.event==5.0
+zope.interface==6.1
+zstandard @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_41b3vxtask/croot/zstandard_1677013668452/work
