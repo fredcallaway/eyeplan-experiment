@@ -10,10 +10,14 @@ def main(name=None, test=False, full=False, mouse=False, **kws):
     if test == 'main':
         exp.setup_eyetracker(mouse)
         exp.debug_main()
-        return
     elif test == 'forced':
         exp.intro_forced()
         exp.practice_forced(10)
+    elif test == 'contingent':
+        exp.setup_eyetracker(mouse)
+        exp.show_gaze_demo()
+        exp.intro_contingent()
+        exp.run_main()
     else:
         try:
             exp.intro()
@@ -26,7 +30,7 @@ def main(name=None, test=False, full=False, mouse=False, **kws):
             exp.show_gaze_demo()
             exp.intro_gaze()
             # exp.calibrate_gaze_tolerance()
-            # exp.intro_contingent()
+            exp.intro_contingent()
             exp.intro_main()
             exp.run_main()
             exp.save_data()

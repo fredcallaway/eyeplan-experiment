@@ -48,6 +48,8 @@ class GraphTrial(object):
 
         self.eyelink = eyelink
         self.gaze_contingent = gaze_contingent
+        if gaze_contingent:
+            assert self.eyelink
         self.gaze_tolerance = gaze_tolerance
         self.fixation_lag = fixation_lag
         self.show_gaze = show_gaze
@@ -127,12 +129,12 @@ class GraphTrial(object):
         self.data["trial"]["node_positions"] = [height2pix(self.win, n.pos) for n in self.nodes]
         self.data["trial"]["radius"] = self.node_radius * self.win.size[1] / 2  # retina pixels
 
-        self.reward_labels = [self.gfx.diamond(n.pos, ori=10 * r) if r else None
+        self.reward_labels = [self.gfx.diamond(n.pos, ori=10 * r, autoDraw=not self.gaze_contingent) if r else None
                               for (n, r) in zip(self.nodes, self.rewards)]
         self.reward_text = [self.gfx.text(reward_string(r), n.pos, height=self.node_radius, autoDraw=False)
                               for (n, r) in zip(self.nodes, self.rewards)]
 
-        # self.update_node_labels()
+        self.update_node_labels()
 
         self.arrows = {}
         for i, js in enumerate(self.graph):
@@ -272,10 +274,14 @@ class GraphTrial(object):
         else:
             return reward_string(self.rewards[i])
 
-    # def update_node_labels(self):
-    #     for i in range(len(self.nodes)):
-    #         self.set_node_label(i, self.node_label(i))
-    #     logging.debug('update_node_labels %s', [lab.text for lab in self.reward_labels])
+    def update_node_labels(self):
+        for i in range(len(self.nodes)):
+            lab = self.reward_labels[i]
+            if lab:
+                lab.autoDraw = i == self.fixated
+
+            # self.set_node_label(i, self.node_label(i))
+        # logging.debug('update_node_labels %s', [lab.text for lab in self.reward_labels])
 
     # def set_node_label(self, i, new):
     #     old = self.reward_labels[i].text
@@ -300,7 +306,6 @@ class GraphTrial(object):
         for i in range(len(self.nodes)):
             if distance(gaze, self.nodes[i].pos) < self.gaze_tolerance * self.nodes[i].radius:
 
-
                 if self.fixated != i:
                     self.log('fixate state', {'state': i})
                 self.fixated = i
@@ -313,6 +318,7 @@ class GraphTrial(object):
 
         if self.gaze_contingent and self.last_fixated != self.fixated:
             self.update_node_labels()
+
 
     def check_click(self):
         clicked = self.get_click()

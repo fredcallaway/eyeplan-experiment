@@ -516,6 +516,7 @@ class Experiment(object):
         while True:
             gt = self.get_practice_trial(gaze_contingent=True, eyelink=self.eyelink, pos=(0,0), stop_on_x=True)
             gt.start_mode = 'immediate'
+            import IPython, time; IPython.embed(); time.sleep(0.5)
             gt.run()
             if gt.status == 'ok':
                 break
