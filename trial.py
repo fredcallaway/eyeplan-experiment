@@ -406,7 +406,7 @@ class GraphTrial(object):
         # draw_cmd = 'draw_filled_box %d %d %d %d 1' % (left, top, right, bottom)
         # el_tracker.sendCommand(draw_cmd)
 
-    def check_keys():
+    def check_keys(self):
         keys = event.getKeys()
         if 'x' in keys:
             logging.warning('press x')
