@@ -606,12 +606,12 @@ class Experiment(object):
                 psychopy.logging.flush()
                 self.trial_data.append(gt.data)
 
-                if gt.status != 'recalibrate':
+                if gt.status == 'ok':
                     logging.info('gt.status is %s', gt.status)
                     self.bonus.add_points(gt.score)
                     self.total_score += int(gt.score)
 
-                if gt.status == 'recalibrate':
+                elif gt.status == 'recalibrate':
                     self.recalibrate()
                     
                 elif gt.status == 'abort':

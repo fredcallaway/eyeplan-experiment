@@ -25,7 +25,7 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, plan_time=None, min_plan_time=5, act_time=None, start_mode=None,
-                 highlight_edges=True, stop_on_x=False, hide_rewards_while_acting=False, initial_stage='acting',
+                 highlight_edges=True, stop_on_x=True, hide_rewards_while_acting=False, initial_stage='acting',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
                  pos=(0, 0), scale=0.7, max_score=None, force_rate=0., force_mode='before', **kws):
 
@@ -406,6 +406,23 @@ class GraphTrial(object):
         # draw_cmd = 'draw_filled_box %d %d %d %d 1' % (left, top, right, bottom)
         # el_tracker.sendCommand(draw_cmd)
 
+    def check_keys():
+        keys = event.getKeys()
+        if 'x' in keys:
+            logging.warning('press x')
+            self.log('press x')
+            self.status = 'recalibrate'
+            if self.stop_on_x:
+                self.done = True
+                break
+        elif 'a' in keys:
+            logging.warning('press a')
+            self.log('press a')
+            self.status = 'abort'
+            self.done = True
+        return keys
+
+
 
     def run_planning(self):
         print("run planning")
@@ -423,7 +440,7 @@ class GraphTrial(object):
                 break
 
             self.update_fixation()
-            keys = event.getKeys()
+            self.check_keys()
 
             # clicked = self.get_click()
             # if clicked == self.current_state:
@@ -431,18 +448,6 @@ class GraphTrial(object):
             #     break
             if self.current_time - self.start_time > self.min_plan_time:
                 break
-
-            elif 'x' in keys or 'c' in keys:
-                logging.warning('press x')
-                self.log('press x')
-                self.status = 'recalibrate'
-                if self.stop_on_x:
-                    self.done = True
-                    break
-            elif 'a' in keys:
-                logging.warning('press a')
-                self.log('press a')
-                self.status = 'abort'
             self.tick()
 
         if self.highlight_edges:
@@ -466,14 +471,13 @@ class GraphTrial(object):
         self.mouse.clickReset()
         while not self.done:
             self.update_fixation()
+            self.check_keys()
             moved = self.check_click()
             if not self.done and self.end_time is not None and self.current_time > self.end_time:
                 self.do_timeout()
             self.tick()
             if moved and one_step:
                 return
-
-
 
     def run(self, one_step=False, skip_planning=False):
         if self.stage == 'acting':
@@ -513,7 +517,7 @@ class GraphTrial(object):
         if not self.done:
             self.run_acting(one_step)
             if one_step:
-                return
+                return self.status
 
         self.log('done')
         logging.info("end trial " + jsonify(self.data["events"]))
