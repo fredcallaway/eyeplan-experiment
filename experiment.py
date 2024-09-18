@@ -447,6 +447,7 @@ class Experiment(object):
 
     @stage
     def calibrate_gaze_tolerance(self):
+        return  # DISABLED
         self.message("We're going to check how well the eyetracker is working.", space=True)
         self.message(
             "When the board comes up, just look at the O's as they appear. "
