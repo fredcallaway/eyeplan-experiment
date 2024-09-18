@@ -414,7 +414,6 @@ class GraphTrial(object):
             self.status = 'recalibrate'
             if self.stop_on_x:
                 self.done = True
-                break
         elif 'a' in keys:
             logging.warning('press a')
             self.log('press a')
