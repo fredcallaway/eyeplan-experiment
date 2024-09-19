@@ -7,6 +7,11 @@ python3 -m venv env
 pip install -r requirements.txt
 ```
 
+You are likely to run into problems installing psychopy as it has many dependencies. The most common issue is caused by not having HDF5 installed, which leads to a pip error when installing the tables package. The solution to this is to install HDF5. 
+
+- install homebrew (https://brew.sh/) if you don't already have it
+- `brew install hdf5`
+
 The experiment is only known to work with Python 3.10 running on macOS.
 
 ## Running the experiment
