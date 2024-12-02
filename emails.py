@@ -42,21 +42,28 @@ except FileNotFoundError:
 
 def get_gmail_service():
     creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first time.
     if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        try:
+            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        except Exception as e:
+            print(f"Error reading token.json: {e}")
+            os.remove('token.json')
+            creds = None
 
-    # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception as e:
+                print(f"Error refreshing token: {e}")
+                os.remove('token.json')
+                creds = None
+                
+        if not creds:
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
+            with open('token.json', 'w') as token:
+                token.write(creds.to_json())
 
     return build('gmail', 'v1', credentials=creds)
 
@@ -135,7 +142,7 @@ def get_participants(when, kind = "Sign-Up"):
     return participants
 
 def main(remind=False):
-    dt = datetime.now() #+ timedelta(1)  # tomorrow
+    dt = datetime.now() + timedelta(1)  # tomorrow
     signed_up = get_participants(dt)
     cancelled = get_participants(dt, "Cancellation")
     for c in cancelled:
@@ -147,9 +154,9 @@ def main(remind=False):
         print(dt.strftime('%I:%M %p'), full_name, email, sep='   ')
 
     if remind and input('send reminders? [N/y]') == 'y':
-            assert len(participants) < 20  # failsafe: make sure we don't email too many people
-            for (dt, full_name, email) in participants:
-                send_reminder(email, full_name, dt)
+        assert len(participants) < 20  # failsafe: make sure we don't email too many people
+        for (dt, full_name, email) in participants:
+            send_reminder(email, full_name, dt)
 
 if __name__ == '__main__':
     Fire(main)

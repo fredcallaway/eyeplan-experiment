@@ -1,12 +1,14 @@
 Hi {name},
 
-This is just a quick reminder about the study today ({date}) at {time}. Please arrive on time. If you are more than 10 minutes late, you may be assigned as a no-show.
+This is just a quick reminder about the study on {date} at {time}. 
 
-__IMPORTANT__: Please review the guidelines below regarding _makeup_ and _glasses_.
+Please plan to arrive five minutes early because we are running on a tight schedule.
+If you are more than five minutes late, you will most likely not be able to complete the study and you will not get credit. If you know you are running late, send me an email
+and I will let you know if you can start the study late (depending on the schedule).
 
-__Eye Makeup__: Please avoid heavy eye makeup on the day of the experiment. This includes thick eyeliner, heavy mascara, glittery or shimmery eyeshadows, and false eyelashes. Understanding that you may be coming directly from other commitments, we will provide makeup removal facilities and products in the lab. This will allow you to participate if you are wearing makeup upon arrival.
+__Eye Makeup__: Please avoid heavy eye makeup on the day of the experiment. This includes thick eyeliner, heavy mascara, glittery or shimmery eyeshadows, and false eyelashes. 
 
-__Glasses__: Unfortunately, the eye tracker does not work with most glasses. Therefore, you cannot participate in the experiment if you need to wear glasses to have normal or near-normal vision. Non-tinted contact lenses are absolutely fine.
+__Glasses__: The eye tracker often does not work with glasses. If you have contacts, please wear them instead.
 
 __Location__: The study is being run in Meyer 566. If you take one of the main elevators, you take a right out of the elevator, then your first right, you'll walk down a hallway and up some stairs, and then when you hit the end of the hallway, 566 will be directly to your left. If you instead take the side elevator, you'll come out into a waiting area with seats. Then, the experiment will be down the hall to your left.
 
