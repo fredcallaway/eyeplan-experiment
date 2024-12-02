@@ -503,7 +503,7 @@ class Experiment(object):
         block_earned = 0
         block_possible = 0
         for (i, trial) in enumerate(trials):
-            logging.info(f"Trial {i+1} of {len(trials)}")
+            logging.info(f"Trial {i+1} of {len(trials)} ({self.total_score}/{self.score_limit} points)")
             try:
                 if self.score_limit:
                     if self.total_score >= self.score_limit:
@@ -525,7 +525,6 @@ class Experiment(object):
                 self.trial_data.append(gt.data)
 
                 if gt.status != 'recalibrate':
-                    logging.info('gt.status is %s', gt.status)
                     block_earned += gt.score
                     block_possible += gt.max_score
                     self.bonus.add_points(gt.score)

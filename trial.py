@@ -78,7 +78,7 @@ class GraphTrial(object):
             "flips": [],
             "mouse": [],
         }
-        logging.info("begin trial " + jsonify(self.data["trial"]))
+        logging.debug("begin trial " + jsonify(self.data["trial"]))
         self.gfx = Graphics(win)
         self.mouse = event.Mouse()
         self.done = False
@@ -408,7 +408,7 @@ class GraphTrial(object):
                 return
 
         self.log('done')
-        logging.info("end trial " + jsonify(self.data["events"]))
+        logging.debug("end trial " + jsonify(self.data["events"]))
         if self.eyelink:
             self.eyelink.stop_recording()
         wait(.3)
