@@ -1,3 +1,4 @@
+import subprocess
 import pylink
 import os
 import random
@@ -237,6 +238,11 @@ class EyeLink(object):
         self.tracker.receiveDataFile(self.edf_file, local_edf)
         logging.info('wrote %s', local_edf)
         self.tracker.close()
+        try:
+            asc_file = os.path.join(session_folder, 'samples.asc')
+            subprocess.run(["edf2asc", local_edf, asc_file])
+        except Exception as e:
+            logging.error('Error converting EDF to ASC: %s', e)
 
     def gaze_position(self):
         sample = gaze = self.tracker.getNewestSample()
