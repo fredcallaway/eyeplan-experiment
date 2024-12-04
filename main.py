@@ -2,7 +2,7 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-def main(config_number=None, name=None, test=False, fast=False, full=False, mouse=False, hotfix=False, **kws):
+def main(config_number=None, name=None, test=False, fast=False, full=False, mouse=False, block=None, initial_score=None, **kws):
     if test and name is None:
         name = 'test'
     if fast:
@@ -42,6 +42,29 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
                 exp.intro_main()
                 exp.run_main()
                 # exp.do_survey()
+            elif block:
+                if initial_score:
+                    exp.total_score = initial_score
+                blocks = [
+                    'intro'
+                    'practice_start'
+                    'practice'
+                    'setup_eyetracker'
+                    'show_gaze_demo'
+                    'intro_gaze'
+                    'calibrate_gaze_tolerance'
+                    'intro_contingent'
+                    'intro_main'
+                    'run_main'
+                ]
+                # Start Generation Here
+                try:
+                    start = blocks.index(block)
+                    for b in blocks[start:]:
+                        getattr(exp, b)()
+                except ValueError:
+                    logging.error(f"Block '{block}' not found in blocks list.")
+
             else:
                 exp.intro()
                 exp.practice_start()

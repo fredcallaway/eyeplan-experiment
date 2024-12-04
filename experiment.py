@@ -312,7 +312,7 @@ class Experiment(object):
         self.message("If you run out of time, we'll make random decisions for you. Probably something to avoid.", space=True)
 
     @stage
-    def practice(self, n):
+    def practice(self, n=2):
         intervened = False
         for i in range(n):
             self.message("Let's try a few more practice rounds.",
