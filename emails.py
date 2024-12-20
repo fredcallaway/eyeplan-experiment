@@ -141,7 +141,7 @@ def get_participants(when, kind = "Sign-Up"):
 
     return participants
 
-def main(remind=False):
+def main(remind=False, skip=''):
     dt = datetime.now() + timedelta(1)  # tomorrow
     signed_up = get_participants(dt)
     cancelled = get_participants(dt, "Cancellation")
@@ -149,7 +149,7 @@ def main(remind=False):
         assert c in signed_up
 
     participants = sorted(set(signed_up).difference(set(cancelled)))
-
+    participants = [p for p in participants if p[2].split('@')[0] not in skip]
     for (dt, full_name, email) in participants:
         print(dt.strftime('%I:%M %p'), full_name, email, sep='   ')
 

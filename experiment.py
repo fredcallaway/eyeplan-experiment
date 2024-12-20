@@ -169,15 +169,16 @@ class Experiment(object):
     def setup_logging(self):
         logFormatter = logging.Formatter("%(asctime)s [%(levelname)s]  %(message)s")
         rootLogger = logging.getLogger()
-        rootLogger.setLevel('DEBUG')
+        rootLogger.setLevel(logging.DEBUG)
 
         fileHandler = logging.FileHandler(f"{LOG_PATH}/{self.id}.log")
         fileHandler.setFormatter(logFormatter)
+        fileHandler.setLevel(logging.DEBUG)
         rootLogger.addHandler(fileHandler)
 
         consoleHandler = logging.StreamHandler()
         consoleHandler.setFormatter(logFormatter)
-        consoleHandler.setLevel('INFO')
+        consoleHandler.setLevel(logging.INFO)
         rootLogger.addHandler(consoleHandler)
 
         logging.info(f'starting up {self.id} at {core.getTime()}')

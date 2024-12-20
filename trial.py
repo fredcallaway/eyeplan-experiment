@@ -22,7 +22,7 @@ def distance(p1, p2):
 class GraphTrial(object):
     """Graph navigation interface"""
     def __init__(self, win, graph, rewards, start, layout, plan_time=None, act_time=None, start_mode=None,
-                 highlight_edges=False, stop_on_x=False, hide_rewards_while_acting=True, initial_stage='planning',
+                 highlight_edges=False, stop_on_x=True, hide_rewards_while_acting=True, initial_stage='planning',
                  eyelink=None, gaze_contingent=False, gaze_tolerance=1.2, fixation_lag = .5, show_gaze=False,
                  pos=(0, 0), space_start=True, max_score=None, **kws):
         self.win = win
@@ -206,12 +206,12 @@ class GraphTrial(object):
     def update_node_labels(self):
         for i in range(len(self.nodes)):
             self.set_node_label(i, self.node_label(i))
-        logging.debug('update_node_labels %s', [lab.text for lab in self.reward_labels])
+        # logging.debug('update_node_labels %s', [lab.text for lab in self.reward_labels])
 
     def set_node_label(self, i, new):
         old = self.reward_labels[i].text
         if old != new:
-            logging.debug(f'Changing reward_label[%s] from %s to %s', i, old, new)
+            # logging.debug(f'Changing reward_label[%s] from %s to %s', i, old, new)
             self.reward_labels[i].text = new
 
 
