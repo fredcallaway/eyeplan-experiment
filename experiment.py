@@ -461,6 +461,7 @@ class Experiment(object):
             self.message("Unlike other experiments you might have done, we don't have a fixed number of rounds.", space=True)
             self.message(f"Instead, you will do as many rounds as it takes to earn {self.score_limit} points.", space=True)
             self.message("To finish the study as quickly as possible, you'll have to balance making fast choices and selecting the best possible path.", space=True)
+            self.message("And remember: when you see the black circle, look at it and press space.", space=True)
             self.message("Good luck!", space=True)
 
         else:
