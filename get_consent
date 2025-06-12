@@ -2,7 +2,8 @@
 
 if [ $# -eq 0 ]; then
     # No arguments, ask for user input
-    read -p "Participant Name: " name
+    # read -p "Participant Name: " name
+    name="Fred"
 else
     # Use the provided argument
     name=$1
@@ -12,7 +13,7 @@ mkdir -p consent
 
 cpdf \
     -add-text "$name" \
-    -pos-left "201 51" \
+    -pos-left "210 23" \
     -font "Helvetica-Bold" \
     -font-size 12 \
     forms/consent.pdf \
@@ -20,7 +21,7 @@ cpdf \
 
 cpdf \
     -add-text `date +%D` \
-    -pos-left "438 89" \
+    -pos-left "430 59" \
     -font "Helvetica-Bold" \
     -font-size 12 \
     /tmp/out.pdf \
