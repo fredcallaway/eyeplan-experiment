@@ -141,8 +141,10 @@ def get_participants(when, kind = "Sign-Up"):
 
     return participants
 
-def main(remind=False, skip=''):
-    dt = datetime.now() + timedelta(1)  # tomorrow
+def main(remind=False, skip='', tomorrow=False):
+    dt = datetime.now() 
+    if tomorrow:
+        dt += timedelta(1)
     signed_up = get_participants(dt)
     cancelled = get_participants(dt, "Cancellation")
     for c in cancelled:
