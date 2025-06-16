@@ -96,8 +96,8 @@ class Experiment(object):
         self.parameters.update(kws)
         logging.info('parameters %s', self.parameters)
 
-        if 'gaze_tolerance' not in self.parameters:
-            self.parameters['gaze_tolerance'] = 1.2
+        # if 'gaze_tolerance' not in self.parameters:
+        self.parameters['gaze_tolerance'] = 1
 
         self.win = self.setup_window()
         self.bonus = Bonus(0, 50)
@@ -553,6 +553,11 @@ class Experiment(object):
                     self.win.showMessage(None)
                     if 'a' in keys:
                         break
+                
+                calibrate_every = 20
+                if i % calibrate_every == (calibrate_every - 1):
+                    if self.total_score < 0.9 * self.score_limit:
+                        self.calibrate_gaze_tolerance()
 
                 if i % summarize_every == (summarize_every - 1):
                     msg = f"In the last {summarize_every} rounds, you earned {int(block_earned)} points out of {int(block_possible)} possible points."
