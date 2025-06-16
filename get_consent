@@ -2,8 +2,8 @@
 
 if [ $# -eq 0 ]; then
     # No arguments, ask for user input
-    # read -p "Participant Name: " name
-    name="Fred"
+    read -p "Participant Name: " name
+    # name="Fred"
 else
     # Use the provided argument
     name=$1
