@@ -78,7 +78,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
                 exp.intro_main()
                 exp.run_main()
 
-            exp.save_data(survey=True)
+            exp.save_data(survey=False)
         except:
             if test:
                 exit(1)
