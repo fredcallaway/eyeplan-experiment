@@ -47,16 +47,16 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
                 if initial_score:
                     exp.total_score = initial_score
                 blocks = [
-                    'intro'
-                    'practice_start'
-                    'practice'
-                    'setup_eyetracker'
-                    'show_gaze_demo'
-                    'intro_gaze'
-                    'calibrate_gaze_tolerance'
-                    # 'intro_contingent'
-                    'intro_main'
-                    'run_main'
+                    'intro',
+                    'practice_start',
+                    'practice',
+                    'setup_eyetracker',
+                    'show_gaze_demo',
+                    'intro_gaze',
+                    'calibrate_gaze_tolerance',
+                    # 'intro_contingent',
+                    'intro_main',
+                    'run_main',
                 ]
                 # Start Generation Here
                 try:
