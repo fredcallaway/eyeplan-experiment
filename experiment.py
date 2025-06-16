@@ -21,7 +21,7 @@ import os
 
 DATA_PATH = f'data/exp/{VERSION}'
 SURVEY_PATH = f'data/survey'
-CONFIG_PATH = f'config/{VERSION}'
+CONFIG_PATH = f'config/e3' # TODO: change to VERSION
 LOG_PATH = 'log'
 PSYCHO_LOG_PATH = 'psycho-log'
 for p in (DATA_PATH, CONFIG_PATH, LOG_PATH, PSYCHO_LOG_PATH, SURVEY_PATH):
@@ -92,11 +92,12 @@ class Experiment(object):
             conf = json.load(f)
             self.trials = conf['trials']
             self.parameters = conf['parameters']
+            self.parameters['gaze_contingent'] = False
         self.parameters.update(kws)
         logging.info('parameters %s', self.parameters)
 
         if 'gaze_tolerance' not in self.parameters:
-            self.parameters['gaze_tolerance'] = 1.5
+            self.parameters['gaze_tolerance'] = 1.2
 
         self.win = self.setup_window()
         self.bonus = Bonus(0, 50)
@@ -396,8 +397,13 @@ class Experiment(object):
             if result == 'success':
                 break
             else:
-                self.message("Let's make some quick adjustments...", tip_text='Press space to continue')
-                keys = event.waitKeys(keyList=['c', 'd', 'r', 'space'])
+                if attempt <= 2:
+                    self.message("Let's make some quick adjustments...", tip_text='Press space to continue')
+                    keys = event.waitKeys(keyList=['c', 'd', 'r', 'space'])
+                else:
+                    self.message("Please check in with the experimenter", tip_text='CDR')
+                    keys = event.waitKeys(keyList=['c', 'd', 'r'])
+                
                 self.hide_message()
                 if 'd' in keys:
                     break
@@ -410,7 +416,7 @@ class Experiment(object):
                 else:
                     self.parameters['gaze_tolerance'] *= 1.2
                     logging.warning('gaze_tolerance is %s', self.parameters['gaze_tolerance'])
-                    if self.parameters['gaze_tolerance'] > 3:
+                    if attempt >= 5 or self.parameters['gaze_tolerance'] > 2.5:
                         break
 
         if result == 'success':
@@ -431,6 +437,7 @@ class Experiment(object):
 
     @stage
     def intro_contingent(self):
+        return # TODO: hack
         if self.disable_gaze_contingency:
             return
         self.message("There's just one more thing...", space=True)

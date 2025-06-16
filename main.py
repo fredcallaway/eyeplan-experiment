@@ -2,7 +2,7 @@ from experiment import Experiment
 from fire import Fire
 import logging
 
-def main(config_number=None, name=None, test=False, fast=False, full=False, mouse=False, block=None, initial_score=None, **kws):
+def main(config_number=None, name=None, test=False, fast=False, full=False, mouse=False, block=None, initial_score=None, skip_intro=False, **kws):
     if test and name is None:
         name = 'test'
     if fast:
@@ -14,15 +14,16 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
         elif test == 'main':
             exp.run_main()
         else:
-            # exp.intro()
-            # exp.practice_start()
-            exp.practice(2)
-            # exp.practice_timelimit()
+            if not skip_intro:
+                exp.intro()
+                exp.practice_start()
+                exp.practice(2)
+                # exp.practice_timelimit()
             exp.setup_eyetracker(mouse)
             exp.show_gaze_demo()
             exp.intro_gaze()
             exp.calibrate_gaze_tolerance()
-            exp.intro_contingent()
+            # exp.intro_contingent()
             exp.intro_main()
             exp.run_main()
             # exp.do_survey()
@@ -38,7 +39,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
                 exp.show_gaze_demo()
                 exp.intro_gaze()
                 exp.calibrate_gaze_tolerance()
-                exp.intro_contingent()
+                # exp.intro_contingent()
                 exp.intro_main()
                 exp.run_main()
                 # exp.do_survey()
@@ -53,7 +54,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
                     'show_gaze_demo'
                     'intro_gaze'
                     'calibrate_gaze_tolerance'
-                    'intro_contingent'
+                    # 'intro_contingent'
                     'intro_main'
                     'run_main'
                 ]
@@ -73,7 +74,7 @@ def main(config_number=None, name=None, test=False, fast=False, full=False, mous
                 exp.show_gaze_demo()
                 exp.intro_gaze()
                 exp.calibrate_gaze_tolerance()
-                exp.intro_contingent()
+                # exp.intro_contingent()
                 exp.intro_main()
                 exp.run_main()
 
