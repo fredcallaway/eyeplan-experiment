@@ -321,9 +321,11 @@ class Experiment(object):
                          space=False, tip_text=f'complete {n - i} practice rounds to continue')
 
             gt = self.get_practice_trial()
-            for i in range(3):
+            n_try = 3
+            tolerance = 2
+            for i in range(n_try):
                 gt.run()
-                if intervened or gt.score == gt.max_score:
+                if intervened or gt.score >= gt.max_score - tolerance:
                     break
                 else:
                     self.message(
